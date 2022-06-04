@@ -302,7 +302,7 @@ def run_NBody(z,L,dz,sigma,Num_stars, v_scale, L_scale, Directory):
 
         for star in stars:
             #print(star.x)
-            star.kick_star(g,dtau)
+            star.kick_star(g,dtau/2)
             star.drift_star(dtau)
 
             #corrective maneuvers on star position
@@ -329,7 +329,7 @@ def run_NBody(z,L,dz,sigma,Num_stars, v_scale, L_scale, Directory):
         a_grid = -NB.acceleration(phi,L) 
         g = NB.accel_funct(a_grid,L,dz)
         for star in stars:
-            star.kick_star(g,dtau)
+            star.kick_star(g,dtau/2)
             
         time += dtau
         i += 1
