@@ -93,17 +93,25 @@ elif choice == 3:
     ################
 
     print("Calculating and Plotting...")
-    folder_name = "FDM_n_Body_Images"
+    if sim_choice == 1: 
+        folder_name = "FDM_n_Body_Images"
+    elif sim_choice == 2:
+        folder_name = "FDM_n_Body_Snapshots"
     GF.run_FDM_n_Bodies(sim_choice, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name)
 
     print("Calculation and Plotting Done. Now Saving Video...")
-    folder_name = "FDM_n_Body_Images"
+    
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    video_name = "SelfGrav_FDM_n_Body.mp4"
+    
     if sim_choice == 1:
+        video_name = "FDM_n_Body.mp4"
         fps = 10 #1/dtau
     elif sim_choice == 2:
+        video_name = "FDM_n_Body_Snapshots.mp4"
         fps = 1
     GF.animate(fourcc,Directory,folder_name,video_name,fps)
     print("Video Saved.")
-    subprocess.call(["xdg-open", "SelfGrav_FDM_n_Body.mp4"])
+    if sim_choice == 1:
+        subprocess.call(["xdg-open", "FDM_n_Body.mp4"])
+    elif sim_choice == 2:
+        subprocess.call(["xdg-open", "FDM_n_Body_Snapshots.mp4"])

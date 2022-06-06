@@ -1,3 +1,4 @@
+from cProfile import label
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -400,6 +401,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
         
     #m = mu*M_scale
     Rho_avg = M_s*np.mean(rho)/L_s
+    print(Rho_avg)
     T_collapse = 1/(Rho_avg)**0.5
     tau_collapse = T_collapse/T_s
     print(f"(Non-dim) Collapse time: {tau_collapse}")
@@ -461,41 +463,51 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
         # Plot only specific time steps if sim_choice == 2
         #################################################
         if sim_choice == 1:
-            fig, ax = plt.subplots(nrows = 2, ncols = 2, squeeze = False)
+            layout = [['upper left', 'upper right', 'far right'],
+                    ['lower left', 'lower right', 'far right']]
+
+            fig, ax = plt.subplot_mosaic(layout, constrained_layout = True)
             fig.set_size_inches(40,20)
             plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
             
             ##############################################3
+            #ACCELERATIONS
+            body_accel = -NB.acceleration(fourier_potential((grid_counts/dz)*sigma,L),L)
+            ax['far right'].plot(z, body_accel, label = "Particle Contribution")
+            ax['far right'].plot(z, fourier_gradient(fourier_potentialV2(np.abs(chi)**2,L),L), label = "FDM Contribution")
+            ax['far right'].set_ylim(-2000,2000)
+            ax['far right'].set_title("Acceleration contributions")
+            ax['far right'].legend()
             # THE FDM
-            ax[0][0].plot(z,chi.real, label = "Re[$\\chi$]")
-            ax[0][0].plot(z,chi.imag, label = "Im[$\\chi$]")
-            ax[0][0].plot(z,phi,label = "Potential [Fourier perturbation]")
-            ax[0][0].plot(z,np.abs(chi)**2,label = "$\\rho_{FDM} = \\chi \\chi^*$")
-            ax[0][0].set_ylim([-y00_max, y00_max] )
-            ax[0][0].set_xlabel("$z = x/L$")
-            ax[0][0].legend()
+            ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
+            ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
+            ax['upper left'].plot(z,phi,label = "Potential [Fourier perturbation]")
+            ax['upper left'].plot(z,np.abs(chi)**2,label = "$\\rho_{FDM} = \\chi \\chi^*$")
+            ax['upper left'].set_ylim([-y00_max, y00_max] )
+            ax['upper left'].set_xlabel("$z = x/L$")
+            ax['upper left'].legend()
             
             max_F = 0.08
-            ax[0][1].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y01_max))
-            ax[0][1].set_xlim(x_min,x_max)
-            ax[0][1].set_ylim(-y01_max,y01_max) #[v_min,v_max])
-            ax[0][1].set_xlabel("$z = x/L$")
+            ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y01_max))
+            ax['upper right'].set_xlim(x_min,x_max)
+            ax['upper right'].set_ylim(-y01_max,y01_max) #[v_min,v_max])
+            ax['upper right'].set_xlabel("$z = x/L$")
 
             ##############################################3
             # THE PARTICLES
-            ax[1][0].plot(z,phi,label = "Potential")
-            ax[1][0].plot(z,(grid_counts/dz)*sigma,label = "Number density")
-            ax[1][0].plot(z,a_grid)
-            ax[1][0].set_xlim(-L/2,L/2)
-            ax[1][0].set_ylim(-0.1*Num_stars/dz,0.1*Num_stars/dz)
+            ax['lower left'].plot(z,phi,label = "Potential")
+            ax['lower left'].plot(z,(grid_counts/dz)*sigma,label = "Number density")
+            ax['lower left'].plot(z,a_grid)
+            ax['lower left'].set_xlim(-L/2,L/2)
+            ax['lower left'].set_ylim(-0.1*Num_stars/dz,0.1*Num_stars/dz)
             
             #Plot the Phase Space distribution
             x_s = np.array([star.x for star in stars])
             v_s = np.array([star.v for star in stars])
-            ax[1][1].plot(x_s,v_s,'.',label = "Phase Space Distribution")
-            ax[1][1].set_ylim(-y11_max,y11_max)
-            ax[1][1].set_xlim(-L/2,L/2)
-            ax[1][1].legend()
+            ax['lower right'].plot(x_s,v_s,'.',label = "Phase Space Distribution")
+            ax['lower right'].set_ylim(-y11_max,y11_max)
+            ax['lower right'].set_xlim(-L/2,L/2)
+            ax['lower right'].legend()
 
             #ADDITIONAL:
             #PLOT CENTER OF MASS
@@ -503,7 +515,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             for j in range(len(grid_counts)):
                 centroid_z += z[j]*grid_counts[j]
             centroid_z = centroid_z / Num_stars
-            ax[1][1].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
+            ax['lower right'].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
             
             #now save it as a .jpg file:
             folder = Directory + "/" + folder_name
