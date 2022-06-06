@@ -46,10 +46,26 @@ def Startup_Initial_Parameters(choice, hbar,L_scale,v_scale,M_scale):
         return sigma, Num_stars
 
     elif choice == 3: #FDM + Particles
+        #FDM
         print("Choose a (non-dimensional) Boson mass:")
-        print("Choose your particle/star mass:")
+        mu = float(input())
         print("How many Bosons?")
+        Num_bosons = int(input())
+        #Calculate dimensional mass:
+        m = mu*M_scale
+        print(f"Mass mu = {mu}, m = mu*M = {m}")
+        #Calculate Fuzziness:
+        r = ND.r(hbar,m,v_scale,L_scale)
+        print(f"Fuzziness: r = {r}")
+        
+        #Particles
+        print("")
+        print("Choose your particle/star mass (per unit area):")
+        sigma = float(input())
         print("How many particles?")
+        Num_stars = int(input())
+        
+        return mu, Num_bosons, r, sigma, Num_stars
 
 def gauss(x,b,std):
     return np.exp(-(x-b)**2/(2*std**2))/(np.sqrt(2*np.pi)*std)
@@ -332,6 +348,214 @@ def run_NBody(z,L,dz,sigma,Num_stars, v_scale, L_scale, Directory):
         for star in stars:
             star.kick_star(g,dtau/2)
             
+        time += dtau
+        i += 1
+
+def run_FDM_n_Bodies(z,L,dz, mu, Num_bosons, r, sigma, Num_stars, v_s, L_s, Directory, folder_name):
+    M_s = v_s**2 * L_s
+    T_s = L_s / v_s
+    ########################################################
+    # INITIAL SETUP
+    ########################################################
+    # FOR THE FDM
+    #Set an initial wavefunction
+    b=0
+    std=0.1*L
+    psi = np.sqrt(gauss(z,b,std)*Num_bosons)#*Num_particles / (L**3))
+    chi = psi*L_s**(3/2)
+
+    #Calculate initial Density perturbation (non-dimensionalized and reduced)
+    rho = np.absolute(chi)**2 #just norm-squared of wavefunction
+    
+    #Calculate initial (non-dim) potential
+    phi = fourier_potentialV2(rho,L) 
+
+    #Check how it's normalized:
+    print(f"|chi|^2 = {np.sum(dz*np.absolute(chi)**2)}")
+    print(f"Numerically calculated: |psi|^2 = {np.sum(dz*np.absolute(psi)**2)}")
+
+    m = mu*M_s
+
+    ####################################################
+    # FOR THE PARTICLES
+    #Set initial distribution on grid
+    b = 0 #center at zero
+    std = 0.1*L #standard deviation of 1
+    z_0 = np.random.normal(b,std,Num_stars) #initial positions sampled from normal distribution
+    stars = [NB.star(i,sigma,z_0[i],0) for i in range(len(z_0))] #create list of normally distributed stars, zero initial speed
+
+    os.chdir(Directory + "/" + folder_name)
+
+    #Calculate distirubtion on Mesh
+    grid_counts = NB.grid_count(stars,L,z)
+    rho = (grid_counts/dz)*sigma 
+    rho += np.absolute(chi)**2
+        
+    #m = mu*M_scale
+    Rho_avg = M_s*np.mean(rho)/L_s
+    T_collapse = 1/(Rho_avg)**0.5
+    tau_collapse = T_collapse/T_s
+    print(f"(Non-dim) Collapse time: {tau_collapse}")
+    
+    #To fix plot axis limits:
+    #y0_max = np.max(phi)*1.5
+    y00_max = np.max(rho)*10
+    y01_max = v_s*100
+    eta = 0.025*L #resolution for Husimi
+
+    y11_max = v_s*50
+
+    dtau = 0.01*tau_collapse
+    tau_stop = tau_collapse*2 #t_stop/T
+    time = 0
+    i = 0 #counter, for saving images
+    while time <= tau_stop:
+        ######################################
+
+        #PHASE SPACE CALCULATION:
+        k = 2*np.pi*np.fft.fftfreq(len(z),dz)
+        k = k/L #non-dimensionalize
+        #rescale wavenumber k to velocity v:
+        hbar = 1
+        v = k*(hbar/m)
+
+        x_min, x_max = np.min(z), np.max(z)
+        v_min, v_max = np.min(v), np.max(v)
+        
+        F = ND.Husimi_phase(chi,z,dz,L,eta)
+
+        #################################################
+        #CALCULATION OF PHYSICAL QUANTITIES
+        #################################################
+        #1. Calculate the Total Density
+
+        #Calculate Particle distirubtion on Mesh
+        grid_counts = NB.grid_count(stars,L,z)
+        rho = (grid_counts/dz)*sigma 
+
+        #Add the density from the FDM
+        rho += np.absolute(chi)**2
+        
+        #2. Calculate potential 
+        phi = fourier_potentialV2(rho,L)
+
+        #3. Calculate Acceleration Field on Mesh:
+        a_grid = -NB.acceleration(phi,L) 
+        
+        #################################################
+        # PLOTTING
+        #################################################
+        fig, ax = plt.subplots(nrows = 2, ncols = 2, squeeze = False)
+        fig.set_size_inches(40,20)
+        plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
+        
+        ##############################################3
+        # THE FDM
+        ax[0][0].plot(z,chi.real, label = "Re[$\\chi$]")
+        ax[0][0].plot(z,chi.imag, label = "Im[$\\chi$]")
+        ax[0][0].plot(z,phi,label = "Potential [Fourier perturbation]")
+        ax[0][0].plot(z,np.abs(chi)**2,label = "$\\rho_{FDM} = \\chi \\chi^*$")
+        ax[0][0].set_ylim([-y00_max, y00_max] )
+        ax[0][0].set_xlabel("$z = x/L$")
+        ax[0][0].legend()
+        
+        max_F = 0.08
+        ax[0][1].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y01_max))
+        ax[0][1].set_xlim(x_min,x_max)
+        ax[0][1].set_ylim(-y01_max,y01_max) #[v_min,v_max])
+        ax[0][1].set_xlabel("$z = x/L$")
+
+        ##############################################3
+        # THE PARTICLES
+        ax[1][0].plot(z,phi,label = "Potential")
+        ax[1][0].plot(z,(grid_counts/dz)*sigma,label = "Number density")
+        ax[1][0].plot(z,a_grid)
+        ax[1][0].set_xlim(-L/2,L/2)
+        ax[1][0].set_ylim(-0.1*Num_stars/dz,0.1*Num_stars/dz)
+        
+        #Plot the Phase Space distribution
+        x_s = np.array([star.x for star in stars])
+        v_s = np.array([star.v for star in stars])
+        ax[1][1].plot(x_s,v_s,'.',label = "Phase Space Distribution")
+        ax[1][1].set_ylim(-y11_max,y11_max)
+        ax[1][1].set_xlim(-L/2,L/2)
+        ax[1][1].legend()
+
+        #ADDITIONAL:
+        #PLOT CENTER OF MASS
+        centroid_z = 0
+        for j in range(len(grid_counts)):
+            centroid_z += z[j]*grid_counts[j]
+        centroid_z = centroid_z / Num_stars
+        ax[1][1].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
+        
+        #now save it as a .jpg file:
+        folder = Directory + "/" + folder_name
+        filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
+        plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
+        plt.close() #close plot so it doesn't overlap with the next one
+        
+        ############################################################
+        #EVOLVE SYSTEM (After calculations on the Mesh)
+        ############################################################
+        #1,2: Kick+Drift
+
+        #FUZZY DM
+        #1. Kick in current potential
+        chi= ND.kick(chi,phi/2,r,dtau/2)
+        #2. Drift in differential operator
+        chi = ND.drift(chi,r,dz,dtau)
+
+        #PARTICLES
+        g = NB.accel_funct(a_grid,L,dz)
+        for star in stars:
+            #print(star.x)
+            star.kick_star(g,dtau/2)
+            star.drift_star(dtau)
+
+            #corrective maneuvers on star position
+            #(for positions that drift outside of the box...
+            # must apply periodicity)
+            if np.absolute(star.x) > L/2:
+                print(f"z = {star.x}")
+                modulo = (star.x // (L/2))
+                remainder = star.x % (L/2)
+                print(f"mod = {modulo}, remainder = {remainder}")
+                if modulo % 2 == 0: #check if modulo is even
+                    star.x = remainder 
+                else: #if modulo is odd, further check:
+                    if star.x > 0:
+                        star.x = remainder-L/2
+                    elif star.x < 0:
+                        star.x = remainder+L/2
+                print(f"new z = {star.x}")
+                print(" ")
+
+        #3 Re-update potential and acceleration fields
+        
+        #Calculate Particle distirubtion on Mesh
+        grid_counts = NB.grid_count(stars,L,z)
+        rho = (grid_counts/dz)*sigma 
+        #Add the density from the FDM
+        rho += np.absolute(chi)**2
+        #Calculate potential 
+        phi = fourier_potentialV2(rho,L)
+        #Calculate Acceleration Field on Mesh:
+        a_grid = -NB.acceleration(phi,L) 
+
+        #4. KICK in updated potential
+
+        #FUZZY DM
+        chi = ND.kick(chi,phi/2,r,dtau/2)
+
+        #PARTICLES
+        a_grid = -NB.acceleration(phi,L) 
+        g = NB.accel_funct(a_grid,L,dz)
+        for star in stars:
+            star.kick_star(g,dtau/2)
+            
+        #Note: no need to re-calculate density.
+        # That happens again at start of loop
         time += dtau
         i += 1
 

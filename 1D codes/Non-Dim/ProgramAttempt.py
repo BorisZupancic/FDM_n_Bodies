@@ -70,7 +70,6 @@ if choice == 1:
 elif choice == 2:
     sigma, Num_stars = GF.Startup_Initial_Parameters(choice, hbar, L_s,v_s, M_s)
     print("Calculating and Plotting...")
-    tau_collapse = 0.044
     GF.run_NBody(z,L,dz,sigma,Num_stars,v_s,L_s,Directory)
 
     print("Calculation and Plotting Done. Now Saving Video...")
@@ -82,4 +81,17 @@ elif choice == 2:
     print("Video Saved.")
     subprocess.call(["xdg-open", "SelfGrav_NBody.mp4"])
 
+elif choice == 3:
+    mu, Num_bosons, r, sigma, Num_stars = GF.Startup_Initial_Parameters(choice, hbar, L_s,v_s, M_s)
+    print("Calculating and Plotting...")
+    folder_name = "FDM_n_Body_Images"
+    #GF.run_FDM_n_Bodies(z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name)
 
+    print("Calculation and Plotting Done. Now Saving Video...")
+    folder_name = "FDM_n_Body_Images"
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    video_name = "SelfGrav_FDM_n_Body.mp4"
+    fps = 10 #1/dtau
+    GF.animate(fourcc,Directory,folder_name,video_name,fps)
+    print("Video Saved.")
+    subprocess.call(["xdg-open", "SelfGrav_FDM_n_Body.mp4"])
