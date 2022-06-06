@@ -11,9 +11,9 @@ from PIL import Image
 My_Package_PATH = "/home/boris/Documents/Research/Coding"
 import sys
 sys.path.insert(1, My_Package_PATH)
-import OneD.Waves.NonDim as ND
-import OneD.NBody.NBody as NB
-import OneD.Global.GlobalFuncs as GF
+import OneD.WaveNonDim as ND
+import OneD.NBody as NB
+import OneD.GlobalFuncs as GF
 
 #Set up Directory for saving files/images/videos
 # Will not rename this again

@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import os
 import cv2 
 from PIL import Image
-import OneD.Waves.NonDim as ND
-import OneD.NBody.NBody as NB
+import OneD.WaveNonDim as ND
+import OneD.NBody as NB
 import matplotlib.cm as cm
 from matplotlib.colors import LogNorm, Normalize
 

@@ -6,8 +6,8 @@ from matplotlib.colors import LogNorm, Normalize
 import os
 import cv2 
 from PIL import Image 
-import OneD.Waves.NonDim as ND
-import OneD.Global.GlobalFuncs as GF
+import OneD.WaveNonDim as ND
+import OneD.GlobalFuncs as GF
 
 class star:
     def __init__(self,id,mass,x,v):
