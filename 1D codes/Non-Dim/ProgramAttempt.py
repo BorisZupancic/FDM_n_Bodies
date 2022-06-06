@@ -85,7 +85,7 @@ elif choice == 3:
     mu, Num_bosons, r, sigma, Num_stars = GF.Startup_Initial_Parameters(choice, hbar, L_s,v_s, M_s)
     print("Calculating and Plotting...")
     folder_name = "FDM_n_Body_Images"
-    #GF.run_FDM_n_Bodies(z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name)
+    GF.run_FDM_n_Bodies(z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name)
 
     print("Calculation and Plotting Done. Now Saving Video...")
     folder_name = "FDM_n_Body_Images"
