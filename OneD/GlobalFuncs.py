@@ -151,6 +151,8 @@ def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
     #####################################################
     #Set an initial wavefunction
     b=0
+    #print("Choose the standard deviation of the initial distribution:")
+    #std = float(input())
     std=0.1*L
     psi = np.sqrt(gauss(z,b,std)*Num_bosons)#*Num_particles / (L**3))
     chi = psi*L_s**(3/2)
@@ -360,7 +362,9 @@ def run_FDM_n_Bodies(z,L,dz, mu, Num_bosons, r, sigma, Num_stars, v_s, L_s, Dire
     # FOR THE FDM
     #Set an initial wavefunction
     b=0
-    std=0.1*L
+    print("Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):")
+    std = float(input())
+    std=std*L
     psi = np.sqrt(gauss(z,b,std)*Num_bosons)#*Num_particles / (L**3))
     chi = psi*L_s**(3/2)
 
@@ -380,7 +384,9 @@ def run_FDM_n_Bodies(z,L,dz, mu, Num_bosons, r, sigma, Num_stars, v_s, L_s, Dire
     # FOR THE PARTICLES
     #Set initial distribution on grid
     b = 0 #center at zero
-    std = 0.1*L #standard deviation of 1
+    print("Choose the standard deviation of the Particle system (as fraction of the box width):")
+    std = float(input())
+    std = std*L 
     z_0 = np.random.normal(b,std,Num_stars) #initial positions sampled from normal distribution
     stars = [NB.star(i,sigma,z_0[i],0) for i in range(len(z_0))] #create list of normally distributed stars, zero initial speed
 
