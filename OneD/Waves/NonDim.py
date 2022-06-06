@@ -59,7 +59,7 @@ def time_evolve(chi,phi,r,dz,dtau,m,L):
     chi_new = kick(chi,phi/2,r,dtau/2)
 
     #2. Drift in differential operator
-    chi_new = drift(chi_new,r,dz,dtau/2)
+    chi_new = drift(chi_new,r,dz,dtau)
 
     #3. Update potential
     phi_new = GF.fourier_potential(chi_new,L)
@@ -78,7 +78,7 @@ def time_evolveV2(chi,phi,r,dz,dtau,m,L):
     chi_new = kick(chi,phi/2,r,dtau/2)
 
     #2. Drift in differential operator
-    chi_new = drift(chi_new,r,dz,dtau/2)
+    chi_new = drift(chi_new,r,dz,dtau)
 
     #3. Update potential
     rho_new = np.absolute(chi_new)**2

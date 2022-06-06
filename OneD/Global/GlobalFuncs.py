@@ -183,7 +183,7 @@ def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
         ######################################
         #Plot everything and save the file
         fig,ax = plt.subplots(1,2,figsize = (20,10))
-        plt.suptitle("Time $\\tau$"+ f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
+        plt.suptitle("Time $\\tau = $"+ f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
         
         ax[0].plot(z,chi.real, label = "Re[$\\chi$]")
         ax[0].plot(z,chi.imag, label = "Im[$\\chi$]")
