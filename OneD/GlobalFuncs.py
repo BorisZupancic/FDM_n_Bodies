@@ -158,7 +158,7 @@ def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
     #To fix plot axis limits:
     #y0_max = np.max(phi)*1.5
     y0_max = np.max(rho)*10
-    y1_max = v_s*50
+    y1_max = v_s*100
     eta = 0.025*L #resolution for Husimi
     dtau = 0.01*tau_collapse
     tau_stop = tau_collapse*2 #t_stop/T

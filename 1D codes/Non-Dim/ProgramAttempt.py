@@ -59,13 +59,13 @@ if choice == 1:
     folder_name = "SelfGrav_Images"
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     m = mu*M_s
-    video_name = f"SelfGrav_Mass{m}.mp4"
+    video_name = f"SelfGrav.mp4"
     fps = 10 #1/dtau
     GF.animate(fourcc,Directory,folder_name,video_name,fps) 
     print("Video Saved.")
 
     #Open the video
-    subprocess.call(["xdg-open", "SelfGrav_Mass1.0.mp4"])
+    subprocess.call(["xdg-open", "SelfGrav.mp4"])
 
 elif choice == 2:
     sigma, Num_stars = GF.Startup_Initial_Parameters(choice, hbar, L_s,v_s, M_s)
