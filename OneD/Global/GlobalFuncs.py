@@ -159,6 +159,7 @@ def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
     #y0_max = np.max(phi)*1.5
     y0_max = np.max(rho)*10
     y1_max = v_s*50
+    eta = 0.025*L #resolution for Husimi
     dtau = 0.01*tau_collapse
     tau_stop = tau_collapse*2 #t_stop/T
     time = 0
@@ -177,7 +178,7 @@ def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
 
         x_min, x_max = np.min(z), np.max(z)
         v_min, v_max = np.min(v), np.max(v)
-        eta = 0.025*L #resolution
+        
         F = ND.Husimi_phase(chi,z,dz,L,eta)
         
         ######################################
