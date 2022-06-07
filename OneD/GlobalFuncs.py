@@ -404,7 +404,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     
     os.chdir(Directory + "/" + folder_name)
 
-    #Calculate distirubtion on Mesh
+    #Calculate distribution on Mesh
     grid_counts = NB.grid_count(stars,L,z)
     rho = (grid_counts/dz)*sigma 
     rho += np.absolute(chi)**2
