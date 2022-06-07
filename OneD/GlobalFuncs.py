@@ -451,7 +451,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
         F = ND.Husimi_phase(chi,z,dz,L,eta)
 
         #1. Calculate the Total Density
-        
+
         #Calculate Particle distirubtion on Mesh
         grid_counts = NB.grid_count(stars,L,z)
         rho = (grid_counts/dz)*sigma 
@@ -485,7 +485,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
                     ['lower left', 'lower right', 'far right']]
 
             fig, ax = plt.subplot_mosaic(layout, constrained_layout = True)
-            fig.set_size_inches(40,20)
+            fig.set_size_inches(20,10)
             plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
             
             ##############################################3
@@ -526,7 +526,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             #Plot the Phase Space distribution
             x_s = np.array([star.x for star in stars])
             v_s = np.array([star.v for star in stars])
-            ax['lower right'].plot(x_s,v_s,'.',label = "Phase Space Distribution")
+            ax['lower right'].scatter(x_s,v_s,s = 1,label = "Phase Space Distribution")
             ax['lower right'].set_ylim(-y11_max,y11_max)
             ax['lower right'].set_xlim(-L/2,L/2)
             ax['lower right'].legend()

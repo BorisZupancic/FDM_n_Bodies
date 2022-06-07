@@ -98,7 +98,13 @@ elif choice == 3:
         folder_name = f"FuzzyMass{m}_Images"
     elif sim_choice == 2:
         folder_name = f"FuzzyMass{m}_Snapshots"
+    
+    if os.path.exists("1D_Codes/Non-Dim/"+folder_name) == True:
+        for file in os.listdir(Directory+"/"+folder_name):
+            os.remove(Directory+"/"+folder_name+"/"+file)
+        os.rmdir(Directory+"/"+folder_name)    
     os.mkdir(Directory+"/"+folder_name)
+    
     GF.run_FDM_n_Bodies(sim_choice, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name)
 
     print("Calculation and Plotting Done. Now Saving Video...")
