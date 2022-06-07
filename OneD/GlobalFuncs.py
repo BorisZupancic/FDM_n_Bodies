@@ -543,7 +543,9 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             folder = Directory + "/" + folder_name
             filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
             plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
-            plt.close() #close plot so it doesn't overlap with the next one
+            plt.clf()
+            plt.cla()
+            plt.close(fig) #close plot so it doesn't overlap with the next one
 
         ############################################################
         #EVOLVE SYSTEM (After calculations on the Mesh)
