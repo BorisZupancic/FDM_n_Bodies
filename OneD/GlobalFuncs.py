@@ -410,7 +410,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     ##########################################################
     #PLOT AXIS LIMITS:
     #y0_max = np.max(phi)*1.5
-    y00_max = np.max(rho)*5
+    y00_max = np.max((grid_counts/dz)*sigma)*10
     y01_max = v_s*150
     y10_max = y00_max*sigma/mu
     y11_max = y01_max #v_s*100
