@@ -23,6 +23,21 @@ class star:
 
     def drift_star(self,dt):
         self.x += self.v*dt #DRIFT the position
+    
+    def reposition(self,L):
+        print(f"z = {star.x}")
+        modulo = (star.x // (L/2))
+        remainder = star.x % (L/2)
+        print(f"mod = {modulo}, remainder = {remainder}")
+        if modulo % 2 == 0: #check if modulo is even
+            star.x = remainder 
+        else: #if modulo is odd, further check:
+            if star.x > 0:
+                star.x = remainder-L/2
+            elif star.x < 0:
+                star.x = remainder+L/2
+        print(f"new z = {star.x}")
+        print(" ")
 
     def evolve_star_dynamics(self,g,dt): #g: acceleration, dt: time-step
         a = g(self.x)

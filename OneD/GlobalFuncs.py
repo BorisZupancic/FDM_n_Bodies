@@ -212,7 +212,8 @@ def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
         ax[0].set_xlabel("$z = x/L$")
         ax[0].legend()
         
-        max_F = 0.08
+        if i == 0:
+            max_F = np.max(F) #max_F = 0.08
         ax[1].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y1_max))
         ax[1].set_xlim([x_min,x_max])
         ax[1].set_ylim([-y1_max,y1_max]) #[v_min,v_max])
@@ -239,7 +240,12 @@ def run_NBody(z,L,dz,sigma,Num_stars, v_scale, L_scale, Directory):
     std = 0.1*L #standard deviation of 1
     z_0 = np.random.normal(b,std,Num_stars) #initial positions sampled from normal distribution
     stars = [NB.star(i,sigma,z_0[i],0) for i in range(len(z_0))] #create list of normally distributed stars, zero initial speed
-
+    
+    #reposition stars if they were generated outside the box
+    for star in stars:
+        if np.absolute(star.x) > L/2:
+                star.reposition(L)
+    
     folder_name = "SelfGrav_NBody_Images"
     os.chdir(Directory + "/" + folder_name)
 
@@ -390,7 +396,12 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     std = std*L 
     z_0 = np.random.normal(b,std,Num_stars) #initial positions sampled from normal distribution
     stars = [NB.star(i,sigma,z_0[i],0) for i in range(len(z_0))] #create list of normally distributed stars, zero initial speed
-
+    
+    #reposition stars if they were generated outside the box
+    for star in stars:
+        if np.absolute(star.x) > L/2:
+                star.reposition(L)
+    
     os.chdir(Directory + "/" + folder_name)
 
     #Calculate distirubtion on Mesh
@@ -409,7 +420,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     #y0_max = np.max(phi)*1.5
     y00_max = np.max(rho)*5
     y01_max = v_s*100
-    eta = 0.025*L #resolution for Husimi
+    eta = 0.025*L/mu #resolution for Husimi
 
     y10_max = y00_max
     y11_max = y01_max #v_s*100
@@ -420,7 +431,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     elif sim_choice == 2:
         tau_stop = tau_collapse*64
         collapse_index = int(np.floor(tau_collapse/dtau))
-        snapshot_indices = np.multiply(collapse_index,[0,1,2,4,8,16,32,64])
+        snapshot_indices = np.multiply(collapse_index-1,[0,1,2,4,8,16,32,64])
         print(snapshot_indices)
     time = 0
     i = 0 #counter, for saving images
@@ -500,7 +511,8 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             ax['upper left'].set_xlabel("$z = x/L$")
             ax['upper left'].legend()
             
-            max_F = 0.08
+            if i == 0:
+                max_F = np.max(F)/2
             ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y01_max))
             ax['upper right'].set_xlim(x_min,x_max)
             ax['upper right'].set_ylim(-y01_max,y01_max) #[v_min,v_max])
@@ -557,23 +569,11 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             #(for positions that drift outside of the box...
             # must apply periodicity)
             if np.absolute(star.x) > L/2:
-                print(f"z = {star.x}")
-                modulo = (star.x // (L/2))
-                remainder = star.x % (L/2)
-                print(f"mod = {modulo}, remainder = {remainder}")
-                if modulo % 2 == 0: #check if modulo is even
-                    star.x = remainder 
-                else: #if modulo is odd, further check:
-                    if star.x > 0:
-                        star.x = remainder-L/2
-                    elif star.x < 0:
-                        star.x = remainder+L/2
-                print(f"new z = {star.x}")
-                print(" ")
+                star.reposition(L)
 
         #3 Re-update potential and acceleration fields
         
-        #Calculate Particle distirubtion on Mesh
+        #Calculate Particle distribution on Mesh
         grid_counts = NB.grid_count(stars,L,z)
         rho = (grid_counts/dz)*sigma 
         #Add the density from the FDM
