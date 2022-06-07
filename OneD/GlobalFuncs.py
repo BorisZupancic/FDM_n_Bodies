@@ -401,29 +401,36 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     for star in stars:
         if np.absolute(star.x) > L/2:
                 star.reposition(L)
-    
-    os.chdir(Directory + "/" + folder_name)
 
     #Calculate distribution on Mesh
     grid_counts = NB.grid_count(stars,L,z)
     rho = (grid_counts/dz)*sigma 
     rho += np.absolute(chi)**2
-        
+    
+    ##########################################################
+    #PLOT AXIS LIMITS:
+    #y0_max = np.max(phi)*1.5
+    y00_max = np.max(rho)*5
+    y01_max = v_s*100
+    y10_max = y00_max
+    y11_max = y01_max #v_s*100
+    ###################################################
+    #PHASE SPACE STUFF
+    eta = 0.025*L/mu #resolution for Husimi
+    k = 2*np.pi*np.fft.fftfreq(len(z),dz)
+    #rescale wavenumber k to velocity v:
+    hbar = 1
+    v = k*(hbar/m)
+    x_min, x_max = np.min(z), np.max(z)
+    v_min, v_max = np.min(v), np.max(v)
+    ####################################################
+    #PRE-LOOP TIME-SCALE SETUP
     #m = mu*M_scale
     Rho_avg = M_s*np.mean(rho)/L_s
     print(Rho_avg)
     T_collapse = 1/(Rho_avg)**0.5
     tau_collapse = T_collapse/T_s
     print(f"(Non-dim) Collapse time: {tau_collapse}")
-    
-    #To fix plot axis limits:
-    #y0_max = np.max(phi)*1.5
-    y00_max = np.max(rho)*5
-    y01_max = v_s*100
-    eta = 0.025*L/mu #resolution for Husimi
-
-    y10_max = y00_max
-    y11_max = y01_max #v_s*100
 
     dtau = 0.01*tau_collapse
     if sim_choice == 1:
@@ -432,28 +439,19 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
         tau_stop = tau_collapse*64
         collapse_index = int(np.floor(tau_collapse/dtau))
         snapshot_indices = np.multiply(collapse_index-1,[0,1,2,4,8,16,32,64])
-        print(snapshot_indices)
+        print(f"Snapshots at i = {snapshot_indices}")
     time = 0
     i = 0 #counter, for saving images
+    os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     while time <= tau_stop:
-        ######################################
-
-        #PHASE SPACE CALCULATION:
-        k = 2*np.pi*np.fft.fftfreq(len(z),dz)
-        #rescale wavenumber k to velocity v:
-        hbar = 1
-        v = k*(hbar/m)
-
-        x_min, x_max = np.min(z), np.max(z)
-        v_min, v_max = np.min(v), np.max(v)
-        
-        F = ND.Husimi_phase(chi,z,dz,L,eta)
-
         #################################################
         #CALCULATION OF PHYSICAL QUANTITIES
         #################################################
-        #1. Calculate the Total Density
+        #PHASE SPACE CALCULATION:
+        F = ND.Husimi_phase(chi,z,dz,L,eta)
 
+        #1. Calculate the Total Density
+        
         #Calculate Particle distirubtion on Mesh
         grid_counts = NB.grid_count(stars,L,z)
         rho = (grid_counts/dz)*sigma 
