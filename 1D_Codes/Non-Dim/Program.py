@@ -18,7 +18,7 @@ import OneD.GlobalFuncs as GF
 #Set up Directory for saving files/images/videos
 # Will not rename this again
 from pathlib import Path
-Directory = os.getcwd()#"/1D codes/Non-Dim" #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
+Directory = os.getcwd()+"/1D codes/Non-Dim" #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 print(Directory)
 ############################################
 # SET UP: shared by Wave and N-Body scenarios
