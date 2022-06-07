@@ -411,8 +411,8 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     #PLOT AXIS LIMITS:
     #y0_max = np.max(phi)*1.5
     y00_max = np.max(rho)*5
-    y01_max = v_s*100
-    y10_max = y00_max
+    y01_max = v_s*150
+    y10_max = y00_max*sigma/mu
     y11_max = y01_max #v_s*100
     ###################################################
     #PHASE SPACE STUFF
@@ -497,17 +497,18 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             ax['far right'].plot(z, body_accel, label = "Particle Contribution")
             ax['far right'].plot(z, fourier_gradient(fourier_potentialV2(np.abs(chi)**2,L),L), label = "FDM Contribution")
             ax['far right'].set_ylim(-y_lim_max,y_lim_max)
-            ax['far right'].set_title("Acceleration contributions")
+            ax['far right'].set_title("Acceleration contributions",fontsize = 15)
             ax['far right'].legend(fontsize = 20)
             
             # THE FDM
             #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
             #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
-            ax['upper left'].plot(z,phi,label = "Potential [Fourier perturbation]")
+            ax['upper left'].plot(z,phi,label = "$\\Phi_{FDM}$ [Fourier perturbation]")
             ax['upper left'].plot(z,np.abs(chi)**2,label = "$\\rho_{FDM} = \\chi \\chi^*$")
             ax['upper left'].set_ylim([-y00_max, y00_max] )
             ax['upper left'].set_xlabel("$z = x/L$")
-            ax['upper left'].legend()
+            ax['upper left'].legend(fontsize = 15)
+            ax['upper left'].set_title("Non-Dimensional Densities and Potentials",fontsize = 15)
             
             if i == 0:
                 max_F = np.max(F)/2
@@ -515,21 +516,23 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             ax['upper right'].set_xlim(x_min,x_max)
             ax['upper right'].set_ylim(-y01_max,y01_max) #[v_min,v_max])
             ax['upper right'].set_xlabel("$z = x/L$")
-
+            ax['upper right'].set_title("Phase Space Distributions", fontsize = 15)
+            
             ##############################################3
             # THE PARTICLES
-            ax['lower left'].plot(z,phi,label = "Potential")
-            ax['lower left'].plot(z,(grid_counts/dz)*sigma,label = "Number density")
+            ax['lower left'].plot(z,phi,label = "$\\Phi_{Particles}$ [Fourier perturbation]")
+            ax['lower left'].plot(z,(grid_counts/dz)*sigma,label = "$\\rho_{Particles}$")
             ax['lower left'].set_xlim(-L/2,L/2)
             ax['lower left'].set_ylim(-y10_max,y10_max)
-            
+            ax['lower left'].legend(fontsize = 15)
+
             #Plot the Phase Space distribution
             x_s = np.array([star.x for star in stars])
             v_s = np.array([star.v for star in stars])
-            ax['lower right'].scatter(x_s,v_s,s = 1,label = "Phase Space Distribution")
+            ax['lower right'].scatter(x_s,v_s,s = 1,label = "Particles")
             ax['lower right'].set_ylim(-y11_max,y11_max)
             ax['lower right'].set_xlim(-L/2,L/2)
-            ax['lower right'].legend()
+            ax['lower right'].legend(fontsize = 15)
 
             #ADDITIONAL:
             #PLOT CENTER OF MASS
