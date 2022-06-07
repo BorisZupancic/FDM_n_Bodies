@@ -18,7 +18,7 @@ import OneD.GlobalFuncs as GF
 #Set up Directory for saving files/images/videos
 # Will not rename this again
 from pathlib import Path
-Directory = os.getcwd()+"/1D codes/Non-Dim" #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
+Directory = os.getcwd()+"/1D_Codes/Non-Dim" #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 print(Directory)
 ############################################
 # SET UP: shared by Wave and N-Body scenarios
@@ -83,7 +83,8 @@ elif choice == 2:
 
 elif choice == 3:
     mu, Num_bosons, r, sigma, Num_stars = GF.Startup_Initial_Parameters(choice, hbar, L_s,v_s, M_s)
-    
+    m = mu*M_s
+
     ################
     #PROMPT FOR FULL SIMULATION OR SNAPSHOTS
     print("")
@@ -94,9 +95,10 @@ elif choice == 3:
 
     print("Calculating and Plotting...")
     if sim_choice == 1: 
-        folder_name = "FDM_n_Body_Images"
+        folder_name = f"FuzzyMass{m}_Images"
     elif sim_choice == 2:
-        folder_name = "FDM_n_Body_Snapshots"
+        folder_name = f"FuzzyMass{m}_Snapshots"
+    os.mkdir(Directory+"/"+folder_name)
     GF.run_FDM_n_Bodies(sim_choice, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name)
 
     print("Calculation and Plotting Done. Now Saving Video...")
@@ -104,15 +106,15 @@ elif choice == 3:
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     
     if sim_choice == 1:
-        video_name = "FDM_n_Body.mp4"
+        video_name = f"FuzzyMass{m}_Video.mp4"
         fps = 10 #1/dtau
     elif sim_choice == 2:
-        m = mu*M_s
-        video_name = f"FDM_n_Body_Snapshots_Mass{m}.mp4"
+        
+        video_name = f"FuzzyMass{m}.mp4"
         fps = 1
     GF.animate(fourcc,Directory,folder_name,video_name,fps)
     print("Video Saved.")
-    if sim_choice == 1:
-        subprocess.call(["xdg-open", "FDM_n_Body.mp4"])
-    #elif sim_choice == 2:
-        #subprocess.call(["xdg-open", "FDM_n_Body_Snapshots.mp4"])
+    # if sim_choice == 1:
+    #     subprocess.call(["xdg-open", "FDM_n_Body.mp4"])
+    # elif sim_choice == 2:
+    #     subprocess.call(["xdg-open", "FDM_n_Body_Snapshots.mp4"])
