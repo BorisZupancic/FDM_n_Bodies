@@ -107,11 +107,12 @@ elif choice == 3:
         video_name = "FDM_n_Body.mp4"
         fps = 10 #1/dtau
     elif sim_choice == 2:
-        video_name = "FDM_n_Body_Snapshots.mp4"
+        m = mu*M_s
+        video_name = f"FDM_n_Body_Snapshots_Mass{m}.mp4"
         fps = 1
     GF.animate(fourcc,Directory,folder_name,video_name,fps)
     print("Video Saved.")
     if sim_choice == 1:
         subprocess.call(["xdg-open", "FDM_n_Body.mp4"])
-    elif sim_choice == 2:
-        subprocess.call(["xdg-open", "FDM_n_Body_Snapshots.mp4"])
+    #elif sim_choice == 2:
+        #subprocess.call(["xdg-open", "FDM_n_Body_Snapshots.mp4"])

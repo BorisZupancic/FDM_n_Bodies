@@ -190,7 +190,6 @@ def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
 
         #PHASE SPACE CALCULATION:
         k = 2*np.pi*np.fft.fftfreq(len(z),dz)
-        k = k/L #non-dimensionalize
         #rescale wavenumber k to velocity v:
         hbar = 1
         v = k*(hbar/m)
@@ -408,19 +407,20 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     
     #To fix plot axis limits:
     #y0_max = np.max(phi)*1.5
-    y00_max = np.max(rho)*10
+    y00_max = np.max(rho)*5
     y01_max = v_s*100
     eta = 0.025*L #resolution for Husimi
 
-    y11_max = v_s*50
+    y10_max = y00_max
+    y11_max = y01_max #v_s*100
 
     dtau = 0.01*tau_collapse
     if sim_choice == 1:
         tau_stop = tau_collapse*2 #t_stop/T
     elif sim_choice == 2:
-        tau_stop = tau_collapse*4
+        tau_stop = tau_collapse*64
         collapse_index = int(np.floor(tau_collapse/dtau))
-        snapshot_indices = [0,collapse_index,2*collapse_index,4*collapse_index]
+        snapshot_indices = np.multiply(collapse_index,[0,1,2,4,8,16,32,64])
         print(snapshot_indices)
     time = 0
     i = 0 #counter, for saving images
@@ -429,7 +429,6 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
 
         #PHASE SPACE CALCULATION:
         k = 2*np.pi*np.fft.fftfreq(len(z),dz)
-        k = k/L #non-dimensionalize
         #rescale wavenumber k to velocity v:
         hbar = 1
         v = k*(hbar/m)
@@ -462,7 +461,17 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
         # Plot everytime if sim_choice == 1
         # Plot only specific time steps if sim_choice == 2
         #################################################
+        
         if sim_choice == 1:
+            PLOT = True #always plot
+        elif sim_choice == 2:
+            #check if time-step is correct one.
+            if i in snapshot_indices:
+                PLOT = True
+            else:
+                PLOT = False
+                
+        if PLOT == True:
             layout = [['upper left', 'upper right', 'far right'],
                     ['lower left', 'lower right', 'far right']]
 
@@ -472,15 +481,19 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             
             ##############################################3
             #ACCELERATIONS
-            body_accel = -NB.acceleration(fourier_potential((grid_counts/dz)*sigma,L),L)
+            body_accel = -NB.acceleration(fourier_potentialV2((grid_counts/dz)*sigma,L),L)
+            if i == 0: #want to set a limit on the acceleration graph
+                a = np.abs([np.max(body_accel),np.min(body_accel)])
+                y_lim_max = np.max(a)*1.5
             ax['far right'].plot(z, body_accel, label = "Particle Contribution")
             ax['far right'].plot(z, fourier_gradient(fourier_potentialV2(np.abs(chi)**2,L),L), label = "FDM Contribution")
-            ax['far right'].set_ylim(-2000,2000)
+            ax['far right'].set_ylim(-y_lim_max,y_lim_max)
             ax['far right'].set_title("Acceleration contributions")
-            ax['far right'].legend()
+            ax['far right'].legend(fontsize = 20)
+            
             # THE FDM
-            ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
-            ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
+            #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
+            #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
             ax['upper left'].plot(z,phi,label = "Potential [Fourier perturbation]")
             ax['upper left'].plot(z,np.abs(chi)**2,label = "$\\rho_{FDM} = \\chi \\chi^*$")
             ax['upper left'].set_ylim([-y00_max, y00_max] )
@@ -497,9 +510,8 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             # THE PARTICLES
             ax['lower left'].plot(z,phi,label = "Potential")
             ax['lower left'].plot(z,(grid_counts/dz)*sigma,label = "Number density")
-            ax['lower left'].plot(z,a_grid)
             ax['lower left'].set_xlim(-L/2,L/2)
-            ax['lower left'].set_ylim(-0.1*Num_stars/dz,0.1*Num_stars/dz)
+            ax['lower left'].set_ylim(-y10_max,y10_max)
             
             #Plot the Phase Space distribution
             x_s = np.array([star.x for star in stars])
@@ -522,60 +534,6 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
             plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
             plt.close() #close plot so it doesn't overlap with the next one
-        
-        elif sim_choice == 2:
-            #check if time-step is correct one.
-            if i in snapshot_indices:
-                fig, ax = plt.subplots(2, 2, squeeze = False)
-                fig.set_size_inches(40,20)
-                plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
-                
-                ##############################################3
-                # THE FDM
-                ax[0][0].plot(z,chi.real, label = "Re[$\\chi$]")
-                ax[0][0].plot(z,chi.imag, label = "Im[$\\chi$]")
-                ax[0][0].plot(z,phi,label = "Potential [Fourier perturbation]")
-                ax[0][0].plot(z,np.abs(chi)**2,label = "$\\rho_{FDM} = \\chi \\chi^*$")
-                ax[0][0].set_ylim([-y00_max, y00_max] )
-                ax[0][0].set_xlabel("$z = x/L$")
-                ax[0][0].legend()
-                
-                max_F = 0.08
-                ax[0][1].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y01_max))
-                ax[0][1].set_xlim(x_min,x_max)
-                ax[0][1].set_ylim(-y01_max,y01_max) #[v_min,v_max])
-                ax[0][1].set_xlabel("$z = x/L$")
-
-                ##############################################3
-                # THE PARTICLES
-                ax[1][0].plot(z,phi,label = "Potential")
-                ax[1][0].plot(z,(grid_counts/dz)*sigma,label = "Number density")
-                ax[1][0].plot(z,a_grid)
-                ax[1][0].set_xlim(-L/2,L/2)
-                ax[1][0].set_ylim(-0.1*Num_stars/dz,0.1*Num_stars/dz)
-                
-                #Plot the Phase Space distribution
-                x_s = np.array([star.x for star in stars])
-                v_s = np.array([star.v for star in stars])
-                ax[1][1].plot(x_s,v_s,'.',label = "Phase Space Distribution")
-                ax[1][1].set_ylim(-y11_max,y11_max)
-                ax[1][1].set_xlim(-L/2,L/2)
-                ax[1][1].legend()
-
-                #ADDITIONAL:
-                #PLOT CENTER OF MASS
-                centroid_z = 0
-                for j in range(len(grid_counts)):
-                    centroid_z += z[j]*grid_counts[j]
-                centroid_z = centroid_z / Num_stars
-                ax[1][1].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
-                
-                #now save it as a .jpg file:
-                folder = Directory + "/" + folder_name
-                filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
-                plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
-                plt.close() #close plot so it doesn't overlap with the next one
-            
 
         ############################################################
         #EVOLVE SYSTEM (After calculations on the Mesh)
