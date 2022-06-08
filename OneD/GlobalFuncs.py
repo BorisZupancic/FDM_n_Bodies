@@ -101,7 +101,9 @@ def fourier_gradient(phi,length):
     
     #3. IFFT back to get Potential
     grad = np.fft.irfft(grad_n,n) #use Phi_n as Fourier Coefficients
-    #grad = np.real(grad)
+    
+    grad = -grad #for some reason there's a negative sign error
+    
     return grad
 
 #Determine the potential from poisson's equation using fourier method
@@ -286,7 +288,7 @@ def run_NBody(z,L,dz,sigma,Num_stars, v_scale, L_scale, Directory):
         phi = fourier_potentialV2(rho,L)
         
         #Calculate Acceleration Field on Mesh:
-        a_grid = -NB.acceleration(phi,L) 
+        a_grid = NB.acceleration(phi,L) 
         
         #################################################
         # PLOTTING
@@ -362,7 +364,7 @@ def run_NBody(z,L,dz,sigma,Num_stars, v_scale, L_scale, Directory):
         grid_counts = NB.grid_count(stars,L,z)
         rho = (grid_counts/dz)*sigma 
         phi = fourier_potentialV2(rho,L)
-        a_grid = -NB.acceleration(phi,L) 
+        a_grid = NB.acceleration(phi,L) 
         g = NB.accel_funct(a_grid,L,dz)
         for star in stars:
             star.kick_star(g,dtau/2)
@@ -488,7 +490,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
         phi = fourier_potentialV2(rho,L)
 
         #3. Calculate Acceleration Field on Mesh:
-        a_grid = -NB.acceleration(phi,L) 
+        a_grid = NB.acceleration(phi,L) 
         
         #################################################
         # PLOTTING
@@ -515,14 +517,14 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             
             ##############################################3
             #ACCELERATIONS
-            body_accel = -NB.acceleration(fourier_potentialV2((grid_counts/dz)*sigma,L),L)
+            body_force = -fourier_gradient(fourier_potentialV2((grid_counts/dz)*sigma,L),L)
             if i == 0: #want to set a limit on the acceleration graph
-                a = np.abs([np.max(body_accel),np.min(body_accel)])
+                a = np.abs([np.max(body_force),np.min(body_force)])
                 y_lim_max = np.max(a)*2
-            ax['far right'].plot(z, body_accel, label = "Particle Contribution")
-            ax['far right'].plot(z, fourier_gradient(fourier_potentialV2(np.abs(chi)**2,L),L), label = "FDM Contribution")
+            ax['far right'].plot(z, body_force, label = "Particle Contribution")
+            ax['far right'].plot(z, -fourier_gradient(fourier_potentialV2(np.abs(chi)**2,L),L), label = "FDM Contribution")
             ax['far right'].set_ylim(-y_lim_max,y_lim_max)
-            ax['far right'].set_title("Acceleration contributions",fontsize = 15)
+            ax['far right'].set_title("Force contributions",fontsize = 15)
             ax['far right'].legend(fontsize = 20)
             
             # THE FDM
@@ -609,7 +611,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
         #Calculate potential 
         phi = fourier_potentialV2(rho,L)
         #Calculate Acceleration Field on Mesh:
-        a_grid = -NB.acceleration(phi,L) 
+        a_grid = NB.acceleration(phi,L) 
 
         #4. KICK in updated potential
 
@@ -617,7 +619,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
         chi = ND.kick(chi,phi/2,r,dtau/2)
 
         #PARTICLES
-        a_grid = -NB.acceleration(phi,L) 
+        a_grid = NB.acceleration(phi,L) 
         g = NB.accel_funct(a_grid,L,dz)
         for star in stars:
             star.kick_star(g,dtau/2)

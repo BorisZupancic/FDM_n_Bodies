@@ -118,8 +118,7 @@ elif choice == 3:
         video_name = f"FuzzyMass{m}_Video.mp4"
         fps = 10 #1/dtau
     elif sim_choice == 2:
-        
-        video_name = f"FuzzyMass{m}.mp4"
+        video_name = f"FuzzyMass{m}_Snapshots.mp4"
         fps = 1
     GF.animate(fourcc,Directory,folder_name,video_name,fps)
     print("Video Saved.")
