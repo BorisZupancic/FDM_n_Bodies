@@ -11,7 +11,7 @@ from matplotlib.colors import LogNorm, Normalize
 
 import psutil
 
-def checkMemory(mem_limit = 95):
+def checkMemory(mem_limit):
     #process = psutil.Process(os.getpid())
     memoryUsage = psutil.virtual_memory().percent
     #print(f"Memory Usage = {memoryUsage} %")
@@ -463,7 +463,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     i = 0 #counter, for saving images
     os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     while time <= tau_stop:
-        checkMemory(mem_limit = 50)
+        checkMemory(mem_limit = 95)
         #################################################
         #CALCULATION OF PHYSICAL QUANTITIES
         #################################################
