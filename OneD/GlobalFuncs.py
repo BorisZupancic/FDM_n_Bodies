@@ -465,7 +465,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     i = 0 #counter, for saving images
     os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     while time <= tau_stop:
-        overflow = checkMemory(mem_limit = 75)
+        overflow = checkMemory(mem_limit = 95)
         if overflow == True:
             break
         #################################################

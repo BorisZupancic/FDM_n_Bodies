@@ -1,7 +1,8 @@
 cd "/home/boris/Documents/Research/Coding"
 
 num_particles='10000'
-masses=('2' '0.05' '0.01')
+#masses=('2' '1' '0.5' '0.1' '0.05' '0.01')
+masses=('1' '0.5' '0.1')
 simulation_choice=('1' '2')
 for m in "${masses[@]}"; do
     # printf $m
