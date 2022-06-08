@@ -1,4 +1,4 @@
-from cProfile import label
+#from cProfile import label
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -411,12 +411,12 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     #PLOT AXIS LIMITS:
     #y0_max = np.max(phi)*1.5
     y00_max = np.max((grid_counts/dz)*sigma)*10
-    y01_max = v_s*150
-    y10_max = y00_max*sigma/mu
+    y01_max = v_s*200
+    y10_max = np.max(np.absolute(chi)**2)*10
     y11_max = y01_max #v_s*100
     ###################################################
     #PHASE SPACE STUFF
-    eta = 0.025*L/mu #resolution for Husimi
+    eta = 0.05*L*r #resolution for Husimi
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     #rescale wavenumber k to velocity v:
     hbar = 1
@@ -493,7 +493,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             body_accel = -NB.acceleration(fourier_potentialV2((grid_counts/dz)*sigma,L),L)
             if i == 0: #want to set a limit on the acceleration graph
                 a = np.abs([np.max(body_accel),np.min(body_accel)])
-                y_lim_max = np.max(a)*1.5
+                y_lim_max = np.max(a)*2
             ax['far right'].plot(z, body_accel, label = "Particle Contribution")
             ax['far right'].plot(z, fourier_gradient(fourier_potentialV2(np.abs(chi)**2,L),L), label = "FDM Contribution")
             ax['far right'].set_ylim(-y_lim_max,y_lim_max)
@@ -522,7 +522,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
             # THE PARTICLES
             ax['lower left'].plot(z,phi,label = "$\\Phi_{Particles}$ [Fourier perturbation]")
             ax['lower left'].plot(z,(grid_counts/dz)*sigma,label = "$\\rho_{Particles}$")
-            ax['lower left'].set_xlim(-L/2,L/2)
+            #ax['lower left'].set_xlim(-L/2,L/2)
             ax['lower left'].set_ylim(-y10_max,y10_max)
             ax['lower left'].legend(fontsize = 15)
 
