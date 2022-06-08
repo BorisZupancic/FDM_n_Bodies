@@ -18,7 +18,8 @@ import OneD.GlobalFuncs as GF
 #Set up Directory for saving files/images/videos
 # Will not rename this again
 from pathlib import Path
-Directory = os.getcwd()+"/1D_Codes/Non-Dim/Program" #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
+dirExtension = "1D_Codes/Non-Dim/Program"
+Directory = os.getcwd()+"/"+dirExtension #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 print(Directory)
 
 ###########################
@@ -118,7 +119,8 @@ elif choice == 3:
     elif sim_choice == 2:
         folder_name = f"FuzzyMass{m}_Snapshots"
     
-    if os.path.exists("1D_Codes/Non-Dim/"+folder_name) == True:
+    print(os.path.exists(dirExtension+"/"+folder_name))
+    if os.path.exists(dirExtension+"/"+folder_name) == True:
         for file in os.listdir(Directory+"/"+folder_name):
             os.remove(Directory+"/"+folder_name+"/"+file)
         os.rmdir(Directory+"/"+folder_name)    

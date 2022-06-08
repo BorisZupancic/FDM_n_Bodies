@@ -17,6 +17,6 @@ sim choice : %i
 Boson std = %f
 Particle std = %f \n \n' "2" "3" "$m" "$num_particles" "1" "$num_particles" "$sim" "0.1" "0.1"
 
-        printf '%f\n%i\n%f\n%i\n%f\n%i\n%i\n%f\n%f' "2" "3" "$m" "10000" "1" "10000" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Program.py 
+        printf '%f\n%i\n%f\n%i\n%f\n%i\n%i\n%f\n%f' "2" "3" "$m" "10000" "1" "10000" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Program/Program.py 
     done
 done
