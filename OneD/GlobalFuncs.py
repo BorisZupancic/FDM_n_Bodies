@@ -15,9 +15,11 @@ def checkMemory(mem_limit):
     #process = psutil.Process(os.getpid())
     memoryUsage = psutil.virtual_memory().percent
     #print(f"Memory Usage = {memoryUsage} %")
+    overflow = False
     if memoryUsage > mem_limit:
         print(f"Memory usage exceeded budget of {mem_limit} percent.")
-        os._exit(0)
+        overflow = True
+    return overflow
 
 def Startup_Choice():
     print("")
@@ -463,7 +465,9 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     i = 0 #counter, for saving images
     os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     while time <= tau_stop:
-        checkMemory(mem_limit = 95)
+        overflow = checkMemory(mem_limit = 75)
+        if overflow == True:
+            break
         #################################################
         #CALCULATION OF PHYSICAL QUANTITIES
         #################################################
