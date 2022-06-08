@@ -6,7 +6,7 @@ import os
 import subprocess
 import cv2 
 from PIL import Image 
-    
+
 #Import My Library
 My_Package_PATH = "/home/boris/Documents/Research/Coding"
 import sys
@@ -20,6 +20,25 @@ import OneD.GlobalFuncs as GF
 from pathlib import Path
 Directory = os.getcwd()+"/1D_Codes/Non-Dim" #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 print(Directory)
+
+###########################
+# import psutil
+# import threading
+# #quit program if memory consumption too high
+# mem_limit = 4
+# def checkMemory():
+#     while True:
+#         process = psutil.Process(os.getpid())
+#         memoryUsage = process.memory_percent()
+#         print(memoryUsage)
+#         if memoryUsage > mem_limit:
+#             print(f"Memory budget exceeded {mem_limit} percent.")
+#             break
+#     #quit()
+#     os._exit(0)
+# threading.Thread(name="Memory Regulator", target=checkMemory).start()
+
+
 ############################################
 # SET UP: shared by Wave and N-Body scenarios
 ############################################

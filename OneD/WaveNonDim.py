@@ -96,33 +96,35 @@ def time_evolveV2(chi,phi,r,dz,dtau,m,L):
 ###################################################################################
 # FOR PHASE-SPACE DISTRIBUTION STUFF
 ###################################################################################
-def Husimi_phase(psi,x,dx,L,eta):
-    N = len(psi)
+def Husimi_phase(chi,z,dz,L,eta):
+    N = len(chi)
     #eta = 0.25#/(2*np.pi*N)**0.5
-    A = 1#/(2*np.pi*hbar)**0.5 
-    B = 1#/(np.pi*eta**2)**0.25 
+    #A = 1#/(2*np.pi*hbar)**0.5 
+    #B = 1#/(np.pi*eta**2)**0.25 
 
-    k = 2*np.pi*np.fft.fftfreq(len(x),dx)
-    k = k/L #non-dimensionalize
+    k = 2*np.pi*np.fft.fftfreq(len(z),dz)
+    #k = k/L #non-dimensionalize
     dk = k[1]-k[0]
+    print(f"k[N//2-1] = {k[N//2 -1]}, k[N//2] = {k[N//2]}")
 
     f_s = np.ndarray((N,N), dtype = complex)
-    for i in range(len(x)):
-        x_0 = x[i]
+    for i in range(len(z)):
+        z_0 = z[i]
 
-        g = np.exp(-(x_0-x)**2 / (2*eta**2))
-        f = np.fft.ifft(np.multiply(psi,g))
+        g = np.exp(-(z_0-z)**2 / (2*eta**2))
+        f = np.fft.ifft(np.multiply(chi,g))
         #f = np.multiply(np.exp(1j*k*x_0/2),f) #A*B*f
 
+        
         f = np.append(f[N//2:N],f[0:N//2])
         
         f_s[i] = f
 
     F_s = np.absolute(f_s)**2 
-    F_s = np.transpose(F_s)#/400
+    F_s = np.transpose(F_s)
 
     #normalize it:
-    Norm_const = np.sum(dx*dk*F_s)
+    Norm_const = np.sum(dz*dk*F_s)
     F_s = F_s/Norm_const
    
     return F_s

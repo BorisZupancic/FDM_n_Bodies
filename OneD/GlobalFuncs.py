@@ -9,6 +9,15 @@ import OneD.NBody as NB
 import matplotlib.cm as cm
 from matplotlib.colors import LogNorm, Normalize
 
+import psutil
+
+def checkMemory(mem_limit):
+    process = psutil.Process(os.getpid())
+    memoryUsage = process.memory_percent()
+    print(f"Memory Usage = {memoryUsage} %")
+    if memoryUsage > mem_limit:
+        print(f"Memory usage exceeded budget of {mem_limit} percent.")
+        os._exit(0)
 
 def Startup_Choice():
     print("")
@@ -423,6 +432,16 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     v = k*(hbar/m)
     x_min, x_max = np.min(z), np.max(z)
     v_min, v_max = np.min(v), np.max(v)
+    print(f"v_min = {v_min}, v_max = {v_max}")
+    #v_max = np.max(np.abs([np.min(v),np.max(v)]))
+    #v_min = -v_max
+    #print(f"v_min = {v_min}, v_max = {v_max}")
+    if v_max >= np.abs(v_min):
+        v_min = -v_max 
+    elif np.abs(v_min) > v_max:
+        v_max = -v_min
+    print(f"v_min = {v_min}, v_max = {v_max}")
+    
     ####################################################
     #PRE-LOOP TIME-SCALE SETUP
     #m = mu*M_scale
@@ -444,12 +463,14 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     i = 0 #counter, for saving images
     os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     while time <= tau_stop:
+        checkMemory(mem_limit = 50)
         #################################################
         #CALCULATION OF PHYSICAL QUANTITIES
         #################################################
         #PHASE SPACE CALCULATION:
         F = ND.Husimi_phase(chi,z,dz,L,eta)
 
+        #POSITION SPACE CALCULATIONS:
         #1. Calculate the Total Density
 
         #Calculate Particle distirubtion on Mesh
