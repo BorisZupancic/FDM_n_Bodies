@@ -101,7 +101,7 @@ elif choice == 3:
     elif sim_choice == 2:
         folder_name = f"FuzzyMass{m}_Snapshots"
     
-    print(os.path.exists(dirExtension+"/"+folder_name))
+    #print(os.path.exists(dirExtension+"/"+folder_name))
     if os.path.exists(dirExtension+"/"+folder_name) == True:
         for file in os.listdir(Directory+"/"+folder_name):
             os.remove(Directory+"/"+folder_name+"/"+file)

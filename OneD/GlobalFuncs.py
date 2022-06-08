@@ -427,7 +427,7 @@ def run_FDM_n_Bodies(sim_choice, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, 
     y11_max = y01_max #v_s*100
     ###################################################
     #PHASE SPACE STUFF
-    eta = 0.05*L*r #resolution for Husimi
+    eta = 0.05*L*r**0.5 #resolution for Husimi
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     #rescale wavenumber k to velocity v:
     hbar = 1
