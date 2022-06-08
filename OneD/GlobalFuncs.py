@@ -11,9 +11,9 @@ from matplotlib.colors import LogNorm, Normalize
 
 import psutil
 
-def checkMemory(mem_limit):
-    process = psutil.Process(os.getpid())
-    memoryUsage = process.memory_percent()
+def checkMemory(mem_limit = 50):
+    #process = psutil.Process(os.getpid())
+    memoryUsage = psutil.virtual_memory().percent
     print(f"Memory Usage = {memoryUsage} %")
     if memoryUsage > mem_limit:
         print(f"Memory usage exceeded budget of {mem_limit} percent.")
