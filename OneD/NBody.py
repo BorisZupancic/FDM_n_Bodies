@@ -25,18 +25,18 @@ class star:
         self.x += self.v*dt #DRIFT the position
     
     def reposition(self,L):
-        print(f"z = {star.x}")
-        modulo = (star.x // (L/2))
-        remainder = star.x % (L/2)
+        print(f"z = {self.x}")
+        modulo = (self.x // (L/2))
+        remainder = self.x % (L/2)
         print(f"mod = {modulo}, remainder = {remainder}")
         if modulo % 2 == 0: #check if modulo is even
-            star.x = remainder 
+            self.x = remainder 
         else: #if modulo is odd, further check:
-            if star.x > 0:
-                star.x = remainder-L/2
-            elif star.x < 0:
-                star.x = remainder+L/2
-        print(f"new z = {star.x}")
+            if self.x > 0:
+                self.x = remainder-L/2
+            elif self.x < 0:
+                self.x = remainder+L/2
+        print(f"new z = {self.x}")
         print(" ")
 
     def evolve_star_dynamics(self,g,dt): #g: acceleration, dt: time-step

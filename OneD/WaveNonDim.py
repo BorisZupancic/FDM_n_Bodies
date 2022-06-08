@@ -105,7 +105,7 @@ def Husimi_phase(chi,z,dz,L,eta):
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     #k = k/L #non-dimensionalize
     dk = k[1]-k[0]
-    print(f"k[N//2-1] = {k[N//2 -1]}, k[N//2] = {k[N//2]}")
+    #print(f"k[N//2-1] = {k[N//2 -1]}, k[N//2] = {k[N//2]}")
 
     f_s = np.ndarray((N,N), dtype = complex)
     for i in range(len(z)):
