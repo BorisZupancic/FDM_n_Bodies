@@ -101,15 +101,15 @@ elif choice == 3:
     if sim_choice2 == 1: 
         folder_name = f"FuzzyMass{m}_Images"
         if Num_bosons == 0:
-            folder_name = f"OnlyFuzzyMass{m}_Images"
-        elif Num_stars == 0:
             folder_name = "ParticlesOnly_Images"
+        elif Num_stars == 0:
+            folder_name = f"OnlyFuzzyMass{m}_Images"
     elif sim_choice2 == 2:
         folder_name = f"FuzzyMass{m}_Snapshots"
         if Num_bosons == 0:
-            folder_name = f"OnlyFuzzyMass{m}_Snapshots"
-        elif Num_stars == 0:
             folder_name = "ParticlesOnly_Snapshots"
+        elif Num_stars == 0:
+            folder_name = f"OnlyFuzzyMass{m}_Snapshots"
 
     #print(os.path.exists(dirExtension+"/"+folder_name))
     if os.path.exists(dirExtension+"/"+folder_name) == True:

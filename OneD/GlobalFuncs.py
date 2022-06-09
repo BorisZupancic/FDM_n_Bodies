@@ -398,14 +398,14 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
     chi = psi*L_s**(3/2)
 
     #Calculate initial Density perturbation (non-dimensionalized and reduced)
-    rho = np.absolute(chi)**2 #just norm-squared of wavefunction
+    rho_FDM = np.absolute(chi)**2 #just norm-squared of wavefunction
     
     #Calculate initial (non-dim) potential
-    phi = fourier_potentialV2(rho,L) 
+    phi_FDM = fourier_potentialV2(rho_FDM,L) 
 
     #Check how it's normalized:
-    print(f"|chi|^2 = {np.sum(dz*np.absolute(chi)**2)}")
-    print(f"Numerically calculated: |psi|^2 = {np.sum(dz*np.absolute(psi)**2)}")
+    print(f"integral of |chi|^2 : {np.sum(dz*rho_FDM)}")
+    print(f"Numerically calculated integral of |psi|^2 : {np.sum(dz*np.absolute(psi)**2)}")
 
     m = mu*M_s
 
@@ -426,19 +426,25 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
 
     #Calculate distribution on Mesh
     grid_counts = NB.grid_count(stars,L,z)
-    rho = (grid_counts/dz)*sigma 
-    rho += np.absolute(chi)**2
+    rho_part = (grid_counts/dz)*sigma 
+    
+    #Calculate total density
+    rho = rho_FDM + rho_part
     
     ##########################################################
     #PLOT AXIS LIMITS:
     #y0_max = np.max(phi)*1.5
-    y00_max = np.max((grid_counts/dz)*sigma)*10
-    y01_max = v_s*200
-    if sim_choice1 == 1 or sim_choice1 == 3:
-        y10_max = np.max(np.absolute(chi)**2)*10
-    else:
+    y00_max = np.max(rho_FDM)*10
+    y10_max = np.max(rho_part)*10
+
+    if Num_stars == 0:
         y10_max = y00_max
+    elif Num_bosons == 0:
+        y00_max = y10_max
+    
+    y01_max = v_s*200
     y11_max = y01_max #v_s*100
+
     ###################################################
     #PHASE SPACE STUFF
     eta = 0.05*L*r**0.5 #resolution for Husimi
@@ -488,11 +494,13 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         #################################################
         #POSITION SPACE CALCULATIONS:
         #1. Calculate Total Density
-        #Calculate Particle distirubtion on Mesh
+        #Calculate Particle distribution on Mesh
         grid_counts = NB.grid_count(stars,L,z)
-        rho = (grid_counts/dz)*sigma 
+        rho_part = (grid_counts/dz)*sigma 
+
         #Then add the density from the FDM
-        rho += np.absolute(chi)**2
+        rho_FDM = np.absolute(chi)**2
+        rho = rho_FDM + rho_part 
 
         #2. Calculate potential 
         phi = fourier_potentialV2(rho,L)
@@ -525,20 +533,22 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
             
             ##############################################3
             #ACCELERATIONS
-            body_force = -fourier_gradient(fourier_potentialV2((grid_counts/dz)*sigma,L),L)
+            Part_force = -fourier_gradient(fourier_potentialV2(rho_part,L),L)
+            FDM_force = -fourier_gradient(fourier_potentialV2(rho_FDM,L),L)
             if i == 0: #want to set a limit on the acceleration graph
-                a = np.abs([np.max(body_force),np.min(body_force)])
-                y_lim_max = np.max(a)*2
-            ax['far right'].plot(z, body_force, label = "Particle Contribution")
-            ax['far right'].plot(z, -fourier_gradient(fourier_potentialV2(np.abs(chi)**2,L),L), label = "FDM Contribution")
-            ax['far right'].set_ylim(-y_lim_max,y_lim_max)
+                a1 = np.abs([np.max(Part_force),np.min(Part_force)])
+                a2 = np.abs([np.max(FDM_force),np.min(FDM_force)])
+                a_max = np.max(np.append(a1,a2))*2
+            ax['far right'].plot(z, Part_force, label = "Particle Contribution")
+            ax['far right'].plot(z, FDM_force, label = "FDM Contribution")
+            ax['far right'].set_ylim(-a_max,a_max)
             ax['far right'].set_title("Force contributions",fontsize = 15)
             ax['far right'].legend(fontsize = 20)
             
             # THE FDM
             #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
             #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
-            rho_FDM = np.abs(chi)**2
+            #rho_FDM = np.abs(chi)**2 #already calculated this
             phi_FDM = fourier_potentialV2(rho_FDM,L)
             ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$ [Fourier perturbation]")
             ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = \\chi \\chi^*$")
@@ -561,7 +571,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
                 
             ##############################################3
             # THE PARTICLES
-            rho_part = (grid_counts/dz)*sigma
+            #rho_part = (grid_counts/dz)*sigma #already calculated this
             phi_part = fourier_potentialV2(rho_part,L)
             ax['lower left'].plot(z,phi_part,label = "$\\Phi_{Particles}$ [Fourier perturbation]")
             ax['lower left'].plot(z,rho_part,label = "$\\rho_{Particles}$")
@@ -578,13 +588,14 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
             ax['lower right'].legend(fontsize = 15)
 
             #ADDITIONAL:
-            #PLOT CENTER OF MASS
-            centroid_z = 0
-            for j in range(len(grid_counts)):
-                centroid_z += z[j]*grid_counts[j]
-            centroid_z = centroid_z / Num_stars
-            ax['lower right'].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
-            
+            #PLOT STAR CENTER OF MASS
+            if Num_stars != 0:#only calculate if there are stars
+                centroid_z = 0
+                for j in range(len(grid_counts)):
+                    centroid_z += z[j]*grid_counts[j]
+                centroid_z = centroid_z / Num_stars
+                ax['lower right'].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
+                
             #now save it as a .jpg file:
             folder = Directory + "/" + folder_name
             filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
@@ -621,9 +632,10 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         
         #Calculate Particle distribution on Mesh
         grid_counts = NB.grid_count(stars,L,z)
-        rho = (grid_counts/dz)*sigma 
+        rho_part = (grid_counts/dz)*sigma 
         #Add the density from the FDM
-        rho += np.absolute(chi)**2
+        rho_FDM = np.absolute(chi)**2 
+        rho = rho_FDM + rho_part
         #Calculate potential 
         phi = fourier_potentialV2(rho,L)
         #Calculate Acceleration Field on Mesh:
