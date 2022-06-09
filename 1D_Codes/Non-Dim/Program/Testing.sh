@@ -20,12 +20,11 @@ for num_p in "${num_particles[@]}"; do
         fi
     fi
 
-    masses=('1' '1')
     #Set Boson Mass array, depending on Number of Bosons
     if [ "$num_b" != '0' ]; then
         masses=('2' '1' '0.5' '0.1' '0.05' '0.04' '0.03' '0.02' '0.01')
-    #else
-     #   masses=('1') #Default, won't matter in simulation
+    else
+        masses=('1') #Default, won't matter in simulation
     fi
 
 #Now run simulation for given num_b, num_p and masses
