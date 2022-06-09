@@ -84,23 +84,33 @@ elif choice == 2:
     subprocess.call(["xdg-open", "SelfGrav_NBody.mp4"])
 
 elif choice == 3:
+    #INITIAL PROMPT:
     mu, Num_bosons, r, sigma, Num_stars = GF.Startup_Initial_Parameters(choice, hbar, L_s,v_s, M_s)
     m = mu*M_s
+    #print(mu, Num_bosons, r, sigma, Num_stars)
 
     ################
     #PROMPT FOR FULL SIMULATION OR SNAPSHOTS
     print("")
     print("Do you want the full simulation [1] or snapshots [2]? Choose [1/2]")
-    sim_choice = int(input())
+    sim_choice2 = int(input())
     print("")
     ################
 
-    print("Calculating and Plotting...")
-    if sim_choice == 1: 
+    #SET UP FOLDERS:
+    if sim_choice2 == 1: 
         folder_name = f"FuzzyMass{m}_Images"
-    elif sim_choice == 2:
+        if Num_bosons == 0:
+            folder_name = f"OnlyFuzzyMass{m}_Images"
+        elif Num_stars == 0:
+            folder_name = "ParticlesOnly_Images"
+    elif sim_choice2 == 2:
         folder_name = f"FuzzyMass{m}_Snapshots"
-    
+        if Num_bosons == 0:
+            folder_name = f"OnlyFuzzyMass{m}_Snapshots"
+        elif Num_stars == 0:
+            folder_name = "ParticlesOnly_Snapshots"
+
     #print(os.path.exists(dirExtension+"/"+folder_name))
     if os.path.exists(dirExtension+"/"+folder_name) == True:
         for file in os.listdir(Directory+"/"+folder_name):
@@ -108,21 +118,32 @@ elif choice == 3:
         os.rmdir(Directory+"/"+folder_name)    
     os.mkdir(Directory+"/"+folder_name)
     
-    GF.run_FDM_n_Bodies(sim_choice, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name)
-
+    #RUN SIMULATION/CALCULATION
+    print("Calculating and Plotting...")
+    GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name)
     print("Calculation and Plotting Done. Now Saving Video...")
     
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    
-    if sim_choice == 1:
+    #SET UP VIDEO NAMES
+    if sim_choice2 == 1:
         video_name = f"FuzzyMass{m}_Video.mp4"
         fps = 10 #1/dtau
-    elif sim_choice == 2:
+        if Num_bosons == 0:
+            video_name = "Particles_Video.mp4"
+        elif Num_stars == 0:
+            video_name = f"OnlyFuzzyMass{m}_Video.mp4"
+    elif sim_choice2 == 2:
         video_name = f"FuzzyMass{m}_Snapshots.mp4"
         fps = 1
+        if Num_bosons == 0:
+            video_name = "Particles_Snapshots.mp4"
+        elif Num_stars == 0:
+            video_name = f"OnlyFuzzyMass{m}_Snapshots.mp4"
+    
+    #WRITE TO VIDEO
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     GF.animate(fourcc,Directory,folder_name,video_name,fps)
     print("Video Saved.")
-    # if sim_choice == 1:
+    # if sim_choice2 == 1:
     #     subprocess.call(["xdg-open", "FDM_n_Body.mp4"])
-    # elif sim_choice == 2:
+    # elif sim_choice2 == 2:
     #     subprocess.call(["xdg-open", "FDM_n_Body_Snapshots.mp4"])
