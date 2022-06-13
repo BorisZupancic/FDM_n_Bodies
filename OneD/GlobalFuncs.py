@@ -134,220 +134,220 @@ def fourier_potentialV2(rho_nondim,length):
 #####################################################3
 #Full Calculation/Simulation Functions
 
-def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
-    M_s = v_s**2 * L_s
-    T = L_s / v_s
-    #####################################################
-    # INITIAL SETUP
-    #####################################################
-    #Set an initial wavefunction
-    b=0
-    #print("Choose the standard deviation of the initial distribution:")
-    #std = float(input())
-    std=0.1*L
-    psi = np.sqrt(gauss(z,b,std)*Num_bosons)#*Num_particles / (L**3))
-    chi = psi*L_s**(3/2)
+# def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
+#     M_s = v_s**2 * L_s
+#     T = L_s / v_s
+#     #####################################################
+#     # INITIAL SETUP
+#     #####################################################
+#     #Set an initial wavefunction
+#     b=0
+#     #print("Choose the standard deviation of the initial distribution:")
+#     #std = float(input())
+#     std=0.1*L
+#     psi = np.sqrt(gauss(z,b,std)*Num_bosons)#*Num_particles / (L**3))
+#     chi = psi*L_s**(3/2)
 
-    #Calculate initial Density perturbation (non-dimensionalized and reduced)
-    rho = np.absolute(chi)**2 #just norm-squared of wavefunction
+#     #Calculate initial Density perturbation (non-dimensionalized and reduced)
+#     rho = np.absolute(chi)**2 #just norm-squared of wavefunction
     
-    #Calculate initial (non-dim) potential
-    phi = fourier_potentialV2(rho,L) 
+#     #Calculate initial (non-dim) potential
+#     phi = fourier_potentialV2(rho,L) 
 
-    #Check how it's normalized:
-    print(f"|chi|^2 = {np.sum(dz*np.absolute(chi)**2)}")
-    print(f"Numerically calculated: |psi|^2 = {np.sum(dz*np.absolute(psi)**2)}")
+#     #Check how it's normalized:
+#     print(f"|chi|^2 = {np.sum(dz*np.absolute(chi)**2)}")
+#     print(f"Numerically calculated: |psi|^2 = {np.sum(dz*np.absolute(psi)**2)}")
 
-    m = mu*M_s
-    Rho_avg = m*np.mean(np.absolute(psi)**2)
-    T_collapse = 1/Rho_avg**0.5
-    tau_collapse = T_collapse/T
-    print(f"(Non-dim) Collapse time: {tau_collapse}")
+#     m = mu*M_s
+#     Rho_avg = m*np.mean(np.absolute(psi)**2)
+#     T_collapse = 1/Rho_avg**0.5
+#     tau_collapse = T_collapse/T
+#     print(f"(Non-dim) Collapse time: {tau_collapse}")
     
-    #To fix plot axis limits:
-    #y0_max = np.max(phi)*1.5
-    y0_max = np.max(rho)*10
-    y1_max = v_s*100
-    eta = 0.025*L #resolution for Husimi
-    dtau = 0.01*tau_collapse
-    tau_stop = tau_collapse*2 #t_stop/T
-    time = 0
-    i = 0
-    while time <= tau_stop:
-        ######################################
-        #Evolve system forward by one time-step
-        chi,phi,rho = ND.time_evolveV2(chi,phi,r,dz,dtau,m,L)
+#     #To fix plot axis limits:
+#     #y0_max = np.max(phi)*1.5
+#     y0_max = np.max(rho)*10
+#     y1_max = v_s*100
+#     eta = 0.025*L #resolution for Husimi
+#     dtau = 0.01*tau_collapse
+#     tau_stop = tau_collapse*2 #t_stop/T
+#     time = 0
+#     i = 0
+#     while time <= tau_stop:
+#         ######################################
+#         #Evolve system forward by one time-step
+#         chi,phi,rho = ND.time_evolveV2(chi,phi,r,dz,dtau,m,L)
 
-        #PHASE SPACE CALCULATION:
-        k = 2*np.pi*np.fft.fftfreq(len(z),dz)
-        #rescale wavenumber k to velocity v:
-        hbar = 1
-        v = k*(hbar/m)
+#         #PHASE SPACE CALCULATION:
+#         k = 2*np.pi*np.fft.fftfreq(len(z),dz)
+#         #rescale wavenumber k to velocity v:
+#         hbar = 1
+#         v = k*(hbar/m)
 
-        x_min, x_max = np.min(z), np.max(z)
-        v_min, v_max = np.min(v), np.max(v)
+#         x_min, x_max = np.min(z), np.max(z)
+#         v_min, v_max = np.min(v), np.max(v)
         
-        F = ND.Husimi_phase(chi,z,dz,L,eta)
+#         F = ND.Husimi_phase(chi,z,dz,L,eta)
         
-        ######################################
-        #Plot everything and save the file
-        fig,ax = plt.subplots(1,2,figsize = (20,10))
-        plt.suptitle("Time $\\tau = $"+ f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
+#         ######################################
+#         #Plot everything and save the file
+#         fig,ax = plt.subplots(1,2,figsize = (20,10))
+#         plt.suptitle("Time $\\tau = $"+ f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
         
-        ax[0].plot(z,chi.real, label = "Re[$\\chi$]")
-        ax[0].plot(z,chi.imag, label = "Im[$\\chi$]")
-        ax[0].plot(z,phi,label = "Potential [Fourier perturbation]")
-        ax[0].plot(z,rho,label = "$\\rho = \\chi \\chi^*$")
-        ax[0].set_ylim([-y0_max, y0_max] )
-        ax[0].set_xlabel("$z = x/L$")
-        ax[0].legend()
+#         ax[0].plot(z,chi.real, label = "Re[$\\chi$]")
+#         ax[0].plot(z,chi.imag, label = "Im[$\\chi$]")
+#         ax[0].plot(z,phi,label = "Potential [Fourier perturbation]")
+#         ax[0].plot(z,rho,label = "$\\rho = \\chi \\chi^*$")
+#         ax[0].set_ylim([-y0_max, y0_max] )
+#         ax[0].set_xlabel("$z = x/L$")
+#         ax[0].legend()
         
-        if i == 0:
-            max_F = np.max(F) #max_F = 0.08
-        ax[1].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y1_max))
-        ax[1].set_xlim([x_min,x_max])
-        ax[1].set_ylim([-y1_max,y1_max]) #[v_min,v_max])
-        ax[1].set_xlabel("$z = x/L$")
-        #ax[1].colorbar()
+#         if i == 0:
+#             max_F = np.max(F) #max_F = 0.08
+#         ax[1].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y1_max))
+#         ax[1].set_xlim([x_min,x_max])
+#         ax[1].set_ylim([-y1_max,y1_max]) #[v_min,v_max])
+#         ax[1].set_xlabel("$z = x/L$")
+#         #ax[1].colorbar()
 
-        #now save it as a .jpg file:
-        folder = Directory + "/" + folder_name
-        filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
-        plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
-        plt.close() #close plot so it doesn't overlap with the next one
+#         #now save it as a .jpg file:
+#         folder = Directory + "/" + folder_name
+#         filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
+#         plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
+#         plt.close() #close plot so it doesn't overlap with the next one
 
-        time += dtau #forward on the clock
-        i += 1
+#         time += dtau #forward on the clock
+#         i += 1
     
-def run_NBody(z,L,dz,sigma,Num_stars, v_scale, L_scale, Directory):
-    M_scale = v_scale**2 * L_scale
-    T_scale = L_scale / v_scale
-    ########################################################
-    # INITIAL SETUP
-    ########################################################
-    #Set initial distribution on grid
-    b = 0 #center at zero
-    std = 0.1*L #standard deviation of 1
-    z_0 = np.random.normal(b,std,Num_stars) #initial positions sampled from normal distribution
-    stars = [NB.star(i,sigma,z_0[i],0) for i in range(len(z_0))] #create list of normally distributed stars, zero initial speed
+# def run_NBody(z,L,dz,sigma,Num_stars, v_scale, L_scale, Directory):
+#     M_scale = v_scale**2 * L_scale
+#     T_scale = L_scale / v_scale
+#     ########################################################
+#     # INITIAL SETUP
+#     ########################################################
+#     #Set initial distribution on grid
+#     b = 0 #center at zero
+#     std = 0.1*L #standard deviation of 1
+#     z_0 = np.random.normal(b,std,Num_stars) #initial positions sampled from normal distribution
+#     stars = [NB.star(i,sigma,z_0[i],0) for i in range(len(z_0))] #create list of normally distributed stars, zero initial speed
     
-    #reposition stars if they were generated outside the box
-    for star in stars:
-        if np.absolute(star.x) > L/2:
-                star.reposition(L)
+#     #reposition stars if they were generated outside the box
+#     for star in stars:
+#         if np.absolute(star.x) > L/2:
+#                 star.reposition(L)
     
-    folder_name = "SelfGrav_NBody_Images"
-    os.chdir(Directory + "/" + folder_name)
+#     folder_name = "SelfGrav_NBody_Images"
+#     os.chdir(Directory + "/" + folder_name)
 
-    #Calculate distirubtion on Mesh
-    grid_counts = NB.grid_count(stars,L,z)
-    rho = (grid_counts/dz)*sigma 
+#     #Calculate distirubtion on Mesh
+#     grid_counts = NB.grid_count(stars,L,z)
+#     rho = (grid_counts/dz)*sigma 
         
-    #m = mu*M_scale
-    Rho_avg = M_scale*np.mean(rho)/L_scale
-    T_collapse = 1/(Rho_avg)**0.5
-    tau_collapse = T_collapse/T_scale
-    print(f"(Non-dim) Collapse time: {tau_collapse}")
+#     #m = mu*M_scale
+#     Rho_avg = M_scale*np.mean(rho)/L_scale
+#     T_collapse = 1/(Rho_avg)**0.5
+#     tau_collapse = T_collapse/T_scale
+#     print(f"(Non-dim) Collapse time: {tau_collapse}")
     
-    dtau = 0.01*tau_collapse
-    tau_stop = tau_collapse*2 #t_stop/T
-    time = 0
-    i = 0 #counter, for saving images
-    while time <= tau_stop:
-        #################################################
-        #CALCULATION OF PHYSICAL QUANTITIES
-        #################################################
-        #Calculate distirubtion on Mesh
-        grid_counts = NB.grid_count(stars,L,z)
-        rho = (grid_counts/dz)*sigma 
+#     dtau = 0.01*tau_collapse
+#     tau_stop = tau_collapse*2 #t_stop/T
+#     time = 0
+#     i = 0 #counter, for saving images
+#     while time <= tau_stop:
+#         #################################################
+#         #CALCULATION OF PHYSICAL QUANTITIES
+#         #################################################
+#         #Calculate distirubtion on Mesh
+#         grid_counts = NB.grid_count(stars,L,z)
+#         rho = (grid_counts/dz)*sigma 
         
-        #Calculate potential 
-        phi = fourier_potentialV2(rho,L)
+#         #Calculate potential 
+#         phi = fourier_potentialV2(rho,L)
         
-        #Calculate Acceleration Field on Mesh:
-        a_grid = NB.acceleration(phi,L) 
+#         #Calculate Acceleration Field on Mesh:
+#         a_grid = NB.acceleration(phi,L) 
         
-        #################################################
-        # PLOTTING
-        #################################################
-        fig,ax = plt.subplots(1,3)#3)
-        fig.set_size_inches(30,10)
-        plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5))
+#         #################################################
+#         # PLOTTING
+#         #################################################
+#         fig,ax = plt.subplots(1,3)#3)
+#         fig.set_size_inches(30,10)
+#         plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5))
         
-        ax[0].plot(z,phi,label = "Potential")
-        ax[0].plot(z,rho,label = "Number density")
-        ax[0].plot(z,a_grid)
-        ax[0].set_xlim([-L/2,L/2])
-        ax[0].set_ylim([-0.1*Num_stars/dz,0.1*Num_stars/dz])
+#         ax[0].plot(z,phi,label = "Potential")
+#         ax[0].plot(z,rho,label = "Number density")
+#         ax[0].plot(z,a_grid)
+#         ax[0].set_xlim([-L/2,L/2])
+#         ax[0].set_ylim([-0.1*Num_stars/dz,0.1*Num_stars/dz])
         
-        #Plot the Phase Space distribution
-        x_s = np.array([star.x for star in stars])
-        v_s = np.array([star.v for star in stars])
-        ax[1].plot(x_s,v_s,'.',label = "Phase Space Distribution")
-        ax[1].set_ylim([-v_scale*50,v_scale*50])
-        ax[1].set_xlim([-L/2,L/2])
-        ax[1].legend()
+#         #Plot the Phase Space distribution
+#         x_s = np.array([star.x for star in stars])
+#         v_s = np.array([star.v for star in stars])
+#         ax[1].plot(x_s,v_s,'.',label = "Phase Space Distribution")
+#         ax[1].set_ylim([-v_scale*50,v_scale*50])
+#         ax[1].set_xlim([-L/2,L/2])
+#         ax[1].legend()
 
-        #Plot Phase space distribution in another way
-        heat = ax[2].hist2d(x_s,v_s,bins = [200,200],range = [[-L/2,L/2],[-2,2]],cmap = cm.hot)
-        #ax[2].set_colorbar()
-        ax[2].set_xlim(-L/2,L/2)
-        ax[2].set_ylim(-15,15)
-        #fig.colorbar(heat[3], ax[2])
+#         #Plot Phase space distribution in another way
+#         heat = ax[2].hist2d(x_s,v_s,bins = [200,200],range = [[-L/2,L/2],[-2,2]],cmap = cm.hot)
+#         #ax[2].set_colorbar()
+#         ax[2].set_xlim(-L/2,L/2)
+#         ax[2].set_ylim(-15,15)
+#         #fig.colorbar(heat[3], ax[2])
 
-        #ADDITIONAL:
-        #PLOT CENTER OF MASS
-        centroid_z = 0
-        for j in range(len(grid_counts)):
-            centroid_z += z[j]*grid_counts[j]
-        centroid_z = centroid_z / Num_stars
-        ax[1].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
+#         #ADDITIONAL:
+#         #PLOT CENTER OF MASS
+#         centroid_z = 0
+#         for j in range(len(grid_counts)):
+#             centroid_z += z[j]*grid_counts[j]
+#         centroid_z = centroid_z / Num_stars
+#         ax[1].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
         
-        #now save it as a .jpg file:
-        folder = Directory + "/" + folder_name
-        filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
-        plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
-        plt.close() #close plot so it doesn't overlap with the next one
+#         #now save it as a .jpg file:
+#         folder = Directory + "/" + folder_name
+#         filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
+#         plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
+#         plt.close() #close plot so it doesn't overlap with the next one
         
-        ############################################################
-        #EVOLVE SYSTEM (After calculations on the Mesh)
-        ############################################################
-        #1,2: Kick+Drift
-        g = NB.accel_funct(a_grid,L,dz)
+#         ############################################################
+#         #EVOLVE SYSTEM (After calculations on the Mesh)
+#         ############################################################
+#         #1,2: Kick+Drift
+#         g = NB.accel_funct(a_grid,L,dz)
 
-        for star in stars:
-            #print(star.x)
-            star.kick_star(g,dtau/2)
-            star.drift_star(dtau)
+#         for star in stars:
+#             #print(star.x)
+#             star.kick_star(g,dtau/2)
+#             star.drift_star(dtau)
 
-            #corrective maneuvers on star position
-            #(for positions that drift outside of the box...
-            # must apply periodicity)
-            if np.absolute(star.x) > L/2:
-                print(f"z = {star.x}")
-                modulo = (star.x // (L/2))
-                remainder = star.x % (L/2)
-                print(f"mod = {modulo}, remainder = {remainder}")
-                if modulo % 2 == 0: #check if modulo is even
-                    star.x = remainder 
-                else: #if modulo is odd, further check:
-                    if star.x > 0:
-                        star.x = remainder-L/2
-                    elif star.x < 0:
-                        star.x = remainder+L/2
-                print(f"new z = {star.x}")
-                print(" ")
-        #3,4: Re-update potential and acceleration fields, + Kick
-        grid_counts = NB.grid_count(stars,L,z)
-        rho = (grid_counts/dz)*sigma 
-        phi = fourier_potentialV2(rho,L)
-        a_grid = NB.acceleration(phi,L) 
-        g = NB.accel_funct(a_grid,L,dz)
-        for star in stars:
-            star.kick_star(g,dtau/2)
+#             #corrective maneuvers on star position
+#             #(for positions that drift outside of the box...
+#             # must apply periodicity)
+#             if np.absolute(star.x) > L/2:
+#                 print(f"z = {star.x}")
+#                 modulo = (star.x // (L/2))
+#                 remainder = star.x % (L/2)
+#                 print(f"mod = {modulo}, remainder = {remainder}")
+#                 if modulo % 2 == 0: #check if modulo is even
+#                     star.x = remainder 
+#                 else: #if modulo is odd, further check:
+#                     if star.x > 0:
+#                         star.x = remainder-L/2
+#                     elif star.x < 0:
+#                         star.x = remainder+L/2
+#                 print(f"new z = {star.x}")
+#                 print(" ")
+#         #3,4: Re-update potential and acceleration fields, + Kick
+#         grid_counts = NB.grid_count(stars,L,z)
+#         rho = (grid_counts/dz)*sigma 
+#         phi = fourier_potentialV2(rho,L)
+#         a_grid = NB.acceleration(phi,L) 
+#         g = NB.accel_funct(a_grid,L,dz)
+#         for star in stars:
+#             star.kick_star(g,dtau/2)
             
-        time += dtau
-        i += 1
+#         time += dtau
+#         i += 1
 
 def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, v_s, L_s, Directory, folder_name):
     #Re-calcualte Mass and Time scales
