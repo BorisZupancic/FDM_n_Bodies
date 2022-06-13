@@ -17,7 +17,7 @@ import OneD.GlobalFuncs as GF
 
 #Set up Directory for saving files/images/videos
 # Will not rename this again
-dirExtension = "1D_Codes/Non-Dim/Program"
+dirExtension = "1D_Codes/Non-Dim/Analysis"
 Directory = os.getcwd()+"/"+dirExtension #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 print(Directory)
 
@@ -55,6 +55,8 @@ print("")
 print("Do you want the full simulation [1] or snapshots [2]? Choose [1/2]")
 sim_choice2 = int(input())
 print("")
+
+#For te
 ################
 
 #SET UP FOLDERS:
@@ -80,31 +82,33 @@ os.mkdir(Directory+"/"+folder_name)
 
 #RUN SIMULATION/CALCULATION
 print("Calculating and Plotting...")
-absolute_PLOT = True
-stars, chi = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name)
+#absolute_PLOT = False
+stars, chi = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = False)
 print("Calculation and Plotting Done. Now Saving Video...")
 
-#SET UP VIDEO NAMES
-if sim_choice2 == 1:
-    video_name = f"FuzzyMass{m}_Video.mp4"
-    fps = 10 #1/dtau
-    if Num_bosons == 0:
-        video_name = "Particles_Video.mp4"
-    elif Num_stars == 0:
-        video_name = f"OnlyFuzzyMass{m}_Video.mp4"
-elif sim_choice2 == 2:
-    video_name = f"FuzzyMass{m}_Snapshots.mp4"
-    fps = 1
-    if Num_bosons == 0:
-        video_name = "Particles_Snapshots.mp4"
-    elif Num_stars == 0:
-        video_name = f"OnlyFuzzyMass{m}_Snapshots.mp4"
+#CALCULATE FINAL STATE OF SYSTEM
 
-#WRITE TO VIDEO
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-GF.animate(fourcc,Directory,folder_name,video_name,fps)
-print("Video Saved.")
-# if sim_choice2 == 1:
-#     subprocess.call(["xdg-open", "FDM_n_Body.mp4"])
-# elif sim_choice2 == 2:
-#     subprocess.call(["xdg-open", "FDM_n_Body_Snapshots.mp4"])
+#Calculate Particle distribution on Mesh
+grid_counts = NB.grid_count(stars,L,z)
+rho_part = (grid_counts/dz)*sigma 
+#Add the density from the FDM
+rho_FDM = np.absolute(chi)**2 
+rho = rho_FDM + rho_part
+
+fig = plt.figure()
+z_left = z[0:len(z)//2]
+z_right = z[len(z)//2:]
+plt.plot(np.log(np.abs(z_left)),np.log(rho), "r-", label = "$z \\in [-L/2,0]$")
+plt.plot(np.log(np.abs(z_right)),np.log(rho), 'b-', label = "$z \\in [0,L/2]$")
+plt.legend()
+plt.show()
+
+
+
+
+
+#ADDITIONAL:
+#Calculate potential 
+phi = GF.fourier_potentialV2(rho,L)
+#Calculate Acceleration Field on Mesh:
+a_grid = NB.acceleration(phi,L) 
