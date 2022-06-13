@@ -17,7 +17,6 @@ import OneD.GlobalFuncs as GF
 
 #Set up Directory for saving files/images/videos
 # Will not rename this again
-from pathlib import Path
 dirExtension = "1D_Codes/Non-Dim/Program"
 Directory = os.getcwd()+"/"+dirExtension #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 print(Directory)
