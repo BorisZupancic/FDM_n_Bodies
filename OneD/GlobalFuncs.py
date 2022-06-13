@@ -79,6 +79,32 @@ def Startup_Initial_Parameters(choice, hbar,L_scale,v_scale,M_scale):
         
         return mu, Num_bosons, r, sigma, Num_stars
 
+def Startup(hbar,L_scale,v_scale,M_scale):
+    print("")
+    print("Choose a (non-dimensional) box length:")
+    L = float(input())
+    print("")
+    
+    print("Choose a (non-dimensional) Boson mass:")
+    mu = float(input())
+    print("How many Bosons?")
+    Num_bosons = int(input())
+    #Calculate dimensional mass:
+    m = mu*M_scale
+    print(f"Mass mu = {mu}, m = mu*M = {m}")
+    #Calculate Fuzziness:
+    r = ND.r(hbar,m,v_scale,L_scale)
+    print(f"Fuzziness: r = {r}")
+    
+    #Particles
+    print("")
+    print("Choose your particle/star mass (per unit area):")
+    sigma = float(input())
+    print("How many particles?")
+    Num_stars = int(input())
+    
+    return L, mu, Num_bosons, r, sigma, Num_stars
+
 def gauss(x,b,std):
     return np.exp(-(x-b)**2/(2*std**2))/(np.sqrt(2*np.pi)*std)
 
