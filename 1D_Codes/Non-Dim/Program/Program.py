@@ -50,45 +50,6 @@ N = 10**3
 z = np.linspace(-L/2,L/2,N)
 dz = z[1]-z[0]
 
-# if choice == 1:
-#     mu, Num_bosons, r  = GF.Startup_Initial_Parameters(choice, hbar, L_s,v_s,M_s)
-    
-#     #Calculate and Plot Everything:
-#     print("Calculating and Plotting...")
-#     folder_name = "SelfGrav_Images"
-#     GF.run_FDM(z,L,dz,mu,Num_bosons,r,v_s,L_s,Directory,folder_name)
-#     print("Calculation and Plotting Done. Now Saving Video...")
-
-#     #Animate the Plots
-#     folder_name = "SelfGrav_Images"
-#     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-#     m = mu*M_s
-#     video_name = f"SelfGrav.mp4"
-#     fps = 10 #1/dtau
-#     GF.animate(fourcc,Directory,folder_name,video_name,fps) 
-#     print("Video Saved.")
-
-#     #Open the video
-#     subprocess.call(["xdg-open", "SelfGrav.mp4"])
-
-# elif choice == 2:
-#     sigma, Num_stars = GF.Startup_Initial_Parameters(choice, hbar, L_s,v_s, M_s)
-#     print("Calculating and Plotting...")
-#     GF.run_NBody(z,L,dz,sigma,Num_stars,v_s,L_s,Directory)
-
-#     print("Calculation and Plotting Done. Now Saving Video...")
-#     folder_name = "SelfGrav_NBody_Images"
-#     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-#     video_name = "SelfGrav_NBody.mp4"
-#     fps = 10 #1/dtau
-#     GF.animate(fourcc,Directory,folder_name,video_name,fps)
-#     print("Video Saved.")
-#     subprocess.call(["xdg-open", "SelfGrav_NBody.mp4"])
-
-# elif choice == 3:
-
-#print(mu, Num_bosons, r, sigma, Num_stars)
-
 ################
 #PROMPT FOR FULL SIMULATION OR SNAPSHOTS
 print("")
