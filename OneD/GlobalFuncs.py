@@ -105,6 +105,7 @@ def fourier_potentialV2(rho_nondim,length):
     and the length of the interval on which it is defined.
 
     Differs from `fourier_potential()` as it takes in density instead of a wavefunction.
+
     """
 
     rho = rho_nondim
@@ -129,7 +130,7 @@ def fourier_potentialV2(rho_nondim,length):
     #3. IFFT back to get Potential
     phi = np.fft.irfft(phi_n,n) #use Phi_n as Fourier Coefficients
     return phi
-    
+
 #####################################################3
 #Full Calculation/Simulation Functions
 
