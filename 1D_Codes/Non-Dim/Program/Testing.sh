@@ -33,7 +33,6 @@ for m in "${masses[@]}"; do
     for sim in "${simulation_choice2[@]}"; do
         echo "---------------------New Sim---------------------"
         printf 'L = %f
-choice : %i
 Boson mass m = %f 
 Num_bosons = %i
 Particle mass m = %f
@@ -42,7 +41,7 @@ sim choice : %i
 Boson std = %f
 Particle std = %f \n \n' "2" "3" "$m" "$num_b" "1" "$num_p" "$sim" "0.1" "0.1"
 
-        printf '%f\n%i\n%f\n%i\n%f\n%i\n%i\n%f\n%f' "2" "3" "$m" "$num_b" "1" "$num_p" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Program/Program.py 
+        printf '%f\n%f\n%i\n%f\n%i\n%i\n%f\n%f' "2" "$m" "$num_b" "1" "$num_p" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Program/Program.py 
     done
 done
 
