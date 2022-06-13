@@ -132,7 +132,7 @@ def Husimi_phase(chi,z,dz,L,eta):
 def generate_phase_plots(psi_s,x,dx,L,m,hbar,max_F,eta,dt,frame_spacing, Directory,folder_name):
     
     k = 2*np.pi*np.fft.fftfreq(len(x),dx)
-    k = k/L #non-dimensionalize
+    k = k#/L #non-dimensionalize
     #rescale wavenumber k to velocity v:
     v = k*(hbar/m)
 
