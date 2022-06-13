@@ -21,64 +21,6 @@ def checkMemory(mem_limit):
         overflow = True
     return overflow
 
-def Startup_Choice():
-    print("")
-    print("Choose a (non-dimensional) box length:")
-    L = float(input())
-    print("")
-    print("Now, Fuzzy DM [1], Particles[2], or both[3]?")
-    print("Enter [1/2/3]")
-    choice = int(input())
-    return L, choice 
-
-def Startup_Initial_Parameters(choice, hbar,L_scale,v_scale,M_scale):
-    print("")
-    print("INITIAL Parameters:")
-    if choice == 1: #FDM
-        print("Choose a (non-dimensional) Boson mass:")
-        mu = float(input())
-        print("How many Bosons?")
-        Num_bosons = int(input())
-
-        #Calculate dimensional mass:
-        m = mu*M_scale
-        print(f"Mass mu = {mu}, m = mu*M = {m}")
-        #Calculate Fuzziness:
-        r = ND.r(hbar,m,v_scale,L_scale)
-        print(f"Fuzziness: r = {r}")
-
-        return mu, Num_bosons, r
-
-    elif choice == 2: #Particles
-        print("Choose your particle/star mass (per unit area):")
-        sigma = float(input())
-        print("How many particles?")
-        Num_stars = int(input())
-        
-        return sigma, Num_stars
-
-    elif choice == 3: #FDM + Particles
-        #FDM
-        print("Choose a (non-dimensional) Boson mass:")
-        mu = float(input())
-        print("How many Bosons?")
-        Num_bosons = int(input())
-        #Calculate dimensional mass:
-        m = mu*M_scale
-        print(f"Mass mu = {mu}, m = mu*M = {m}")
-        #Calculate Fuzziness:
-        r = ND.r(hbar,m,v_scale,L_scale)
-        print(f"Fuzziness: r = {r}")
-        
-        #Particles
-        print("")
-        print("Choose your particle/star mass (per unit area):")
-        sigma = float(input())
-        print("How many particles?")
-        Num_stars = int(input())
-        
-        return mu, Num_bosons, r, sigma, Num_stars
-
 def Startup(hbar,L_scale,v_scale,M_scale):
     print("")
     print("Choose a (non-dimensional) box length:")
