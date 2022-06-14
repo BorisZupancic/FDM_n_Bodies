@@ -175,7 +175,119 @@ def fourier_potentialV2(rho_nondim,length):
 #####################################################3
 #Full Calculation/Simulation Functions
 
-def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, v_s, L_s, Directory, folder_name, absolute_PLOT = True):
+def main_plot(sim_choice1,L,eta,
+                z,dz,chi,rho_FDM,rho_part,
+                stars,Num_bosons,Num_stars,
+                grid_counts,dtau,i,
+                x_min,x_max,v_min,v_max,
+                y00_max,y10_max,y01_max,y11_max,
+                a_max,max_F,
+                Directory,folder_name,track_stars, E_storage: None):
+    
+    # #PLOT AXIS LIMITS:
+    # #y0_max = np.max(phi)*1.5
+    # y00_max = np.max(rho_FDM)*10
+    # y10_max = np.max(rho_part)*10
+
+    # if Num_stars == 0:
+    #     y10_max = y00_max
+    # elif Num_bosons == 0:
+    #     y00_max = y10_max
+    
+    # y01_max = v_s*200
+    # y11_max = y01_max #v_s*100
+
+    layout = [['upper left', 'upper right', 'far right'],
+                        ['lower left', 'lower right', 'far right']]
+
+    fig, ax = plt.subplot_mosaic(layout, constrained_layout = True)
+    fig.set_size_inches(20,10)
+    plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
+    
+    ##############################################3
+    #ACCELERATIONS
+    Part_force = -fourier_gradient(fourier_potentialV2(rho_part,L),L)
+    FDM_force = -fourier_gradient(fourier_potentialV2(rho_FDM,L),L)
+    # if i == 0: #want to set a limit on the acceleration graph
+    #     a1 = np.abs([np.max(Part_force),np.min(Part_force)])
+    #     a2 = np.abs([np.max(FDM_force),np.min(FDM_force)])
+    #     a_max = np.max(np.append(a1,a2))*2
+    ax['far right'].plot(z, Part_force, label = "Particle Contribution")
+    ax['far right'].plot(z, FDM_force, label = "FDM Contribution")
+    ax['far right'].set_ylim(-a_max,a_max)
+    ax['far right'].set_title("Force contributions",fontsize = 15)
+    ax['far right'].legend(fontsize = 20)
+    
+    # THE FDM
+    #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
+    #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
+    #rho_FDM = np.abs(chi)**2 #already calculated this
+    phi_FDM = fourier_potentialV2(rho_FDM,L)
+    ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$ [Fourier perturbation]")
+    ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = \\chi \\chi^*$")
+    ax['upper left'].set_ylim([-y00_max, y00_max] )
+    ax['upper left'].set_xlabel("$z = x/L$")
+    ax['upper left'].legend(fontsize = 15)
+    ax['upper left'].set_title("Non-Dimensional Densities and Potentials",fontsize = 15)
+    
+    if sim_choice1 == 1 or sim_choice1 == 3:
+        #PHASE SPACE CALCULATION:
+        #Don't calculate if sim_choice1 == '2'
+        F = ND.Husimi_phase(chi,z,dz,L,eta)
+        # if i == 0:
+        #     max_F = np.max(F)/2
+        ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y01_max))
+        ax['upper right'].set_xlim(x_min,x_max)
+        ax['upper right'].set_ylim(-y01_max,y01_max) #[v_min,v_max])
+        ax['upper right'].set_xlabel("$z = x/L$")
+        ax['upper right'].set_title("Phase Space Distributions", fontsize = 15)
+        
+    ##############################################3
+    # THE PARTICLES
+    #rho_part = (grid_counts/dz)*sigma #already calculated this
+    phi_part = fourier_potentialV2(rho_part,L)
+    ax['lower left'].plot(z,phi_part,label = "$\\Phi_{Particles}$ [Fourier perturbation]")
+    ax['lower left'].plot(z,rho_part,label = "$\\rho_{Particles}$")
+    #ax['lower left'].set_xlim(-L/2,L/2)
+    ax['lower left'].set_ylim(-y10_max,y10_max)
+    ax['lower left'].legend(fontsize = 15)
+
+    #Plot the Phase Space distribution
+    x_s = np.array([star.x for star in stars])
+    v_s = np.array([star.v for star in stars])
+    ax['lower right'].scatter(x_s,v_s,s = 1,label = "Particles")
+    ax['lower right'].set_ylim(-y11_max,y11_max)
+    ax['lower right'].set_xlim(-L/2,L/2)
+    ax['lower right'].legend(fontsize = 15)
+
+    #ADDITIONAL:
+    # Plotting the paths of those select stars
+    if track_stars == True:
+        E_array = np.array([])
+        for j in range(5):
+            ax['lower right'].scatter(stars[j].x, stars[j].v, c = 'g', marker = 'o')
+            E_array = np.append(E_array,stars[i].v**2)
+        E_storage = np.append(E_storage,[E_array])
+        
+    #PLOT STAR CENTER OF MASS
+    if Num_stars != 0:#only calculate if there are stars
+        centroid_z = 0
+        for j in range(len(grid_counts)):
+            centroid_z += z[j]*grid_counts[j]
+        centroid_z = centroid_z / Num_stars
+        ax['lower right'].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
+        
+    #now save it as a .jpg file:
+    folder = Directory + "/" + folder_name
+    filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
+    plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
+    plt.clf()
+    plt.cla()
+    plt.close(fig) #close plot so it doesn't overlap with the next one
+
+    #return E_storage
+
+def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, v_s, L_s, Directory, folder_name, absolute_PLOT = True, track_stars = False):
     #Re-calcualte Mass and Time scales
     M_s = v_s**2 * L_s
     T_s = L_s / v_s
@@ -329,85 +441,28 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
                 #   PLOT = False
                     
             if PLOT == True:
-                layout = [['upper left', 'upper right', 'far right'],
-                        ['lower left', 'lower right', 'far right']]
-
-                fig, ax = plt.subplot_mosaic(layout, constrained_layout = True)
-                fig.set_size_inches(20,10)
-                plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
-                
-                ##############################################3
-                #ACCELERATIONS
-                Part_force = -fourier_gradient(fourier_potentialV2(rho_part,L),L)
-                FDM_force = -fourier_gradient(fourier_potentialV2(rho_FDM,L),L)
                 if i == 0: #want to set a limit on the acceleration graph
+                    Part_force = -fourier_gradient(fourier_potentialV2(rho_part,L),L)
+                    FDM_force = -fourier_gradient(fourier_potentialV2(rho_FDM,L),L)
+
                     a1 = np.abs([np.max(Part_force),np.min(Part_force)])
                     a2 = np.abs([np.max(FDM_force),np.min(FDM_force)])
                     a_max = np.max(np.append(a1,a2))*2
-                ax['far right'].plot(z, Part_force, label = "Particle Contribution")
-                ax['far right'].plot(z, FDM_force, label = "FDM Contribution")
-                ax['far right'].set_ylim(-a_max,a_max)
-                ax['far right'].set_title("Force contributions",fontsize = 15)
-                ax['far right'].legend(fontsize = 20)
-                
-                # THE FDM
-                #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
-                #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
-                #rho_FDM = np.abs(chi)**2 #already calculated this
-                phi_FDM = fourier_potentialV2(rho_FDM,L)
-                ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$ [Fourier perturbation]")
-                ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = \\chi \\chi^*$")
-                ax['upper left'].set_ylim([-y00_max, y00_max] )
-                ax['upper left'].set_xlabel("$z = x/L$")
-                ax['upper left'].legend(fontsize = 15)
-                ax['upper left'].set_title("Non-Dimensional Densities and Potentials",fontsize = 15)
-                
-                if sim_choice1 == 1 or sim_choice1 == 3:
-                    #PHASE SPACE CALCULATION:
-                    #Don't calculate if sim_choice1 == '2'
+                if i == 0:
                     F = ND.Husimi_phase(chi,z,dz,L,eta)
-                    if i == 0:
-                        max_F = np.max(F)/2
-                    ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y01_max))
-                    ax['upper right'].set_xlim(x_min,x_max)
-                    ax['upper right'].set_ylim(-y01_max,y01_max) #[v_min,v_max])
-                    ax['upper right'].set_xlabel("$z = x/L$")
-                    ax['upper right'].set_title("Phase Space Distributions", fontsize = 15)
-                    
-                ##############################################3
-                # THE PARTICLES
-                #rho_part = (grid_counts/dz)*sigma #already calculated this
-                phi_part = fourier_potentialV2(rho_part,L)
-                ax['lower left'].plot(z,phi_part,label = "$\\Phi_{Particles}$ [Fourier perturbation]")
-                ax['lower left'].plot(z,rho_part,label = "$\\rho_{Particles}$")
-                #ax['lower left'].set_xlim(-L/2,L/2)
-                ax['lower left'].set_ylim(-y10_max,y10_max)
-                ax['lower left'].legend(fontsize = 15)
+                    max_F = np.max(F)/2
 
-                #Plot the Phase Space distribution
-                x_s = np.array([star.x for star in stars])
-                v_s = np.array([star.v for star in stars])
-                ax['lower right'].scatter(x_s,v_s,s = 1,label = "Particles")
-                ax['lower right'].set_ylim(-y11_max,y11_max)
-                ax['lower right'].set_xlim(-L/2,L/2)
-                ax['lower right'].legend(fontsize = 15)
+                if track_stars == True:
+                    E_storage = []
 
-                #ADDITIONAL:
-                #PLOT STAR CENTER OF MASS
-                if Num_stars != 0:#only calculate if there are stars
-                    centroid_z = 0
-                    for j in range(len(grid_counts)):
-                        centroid_z += z[j]*grid_counts[j]
-                    centroid_z = centroid_z / Num_stars
-                    ax['lower right'].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
-                    
-                #now save it as a .jpg file:
-                folder = Directory + "/" + folder_name
-                filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
-                plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
-                plt.clf()
-                plt.cla()
-                plt.close(fig) #close plot so it doesn't overlap with the next one
+                main_plot(sim_choice1,L,eta,
+                z,dz,chi,rho_FDM,rho_part,
+                stars,Num_bosons,Num_stars,
+                grid_counts,dtau,i,
+                x_min,x_max,v_min,v_max,
+                y00_max,y10_max,y01_max,y11_max,
+                a_max,max_F,
+                Directory,folder_name,track_stars,E_storage)
                 
         ############################################################
         #EVOLVE SYSTEM (After calculations on the Mesh)
@@ -464,7 +519,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
     
     #if absolute_PLOT == False:
      #   return stars, chi
-    return stars, chi
+    return stars, chi, E_storage
 
 ##################################################################
 ##################################################################
