@@ -40,7 +40,7 @@ M_s = L_s*v_s**2
 print(f"Mass scale M = {M_s}")
 
 #L, choice = GF.Startup_Choice()
-L, mu, Num_bosons, r, sigma, Num_stars = GF.Startup(hbar, L_s, v_s, M_s)
+L, mu, Num_bosons, r, sigma, Num_stars = GF.StartupV2(hbar, L_s, v_s)
 m = mu*M_s
 
 #Set up Grid
@@ -82,33 +82,10 @@ os.mkdir(Directory+"/"+folder_name)
 
 #RUN SIMULATION/CALCULATION
 print("Calculating and Plotting...")
-#absolute_PLOT = False
-stars, chi = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = False)
+#folder_name = "bla" 
+stars, chi = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = True)
 print("Calculation and Plotting Done. Now Saving Video...")
 
-#CALCULATE FINAL STATE OF SYSTEM
-
-#Calculate Particle distribution on Mesh
-grid_counts = NB.grid_count(stars,L,z)
-rho_part = (grid_counts/dz)*sigma 
-#Add the density from the FDM
-rho_FDM = np.absolute(chi)**2 
-rho = rho_FDM + rho_part
-
-fig = plt.figure()
-z_left = z[0:len(z)//2]
-z_right = z[len(z)//2:]
-plt.plot(np.log(np.abs(z_left)),np.log(rho), "r-", label = "$z \\in [-L/2,0]$")
-plt.plot(np.log(np.abs(z_right)),np.log(rho), 'b-', label = "$z \\in [0,L/2]$")
-plt.legend()
-plt.show()
-
-
-
-
-
-#ADDITIONAL:
-#Calculate potential 
-phi = GF.fourier_potentialV2(rho,L)
-#Calculate Acceleration Field on Mesh:
-a_grid = NB.acceleration(phi,L) 
+np.savetxt(f"Stars_Pos_m{m}.csv",[star.x for star in stars], delimiter = ",")
+np.savetxt(f"Stars_Vel_m{m}.csv",[star.v for star in stars], delimiter = ",")
+np.savetxt(f"Chi_m{m}.csv", chi)

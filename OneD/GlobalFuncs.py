@@ -47,6 +47,47 @@ def Startup(hbar,L_scale,v_scale,M_scale):
     
     return L, mu, Num_bosons, r, sigma, Num_stars
 
+def StartupV2(hbar,L_scale,v_scale):
+
+    M_scale = L_scale*v_scale**2
+    
+    print("")
+    print("Choose a (non-dimensional) box length:")
+    L = float(input())
+    print("")
+
+    print("Choose ratio of FDM to Particles")
+    ratio = float(input())
+    print("")
+
+    ##########################################
+    #Particles
+    print("")
+    print("Choose your particle/star mass (per unit area):")
+    sigma = float(input())
+    print("How many particles?")
+    Num_stars = int(input())
+    
+    ##########################################
+    # FDM
+    print("Choose a FDM fuzziness:")
+    r = float(input())
+    print(f"Fuzziness: r = {r}")
+    m = hbar/(2*r*v_scale*L_scale)
+    #Calculate dimensional mass:
+    mu = M_scale/m
+    #print(f"This gives non-dim mass: mu = {mu}")
+    print(f"Mass mu = {mu}, m = mu*M = {m}")
+    print("")
+    
+    #print("How much (non-dim) FDM mass in total?")
+    FDM_mass = (Num_stars*sigma)*ratio#int(input())
+    Num_bosons = int(FDM_mass/mu)
+    print(f"=> Num_Bosons = {Num_bosons}")
+    
+    return L, mu, Num_bosons, r, sigma, Num_stars
+
+
 def gauss(x,b,std):
     return np.exp(-(x-b)**2/(2*std**2))/(np.sqrt(2*np.pi)*std)
 
