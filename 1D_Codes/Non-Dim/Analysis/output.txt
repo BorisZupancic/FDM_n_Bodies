@@ -1,0 +1,43 @@
+---------------------New Sim---------------------
+L = 2.000000
+Particle mass m = 1.000000
+Num_particles 10000
+Fuzziness r = 0.500000
+FDM percentage by mass : 0.000000 
+sim choice : 2
+Boson std = 0.100000
+Particle std = 0.100000 
+ 
+/home/boris/Documents/Research/Coding/1D_Codes/Non-Dim/Analysis
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+
+Choose your particle/star mass (per unit area):
+How many particles?
+Choose a FDM fuzziness:
+Fuzziness: r = 0.5
+Mass mu = 1.0, m = mu*M = 1.0
+
+Choose percentage (as a decimal) of FDM (by mass)
+
+=> Num_Bosons = 0
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+Choose the standard deviation of the Particle system (as fraction of the box width):
+v_min = -1569.225530468137, v_max = 1566.0870794072007
+v_min = -1569.225530468137, v_max = 1569.225530468137
+4995.000000000113
+(Non-dim) Collapse time: 0.014149211999266803
+Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
+/home/boris/Documents/Research/Coding/OneD/WaveNonDim.py:128: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const

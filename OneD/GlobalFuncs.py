@@ -56,10 +56,6 @@ def StartupV2(hbar,L_scale,v_scale):
     L = float(input())
     print("")
 
-    print("Choose ratio of FDM to Particles")
-    ratio = float(input())
-    print("")
-
     ##########################################
     #Particles
     print("")
@@ -80,8 +76,13 @@ def StartupV2(hbar,L_scale,v_scale):
     print(f"Mass mu = {mu}, m = mu*M = {m}")
     print("")
     
+    print("Choose percentage (as a decimal) of FDM (by mass)")
+    percent_FDM = float(input())
+    print("")
+
+    Total_mass = (Num_stars*sigma)/(1-percent_FDM)
     #print("How much (non-dim) FDM mass in total?")
-    FDM_mass = (Num_stars*sigma)*ratio#int(input())
+    FDM_mass = Total_mass*percent_FDM #int(input())
     Num_bosons = int(FDM_mass/mu)
     print(f"=> Num_Bosons = {Num_bosons}")
     
@@ -263,11 +264,11 @@ def main_plot(sim_choice1,L,eta,
     #ADDITIONAL:
     # Plotting the paths of those select stars
     if track_stars == True:
-        E_array = np.array([])
+        #E_array = np.array([])
         for j in range(5):
             ax['lower right'].scatter(stars[j].x, stars[j].v, c = 'g', marker = 'o')
-            E_array = np.append(E_array,stars[i].v**2)
-        E_storage = np.append(E_storage,[E_array])
+        #    E_array = np.append(E_array,stars[j].v**2)
+        #E_storage = np.append(E_storage,[E_array])
         
     #PLOT STAR CENTER OF MASS
     if Num_stars != 0:#only calculate if there are stars
@@ -398,8 +399,13 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         print(f"Snapshots at i = {snapshot_indices}")
     time = 0
     i = 0 #counter, for saving images
+    
     if absolute_PLOT == True:
         os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
+    
+    if track_stars == True:
+        E_storage = []
+    
     while time <= tau_stop:
         overflow = checkMemory(mem_limit = 95)
         if overflow == True:
@@ -424,6 +430,18 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         #3. Calculate Acceleration Field on Mesh:
         a_grid = NB.acceleration(phi,L) 
         
+        
+        ###################
+        # Tracking Some stars
+        # This is independant of plotting
+        if track_stars == True:
+                    E_array = np.array([])
+                    for j in range(5):
+                        Energy = stars[j].v**2
+                        E_array = np.append(E_array,Energy)
+                    E_storage = np.append(E_storage,[E_array])
+        #print(E_storage)
+
         #################################################
         # PLOTTING
         # Plot everytime if sim_choice2 == 1
@@ -451,10 +469,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
                 if i == 0:
                     F = ND.Husimi_phase(chi,z,dz,L,eta)
                     max_F = np.max(F)/2
-
-                if track_stars == True:
-                    E_storage = []
-
+                
                 main_plot(sim_choice1,L,eta,
                 z,dz,chi,rho_FDM,rho_part,
                 stars,Num_bosons,Num_stars,
@@ -463,7 +478,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
                 y00_max,y10_max,y01_max,y11_max,
                 a_max,max_F,
                 Directory,folder_name,track_stars,E_storage)
-                
+         
         ############################################################
         #EVOLVE SYSTEM (After calculations on the Mesh)
         ############################################################
