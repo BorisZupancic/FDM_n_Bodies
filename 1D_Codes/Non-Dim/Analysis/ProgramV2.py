@@ -83,12 +83,30 @@ os.mkdir(Directory+"/"+folder_name)
 #RUN SIMULATION/CALCULATION
 print("Calculating and Plotting...")
 #folder_name = "bla" 
-stars, chi, E_storage = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = True, track_stars = True)
-print("Calculation and Plotting Done. Now Saving Video...")
+#Whether to track stars or not:
+track_stars = False
+if Num_stars != 0:
+    track_stars = True
 
-os.chdir(Directory+"/"+dirExtension)
+stars, chi, E_storage = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = True, track_stars = track_stars)
+print("Calculation and Plotting Done. Now Saving Data...")
 
-np.savetxt(f"Stars_Pos_m{m}.csv",[star.x for star in stars], delimiter = ",")
-np.savetxt(f"Stars_Vel_m{m}.csv",[star.v for star in stars], delimiter = ",")
-np.savetxt(f"Chi_m{m}.csv", chi)
-np.savetxt(f"K_Energies_m{m}.csv", E_storage, delimiter = ",")
+#os.chdir(Directory)#+"/"+dirExtension)
+
+if Num_bosons == 0:
+    np.savetxt(f"StarsOnly_Pos.csv",[star.x for star in stars], delimiter = ",")
+    np.savetxt(f"StarsOnly_Vel.csv",[star.v for star in stars], delimiter = ",")
+    np.savetxt(f"Energies.csv", E_storage, delimiter = ",")
+    np.savetxt(f"Chi.csv", chi,delimiter = ",")
+elif Num_stars == 0:
+    #np.savetxt(f"Stars_Pos_m{m}.csv",[star.x for star in stars], delimiter = ",")
+    #np.savetxt(f"Stars_Vel_m{m}.csv",[star.v for star in stars], delimiter = ",")
+    np.savetxt(f"FuzzyOnlyChi_m{m}.csv", chi)
+    #np.savetxt(f"Energies_m{m}.csv", E_storage, delimiter = ",")
+elif Num_bosons!=0 and Num_stars!=0:
+    np.savetxt(f"Stars_Pos_m{m}.csv",[star.x for star in stars], delimiter = ",")
+    np.savetxt(f"Stars_Vel_m{m}.csv",[star.v for star in stars], delimiter = ",")
+    np.savetxt(f"Chi_m{m}.csv", chi)
+    np.savetxt(f"Energies_m{m}.csv", E_storage, delimiter = ",")
+
+print("Data Saved.")

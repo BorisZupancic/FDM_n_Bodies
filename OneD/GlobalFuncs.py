@@ -79,11 +79,15 @@ def StartupV2(hbar,L_scale,v_scale):
     print("Choose percentage (as a decimal) of FDM (by mass)")
     percent_FDM = float(input())
     print("")
-
-    Total_mass = (Num_stars*sigma)/(1-percent_FDM)
-    #print("How much (non-dim) FDM mass in total?")
-    FDM_mass = Total_mass*percent_FDM #int(input())
-    Num_bosons = int(FDM_mass/mu)
+    if Num_stars != 0:
+        Total_mass = (Num_stars*sigma)/(1-percent_FDM)
+        #print("How much (non-dim) FDM mass in total?")
+        FDM_mass = Total_mass*percent_FDM #int(input())
+        Num_bosons = int(FDM_mass/mu)
+    else:
+        Total_mass = 10000
+        FDM_mass = Total_mass
+        Num_bosons = int(FDM_mass/mu)
     print(f"=> Num_Bosons = {Num_bosons}")
     
     return L, mu, Num_bosons, r, sigma, Num_stars
@@ -403,9 +407,6 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
     if absolute_PLOT == True:
         os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     
-    if track_stars == True:
-        E_storage = []
-    
     while time <= tau_stop:
         overflow = checkMemory(mem_limit = 95)
         if overflow == True:
@@ -431,15 +432,32 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         a_grid = NB.acceleration(phi,L) 
         
         
-        ###################
+        ##########################################
         # Tracking Some stars
         # This is independant of plotting
         if track_stars == True:
-                    E_array = np.array([])
-                    for j in range(5):
-                        Energy = stars[j].v**2
-                        E_array = np.append(E_array,Energy)
-                    E_storage = np.append(E_storage,[E_array])
+            E_array = np.array([])
+            for j in range(5):
+                
+                #Find the potential energy:
+                N = len(z)
+                zz = stars[j].x
+                n = int((zz+L/2)//dz)
+                rem = (zz+L/2) % dz 
+                PotentialE = 0
+                if n < N-1:
+                    PotentialE = phi[n] + rem*(phi[n+1]-phi[n])/dz
+                elif n == N-1:
+                    PotentialE = phi[-1]+rem*(phi[0]-phi[-1])/dz
+                
+                Energy = 0.5*m*stars[j].v**2 + PotentialE
+                E_array = np.append(E_array,Energy)
+            if i ==0:
+                E_storage = np.array([E_array])
+            else:
+                E_storage = np.append(E_storage,[E_array],axis = 0)
+        else:
+            E_storage = None
         #print(E_storage)
 
         #################################################

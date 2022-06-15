@@ -39,7 +39,7 @@ for r in "${fuzziness[@]}"; do
     for sim in "${simulation_choice2[@]}"; do
         echo "---------------------New Sim---------------------"
         printf 'L = %f
-Particle mass m = %f
+Particle mass sigma = %f
 Num_particles %i
 Fuzziness r = %f
 FDM percentage by mass : %f 
