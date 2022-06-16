@@ -528,3 +528,46 @@ v_min = -15692.25530468137, v_max = 15692.25530468137
 49949.9721006671
 (Non-dim) Collapse time: 0.004474374950997336
 Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+---------------------New Sim---------------------
+L = 2.000000
+Particle mass m = 1.000000
+Num_particles 0
+Fuzziness r = 0.010000
+FDM percentage by mass : 1.000000 
+sim choice : 2
+Boson std = 0.100000
+Particle std = 0.100000 
+ 
+/home/boris/Documents/Research/Coding/1D_Codes/Non-Dim/Analysis
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+
+Choose your particle/star mass (per unit area):
+How many particles?
+Choose a FDM fuzziness:
+Fuzziness: r = 0.01
+Mass mu = 0.02, m = mu*M = 50.0
+
+Choose percentage (as a decimal) of FDM (by mass)
+
+=> Num_Bosons = 500000
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
+integral of |chi|^2 : 499999.7207273871
+Numerically calculated integral of |psi|^2 : 499999.7207273871
+Choose the standard deviation of the Particle system (as fraction of the box width):
+v_min = -78461.27652340685, v_max = 78304.35397036004
+v_min = -78461.27652340685, v_max = 78461.27652340685
+249749.86050333548
+(Non-dim) Collapse time: 0.002001001309450467
+Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
