@@ -26,7 +26,7 @@ for num_p in "${num_particles[@]}"; do
     #Set Boson Mass array, depending on Number of Bosons
     if [ "$percent" != '0' ]; then
         #r parameters:
-        fuzziness=('0.5' '0.1' '0.05' ' 0.01')
+        fuzziness=('0.5' '1' '5' '10' '50')
         #masses=('2' '1' '0.5' '0.1' '0.05' '0.04' '0.03' '0.02' '0.01')
     else
         fuzziness=('0.5') #Default, won't matter in calculation

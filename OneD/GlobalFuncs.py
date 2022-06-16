@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import cv2 
 from PIL import Image
+from pyrsistent import mutant
 import OneD.WaveNonDim as ND
 import OneD.NBody as NB
 import matplotlib.cm as cm
@@ -71,7 +72,7 @@ def StartupV2(hbar,L_scale,v_scale):
     print(f"Fuzziness: r = {r}")
     m = hbar/(2*r*v_scale*L_scale)
     #Calculate dimensional mass:
-    mu = M_scale/m
+    mu = m/M_scale
     #print(f"This gives non-dim mass: mu = {mu}")
     print(f"Mass mu = {mu}, m = mu*M = {m}")
     print("")
@@ -213,10 +214,6 @@ def main_plot(sim_choice1,L,eta,
     #ACCELERATIONS
     Part_force = -fourier_gradient(fourier_potentialV2(rho_part,L),L)
     FDM_force = -fourier_gradient(fourier_potentialV2(rho_FDM,L),L)
-    # if i == 0: #want to set a limit on the acceleration graph
-    #     a1 = np.abs([np.max(Part_force),np.min(Part_force)])
-    #     a2 = np.abs([np.max(FDM_force),np.min(FDM_force)])
-    #     a_max = np.max(np.append(a1,a2))*2
     ax['far right'].plot(z, Part_force, label = "Particle Contribution")
     ax['far right'].plot(z, FDM_force, label = "FDM Contribution")
     ax['far right'].set_ylim(-a_max,a_max)
@@ -226,7 +223,6 @@ def main_plot(sim_choice1,L,eta,
     # THE FDM
     #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
     #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
-    #rho_FDM = np.abs(chi)**2 #already calculated this
     phi_FDM = fourier_potentialV2(rho_FDM,L)
     ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$ [Fourier perturbation]")
     ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = \\chi \\chi^*$")
@@ -318,7 +314,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
     chi = psi*L_s**(3/2)
 
     #Calculate initial Density perturbation (non-dimensionalized and reduced)
-    rho_FDM = np.absolute(chi)**2 #just norm-squared of wavefunction
+    rho_FDM = mu*np.absolute(chi)**2 #just norm-squared of wavefunction
     
     #Calculate initial (non-dim) potential
     phi_FDM = fourier_potentialV2(rho_FDM,L) 
@@ -422,7 +418,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         rho_part = (grid_counts/dz)*sigma 
 
         #Then add the density from the FDM
-        rho_FDM = np.absolute(chi)**2
+        rho_FDM = mu*np.absolute(chi)**2
         rho = rho_FDM + rho_part 
 
         #2. Calculate potential 
@@ -527,7 +523,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         grid_counts = NB.grid_count(stars,L,z)
         rho_part = (grid_counts/dz)*sigma 
         #Add the density from the FDM
-        rho_FDM = np.absolute(chi)**2 
+        rho_FDM = mu*np.absolute(chi)**2 
         rho = rho_FDM + rho_part
         #Calculate potential 
         phi = fourier_potentialV2(rho,L)
