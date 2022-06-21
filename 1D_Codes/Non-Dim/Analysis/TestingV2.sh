@@ -1,7 +1,7 @@
 cd "/home/boris/Documents/Research/Coding"
 
 #Possible choices for number of Bosons and/or Particles:
-num_particles=('0' '10000')
+#num_particles=('0' '10000')
 
 #Choices of either full simulation video or snapshots:
 simulation_choice2=('2') #want it to run a long time
@@ -13,15 +13,31 @@ percentages=('0' '0.5' '1' )
 # done
 
 
-
 for percent in "${percentages[@]}"; do
+    
+    if [ "$percent" == "1" ]; then
+        num_particles=('0')
+    else
+        num_particles=('10000')
+    fi
+
 for num_p in "${num_particles[@]}"; do
     #Break loop if num_b and num_p are both zero
-    if [ "$percent" == '0' ]; then
-        if [ "$num_p" == "0" ]; then
-            continue #No FDM or Particles -> go to next step of loop
-        fi
-    fi
+    # if [ "$percent" == '0' ]; then
+    #     if [ "$num_p" == "0" ]; then
+    #         continue #No FDM or Particles -> go to next step of loop
+    #     fi
+    # fi
+
+    # if [ "$num_p" == "0" ]; then 
+    #     if [ "$percent" != "1" ]; then
+    #         continue
+    #     fi
+    # fi
+
+    # if [ "$percent" = "1"]; then
+    #     num_b=0
+    # fi
 
     #Set Boson Mass array, depending on Number of Bosons
     if [ "$percent" != '0' ]; then

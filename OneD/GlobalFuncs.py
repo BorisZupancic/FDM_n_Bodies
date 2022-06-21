@@ -266,7 +266,7 @@ def main_plot(sim_choice1,L,eta,
     if track_stars == True:
         #E_array = np.array([])
         for j in range(5):
-            ax['lower right'].scatter(stars[j].x, stars[j].v, c = 'g', marker = 'o')
+            ax['lower right'].scatter(stars[j].x, stars[j].v, c = 'k', s = 50, marker = 'o')
         #    E_array = np.append(E_array,stars[j].v**2)
         #E_storage = np.append(E_storage,[E_array])
         
@@ -446,7 +446,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
                 elif n == N-1:
                     PotentialE = phi[-1]+rem*(phi[0]-phi[-1])/dz
                 
-                Energy = 0.5*m*stars[j].v**2 + PotentialE
+                Energy = 0.5*sigma*stars[j].v**2 + sigma*PotentialE
                 E_array = np.append(E_array,Energy)
             if i ==0:
                 E_storage = np.array([E_array])
