@@ -42,6 +42,7 @@ print(f"Mass scale M = {M_s}")
 #L, choice = GF.Startup_Choice()
 L, mu, Num_bosons, r, sigma, Num_stars = GF.StartupV2(hbar, L_s, v_s)
 m = mu*M_s
+percent_FDM = Num_bosons * mu / (Num_bosons * mu + Num_stars * sigma)
 
 #Set up Grid
 L = L*L_s #new length. Length of the box
@@ -61,17 +62,17 @@ print("")
 
 #SET UP FOLDERS:
 if sim_choice2 == 1: 
-    folder_name = f"FuzzyMass{m}_Images"
+    folder_name = f"FDM{percent_FDM}_r{r}_Images"
     if Num_bosons == 0:
-        folder_name = "ParticlesOnly_Images"
+        folder_name = f"{Num_stars}ParticlesOnly_Images"
     elif Num_stars == 0:
-        folder_name = f"OnlyFuzzyMass{m}_Images"
+        folder_name = f"OnlyFDM_r{r}_Images"
 elif sim_choice2 == 2:
-    folder_name = f"FuzzyMass{m}_Snapshots"
+    folder_name = f"FDM{percent_FDM}_r{r}_Snapshots"
     if Num_bosons == 0:
-        folder_name = "ParticlesOnly_Snapshots"
+        folder_name = f"{Num_stars}ParticlesOnly_Snapshots"
     elif Num_stars == 0:
-        folder_name = f"OnlyFuzzyMass{m}_Snapshots"
+        folder_name = f"OnlyFDM_r{r}_Snapshots"
 
 #print(os.path.exists(dirExtension+"/"+folder_name))
 if os.path.exists(dirExtension+"/"+folder_name) == True:
@@ -88,7 +89,7 @@ track_stars = False
 if Num_stars != 0:
     track_stars = True
 
-stars, chi, E_storage = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = True, track_stars = track_stars)
+stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = True, track_stars = track_stars, track_centroid=True)
 print("Calculation and Plotting Done. Now Saving Data...")
 
 #os.chdir(Directory)#+"/"+dirExtension)
@@ -96,17 +97,25 @@ print("Calculation and Plotting Done. Now Saving Data...")
 if Num_bosons == 0:
     np.savetxt(f"StarsOnly_Pos.csv",[star.x for star in stars], delimiter = ",")
     np.savetxt(f"StarsOnly_Vel.csv",[star.v for star in stars], delimiter = ",")
-    np.savetxt(f"Energies.csv", E_storage, delimiter = ",")
+    np.savetxt(f"K_Energies.csv", K_storage, delimiter = ",")
+    np.savetxt(f"W_Energies.csv", W_storage, delimiter = ",")
+    np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
+    np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")
     np.savetxt(f"Chi.csv", chi,delimiter = ",")
+    np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
 elif Num_stars == 0:
     #np.savetxt(f"Stars_Pos_m{m}.csv",[star.x for star in stars], delimiter = ",")
     #np.savetxt(f"Stars_Vel_m{m}.csv",[star.v for star in stars], delimiter = ",")
-    np.savetxt(f"FuzzyOnlyChi_m{m}.csv", chi)
+    np.savetxt(f"FuzzyOnlyChi_r{r}.csv", chi)
     #np.savetxt(f"Energies_m{m}.csv", E_storage, delimiter = ",")
 elif Num_bosons!=0 and Num_stars!=0:
-    np.savetxt(f"Stars_Pos_m{m}.csv",[star.x for star in stars], delimiter = ",")
-    np.savetxt(f"Stars_Vel_m{m}.csv",[star.v for star in stars], delimiter = ",")
-    np.savetxt(f"Chi_m{m}.csv", chi)
-    np.savetxt(f"Energies_m{m}.csv", E_storage, delimiter = ",")
-
+    np.savetxt(f"Stars_Pos.csv",[star.x for star in stars], delimiter = ",")
+    np.savetxt(f"Stars_Vel.csv",[star.v for star in stars], delimiter = ",")
+    np.savetxt(f"Chi.csv", chi)
+    np.savetxt(f"K_Energies.csv", K_storage, delimiter = ",")
+    np.savetxt(f"W_Energies.csv", W_storage, delimiter = ",")
+    np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
+    np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")
+    np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
 print("Data Saved.")
+

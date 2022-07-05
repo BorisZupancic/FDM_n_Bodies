@@ -14,7 +14,8 @@ def r(hbar,m,v,L):
     return hbar/(2*m*v*L)
 
 def f(omega,v,L):
-    return 0.5*L*omega/v 
+    return 0.5*L*omega/v
+    
 ####################################
 
 ## FOR NON DIMENSIONALIZED, FIXED PHI SYSTEMS ONLY

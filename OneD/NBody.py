@@ -85,14 +85,18 @@ def acceleration(phi,L):
     Force = -grad
     
     acceleration = Force#/m #acceleration per particle, at each point of the grid
-    return acceleration#/L #divide by L to keep it non-dimensional
+    return acceleration#/L #divide by L to keep it non-dimensional    
 
 def g(star,acceleration,dz):
     a_grid = acceleration
     
     i = int(star.x//dz)
     rem = star.x % dz 
-    value = a_grid[i] + rem*(a_grid[i]-a_grid[i-1])/dz
+    if i != len(acceleration)-1:
+        value = a_grid[i] + rem*(a_grid[i+1]-a_grid[i])/dz
+    elif i == len(acceleration)-1:
+        # then i+1 <=> 0
+        value = a_grid[i] + rem*(a_grid[0]-a_grid[i])/dz
     return value
 
 def accel_funct(a_grid,L,dz):

@@ -1,71 +1,69 @@
 cd "/home/boris/Documents/Research/Coding"
 
-#Possible choices for number of Bosons and/or Particles:
-#num_particles=('0' '10000')
+#Possible choices for number of Particles:
+num_particles=('0' '1000' '5000' '10000')
 
 #Choices of either full simulation video or snapshots:
 simulation_choice2=('2') #want it to run a long time
 
 #Mass ratios:
 percentages=('0' '0.5' '1' )
-# for num_b in "${num_bosons[@]}"; do
-# echo "$num_b"
-# done
-
 
 for percent in "${percentages[@]}"; do
-    
-    if [ "$percent" == "1" ]; then
-        num_particles=('0')
-    else
-        num_particles=('10000')
-    fi
-
-for num_p in "${num_particles[@]}"; do
-    #Break loop if num_b and num_p are both zero
-    # if [ "$percent" == '0' ]; then
-    #     if [ "$num_p" == "0" ]; then
-    #         continue #No FDM or Particles -> go to next step of loop
-    #     fi
-    # fi
-
-    # if [ "$num_p" == "0" ]; then 
-    #     if [ "$percent" != "1" ]; then
-    #         continue
-    #     fi
-    # fi
-
-    # if [ "$percent" = "1"]; then
-    #     num_b=0
-    # fi
-
-    #Set Boson Mass array, depending on Number of Bosons
-    if [ "$percent" != '0' ]; then
-        #r parameters:
-        fuzziness=('0.5' '1' '5' '10' '50')
-        #masses=('2' '1' '0.5' '0.1' '0.05' '0.04' '0.03' '0.02' '0.01')
-    else
-        fuzziness=('0.5') #Default, won't matter in calculation
-        #masses=('1') #Default, won't matter in simulation
-    fi
-
-#Now run simulation for given num_b, num_p and masses
-    # printf $m
-for r in "${fuzziness[@]}"; do
-    for sim in "${simulation_choice2[@]}"; do
-        echo "---------------------New Sim---------------------"
-        printf 'L = %f
-Particle mass sigma = %f
-Num_particles %i
-Fuzziness r = %f
+    if [ "$percent" == '0' ]; then
+        for num_p in "${num_particles[@]}"; do
+            for sim in "${simulation_choice2[@]}"; do
+                echo "---------------------New Sim---------------------"
+                printf 'L = %f
 FDM percentage by mass : %f 
+Num_particles %i
 sim choice : %i
 Boson std = %f
-Particle std = %f \n \n' "2" "1" "$num_p" "$r" "$percent" "$sim" "0.1" "0.1"
+Particle std = %f \n \n' "2" "$percent" "$num_p" "$sim" "0.1" "0.1"
 
-        printf '%f\n%f\n%i\n%f\n%f\n%i\n%f\n%f' "2" "1" "$num_p" "$r" "$percent" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Analysis/ProgramV2.py 
-    done
-done
+                printf '%f\n%f\n%i\n%i\n%f\n%f' "2" "$percent" "$num_p" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Analysis/ProgramV2.py 
+            done
+        done
+    elif ["$percent" == "1" ]; then
+        v_FDM=1
+        R_syst=1
+        de_Broglie=0.05
+        #num_p=10000
 
-done
+        for sim in "${simulation_choice2[@]}"; do
+            echo "---------------------New Sim---------------------"
+            printf 'L = %f
+FDM percentage by mass : %f 
+v_FDM dispersion = %f
+Characteristic Radius: R_syst = %f
+de Broglie Wavelength = %f
+sim choice : %i
+Boson std = %f
+Particle std = %f \n \n' "2" "$percent" "$v_FDM" "$R_syst" "$de_Broglie" "$sim" "0.1" "0.1"
+
+            printf '%f\n%f\n%f\n%f\n%f\n%i\n%f\n%f' "2" "$percent" "$v_FDM" "$R_syst" "$de_Broglie" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Analysis/ProgramV2.py 
+        done
+    else
+        
+        v_FDM=57.66
+        R_syst=0.1568
+        de_Broglie=0.05
+        num_p=10000
+
+        for sim in "${simulation_choice2[@]}"; do
+            echo "---------------------New Sim---------------------"
+            printf 'L = %f
+FDM percentage by mass : %f 
+v_FDM dispersion = %f
+Characteristic size: R_syst = %f
+de Broglie Wavelength = %f
+Num_particles = %f
+sim choice : %i
+Boson std = %f
+Particle std = %f \n \n' "2" "$percent" "$v_FDM" "$R_syst" "$de_Broglie" "$num_p" "$sim" "0.1" "0.1"
+
+            printf '%f\n%f\n%f\n%f\n%f\n%i\n%f\n%f' "2" "$percent" "$v_FDM" "$R_syst" "$de_Broglie" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Analysis/ProgramV2.py 
+        done
+
+    fi
 done
