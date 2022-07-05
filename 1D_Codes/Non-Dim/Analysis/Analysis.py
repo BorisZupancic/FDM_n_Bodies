@@ -240,7 +240,7 @@ def analysis(*args):
         K += dK
     print(f"K_tot = {K}")
     #average KE:
-    print(K/Num_stars)
+    print(f"K_avg = {K/Num_stars}")
 
     # Compute Total Potential of stars:
     a_part = NB.acceleration(phi_part,L)
@@ -251,16 +251,15 @@ def analysis(*args):
         dW = - sigma*star.x*g
         W += dW
     print(f"W_tot = {W}")
-    print(W/Num_stars)
+    print(f"W_avg = {W/Num_stars}")
 
 
     #Plot <v^2> vs |z|
-    num_bins = 100
+    num_bins = int(np.floor(np.sqrt(Num_stars)))
     bins = np.zeros(num_bins)
     Delta = (L/2)/num_bins
     bins_counts = np.zeros(num_bins)
     for star in stars:
-
         i = int(np.abs(star.x)//Delta)
         bins[i] += star.v**2
         bins_counts[i] += 1
@@ -272,9 +271,9 @@ def analysis(*args):
     ax[0].set_ylabel("$v^2$")
 
     ax[1].set_title(f"RMS Velocity of Stars by histogrammed positions ({num_bins} bins)")
-    ax[1].plot(np.linspace(0,L/2,len(v_rms_array)), v_rms_array, 'b-', marker = "o")
+    ax[1].plot(np.linspace(0,L/2,len(v_rms_array)), np.sqrt(v_rms_array), 'b-', marker = "o")
     ax[1].set_xlabel("$|z|$")
-    ax[1].set_ylabel("$\\langle v^2 \\rangle$")
+    ax[1].set_ylabel("$\\sqrt{\\langle v^2 \\rangle}$")
 
     plt.show()
 
@@ -610,14 +609,17 @@ def analysis(*args):
         plt.show()
 
         ###################################################
-        plt.figure()
-        plt.title("Gravitational Potential in the Box")
+        fig,ax = plt.subplots(2,1, figsize = (8,10), gridspec_kw = {"height_ratios": [2,1]})
+        plt.suptitle("Gravitational Potential in the Box")
         fit_rho = np.append(fit_rho[::-1],fit_rho)/ 2 #have to divide by 2 becasue we are double counting on the grid
         fit_phi = GF.fourier_potentialV2(fit_rho,L) 
         fit_z = np.linspace(-L/2,L/2,len(fit_phi))
-        plt.plot(fit_z,fit_phi,label = "Analytic Model")
+        ax[0].plot(fit_z,fit_phi,label = "Analytic Model")
         rho = np.append(rho_left,rho_right)
-        plt.plot(z,GF.fourier_potentialV2(rho,L), label = "Exact NBody Potential")
-        plt.legend()
+        ax[0].plot(z,GF.fourier_potentialV2(rho,L), label = "Exact NBody Potential")
+        ax[0].legend()
+
+        ax[1].plot(fit_z,fit_phi-GF.fourier_potentialV2(rho,L)[4:],'r,--')
+        ax[1].set_title("Residuals")
         plt.show()
 

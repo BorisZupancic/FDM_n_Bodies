@@ -1,8 +1,8 @@
 cd "/home/boris/Documents/Research/Coding"
 
 #Possible choices for number of Particles:
-num_particles=('0' '1000' '5000' '10000')
-
+#num_particles=('0' '1000' '5000' '10000' '50000' '100000')
+num_particles=('50000' '100000')
 #Choices of either full simulation video or snapshots:
 simulation_choice2=('2') #want it to run a long time
 
