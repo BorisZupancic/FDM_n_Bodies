@@ -9,7 +9,7 @@ from PIL import Image
 import scipy.optimize as opt
 
 #Import My Library
-My_Package_PATH = "/home/boris/Documents/Research/Coding"
+My_Package_PATH = "/home/boris/Documents/Research/FDM_n_Bodies"
 import sys
 sys.path.insert(1, My_Package_PATH)
 import OneD.WaveNonDim as ND
