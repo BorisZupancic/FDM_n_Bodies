@@ -112,29 +112,40 @@ def analysis(*args):
     #ADDITIONAL:
     #PLOT STAR CENTER OF MASS
     if Num_stars != 0:#only calculate if there are stars
+        centroid_z = 0
+        for j in range(len(grid_counts)):
+            centroid_z += z[j]*grid_counts[j]
+        centroid_z = centroid_z / Num_stars
+        
+        # #Find center of distribution / max value and index:
+        # i = 0
+        # max_bool = False
+        # while max_bool == False:
+        #     for j in range(len(rho)):
+        #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
+        #             #then set i equal to j
+        #             i = j 
+        #             #break
+        #         else:
+        #             max_index = i
+        #             max_bool = True
+
+        # max_rho = rho[max_index]
+
+        # #Other method to accumulate left and right sides:
+        # for star in stars:
+        #     star.x = star.x - z[max_index] #shift
+        #     star.reposition(L) #reposition
+
+        # Reposition the center of mass
+        # grid_counts = NB.grid_count(stars,L,z)
         # centroid_z = 0
         # for j in range(len(grid_counts)):
         #     centroid_z += z[j]*grid_counts[j]
         # centroid_z = centroid_z / Num_stars
-        
-        #Find center of distribution / max value and index:
-        i = 0
-        max_bool = False
-        while max_bool == False:
-            for j in range(len(rho)):
-                if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
-                    #then set i equal to j
-                    i = j 
-                    #break
-                else:
-                    max_index = i
-                    max_bool = True
 
-        max_rho = rho[max_index]
-
-        #Other method to accumulate left and right sides:
         for star in stars:
-            star.x = star.x - z[max_index] #shift
+            star.x = star.x - centroid_z #shift
             star.reposition(L) #reposition
 
         grid_counts = NB.grid_count(stars,L,z)
@@ -143,10 +154,10 @@ def analysis(*args):
         rho_FDM = mu*np.absolute(chi)**2 
         rho = rho_FDM + rho_part
 
-        centroid_z = 0
-        for j in range(len(grid_counts)):
-            centroid_z += z[j]*grid_counts[j]
-        centroid_z = centroid_z / Num_stars
+        # centroid_z = 0
+        # for j in range(len(grid_counts)):
+        #     centroid_z += z[j]*grid_counts[j]
+        # centroid_z = centroid_z / Num_stars
         ax['lower right'].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
 
 
@@ -296,23 +307,57 @@ def analysis(*args):
     ax[2].legend()
     plt.show()
     
-    W_totals = np.array([np.sum(W_Energies[i,:]) for i in range(np.shape(W_Energies)[0])])
+    W_totals = np.array([np.sum(W_5stars_Energies[i,:]) for i in range(np.shape(W_5stars_Energies)[0])])
+    K_totals = np.array([np.sum(K_5stars_Energies[i,:]) for i in range(np.shape(K_5stars_Energies)[0])])
+    Virial_ratios = np.abs(K_totals/W_totals)
+    #print(Virial_ratios)
+    indices = z#99*np.array([0,1,2,4,8,16,32,64])
+    
+    fig,ax = plt.subplots(1,4,figsize = (20,5))
+    plt.suptitle("Total Energy Plots for the 5 stars")
+    ax[0].set_title("Total Potential Energy over time")
+    ax[0].plot(W_totals,label = "$\\Sigma W$")
+    ax[0].legend()
+
+    ax[1].set_title("Total Kinetic Energy over time")
+    ax[1].plot(K_totals,label = "$\\Sigma K$")
+    ax[1].legend()
+
+    ax[2].set_title("Total Energy K+W over time")
+    ax[2].plot(K_totals+W_totals,label = "$\\Sigma E$")
+    ax[2].legend()
+
+    ax[3].set_title("Virial Ratio $|K/W|$ over time")
+    ax[3].plot(Virial_ratios, "b--", marker = "o")
+    plt.show()
+
+
+    W_totals = 0.5 * np.array([np.sum(W_Energies[i,:]) for i in range(np.shape(W_Energies)[0])])
     K_totals = np.array([np.sum(K_Energies[i,:]) for i in range(np.shape(K_Energies)[0])])
     Virial_ratios = np.abs(K_totals/W_totals)
     #print(Virial_ratios)
     indices = 99*np.array([0,1,2,4,8,16,32,64])
     
-    fig,ax = plt.subplots(1,3,figsize = (15,5))
-    ax[0].set_title("Total Energies over time")
+    fig,ax = plt.subplots(1,4,figsize = (20,5))
+    plt.suptitle("Energy Plots for Every Star, at Snapshot times/indices")
+    ax[0].set_title("Potential Energy over time")
     ax[0].plot(indices,W_totals,label = "$\\Sigma W$")
-    ax[0].plot(indices,K_totals,label = "$\\Sigma K$")
-    ax[0].legend()
-
-    ax[1].plot(indices,K_totals+W_totals,label = "$\\Sigma E$")
+    
+    ax[1].set_title("Kinetic Energy over time")
+    ax[1].plot(indices,K_totals,label = "$\\Sigma K$")
     ax[1].legend()
 
-    ax[2].set_title("Virial Ratio $|K/W|$ over time")
-    ax[2].plot(indices, Virial_ratios, "b--", marker = "o")
+    #set the scale:
+    Dy = np.max(K_totals)-np.min(K_totals)
+    y_min = np.min(K_totals+W_totals)
+    y_max = Dy + y_min
+    ax[2].set_title("Total Energy K+W over time")
+    ax[2].plot(indices,K_totals+W_totals,label = "$\\Sigma E$")
+    ax[2].set_ylim(y_min,y_max)
+    ax[2].legend()
+
+    ax[3].set_title("Virial Ratio $|K/W|$ over time")
+    ax[3].plot(indices, Virial_ratios, "b--", marker = "o")
     plt.show()
 
     Energies = K_Energies + W_Energies
@@ -355,40 +400,40 @@ def analysis(*args):
         rho = rho_part
 
 
-        #METHOD 1: Split across peak of distribution
-        #Find center of distribution / max value and index:
-        i = 0
-        max_bool = False
-        while max_bool == False:
-            for j in range(len(rho)):
-                if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
-                    #then set i equal to j
-                    i = j 
-                    #break
-                else:
-                    max_index = i
-                    max_bool = True
+        # #METHOD 1: Split across peak of distribution
+        # #Find center of distribution / max value and index:
+        # i = 0
+        # max_bool = False
+        # while max_bool == False:
+        #     for j in range(len(rho)):
+        #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
+        #             #then set i equal to j
+        #             i = j 
+        #             #break
+        #         else:
+        #             max_index = i
+        #             max_bool = True
 
-        # max_rho = rho[max_index]
-        # print(max_rho,max_index,z[i])
+        # # max_rho = rho[max_index]
+        # # print(max_rho,max_index,z[i])
 
 
-        i = max_index
-        z = z-z[i]
-        z_left = z[0:i]
-        z_right = z[i:]
-        rho_left = rho[0:i]
-        rho_right = rho[i:]
+        # i = max_index
+        # z = z-z[i]
+        # z_left = z[0:i]
+        # z_right = z[i:]
+        # rho_left = rho[0:i]
+        # rho_right = rho[i:]
 
-        #rho_avgd = (rho_left[len(rho_left)-len(rho_right):][::-1]+rho_right)/2
-        #rho_avgd = np.append(rho_avgd, rho_left[0:len(rho_left)-len(rho_right)][::-1])
-        fig = plt.figure()
-        plt.title("Density of Particles Split in Half")
-        plt.plot(z_right,rho_right)
-        plt.plot(z_left,rho_left)
-        plt.plot(z[i],rho[i], "ro", label = "Peak of Distribution")
-        plt.legend()
-        plt.show()
+        # #rho_avgd = (rho_left[len(rho_left)-len(rho_right):][::-1]+rho_right)/2
+        # #rho_avgd = np.append(rho_avgd, rho_left[0:len(rho_left)-len(rho_right)][::-1])
+        # fig = plt.figure()
+        # plt.title("Density of Particles Split in Half")
+        # plt.plot(z_right,rho_right)
+        # plt.plot(z_left,rho_left)
+        # plt.plot(z[i],rho[i], "ro", label = "Peak of Distribution")
+        # plt.legend()
+        # plt.show()
 
         fig = plt.figure()
         plt.title("Density of Particles Split in Half")
@@ -507,33 +552,44 @@ def analysis(*args):
         except:
             pass
             
-        if cols ==0:
-            cols = 1
+        # plot = True
+        # if cols == 0:
+        #     plot = False
+        #     #cols = 1
+        print(f"#columns = {cols}")
+        if cols >= 1:
+            fig,ax = plt.subplots(2,cols,figsize = (30,10))
+            print(ax)
+            #special cases when cols == 1:
+            if cols == 1:
+               ax0 = ax[0]
+               ax1 = ax[1]
+            else:
+                ax0 = ax[0,0]
+                ax1 = ax[1,0]     
+            plt.suptitle("Density vs |z| with Curve fit",fontsize = 25)
+            
+            fit_rho = fit_func(z_right,*popt1)
+            ax0.plot(z_right,rho_whole)
+            ax0.plot(z_right,fit_rho,'r--',label="Curve Fit")
+            ax0.set_xlim(-0.1,1.1)#L/2)
+            ax0.text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|(|z|+a_1)^2}$",fontsize = 30)
+            ax0.text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt1[0]}$",fontsize = 15)
+            ax0.text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt1[1]}$",fontsize = 15)
+            
+            ax0.legend(fontsize = 25)
 
-        fig,ax = plt.subplots(2,cols,figsize = (30,10))
-        plt.suptitle("Density vs |z| with Curve fit",fontsize = 25)
-        
-        fit_rho = fit_func(z_right,*popt1)
-        ax[0,0].plot(z_right,rho_whole)
-        ax[0,0].plot(z_right,fit_rho,'r--',label="Curve Fit")
-        ax[0,0].set_xlim(-0.1,1.1)#L/2)
-        ax[0,0].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|(|z|+a_1)^2}$",fontsize = 30)
-        ax[0,0].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt1[0]}$",fontsize = 15)
-        ax[0,0].text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt1[1]}$",fontsize = 15)
-        
-        ax[0,0].legend(fontsize = 25)
+            residuals = fit_rho-rho_whole
+            resid_y_max = np.max(residuals)
+            ax1.plot(z_right,residuals,"r.--")
+            ax1.set_xlim(-0.1,1.1)#L/2)
+            ax1.set_ylim((-resid_y_max,resid_y_max))
+            #ax[1,0].legend()
 
-        residuals = fit_rho-rho_whole
-        resid_y_max = np.max(residuals)
-        ax[1,0].plot(z_right,residuals,"r.--")
-        ax[1,0].set_xlim(-0.1,1.1)#L/2)
-        ax[1,0].set_ylim((-resid_y_max,resid_y_max))
-        #ax[1,0].legend()
-
-        chi2 = 0
-        for i in range(len(residuals)):
-            chi2 += (residuals[i])**2 / fit_rho[i]
-        ax[1,0].text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
+            chi2 = 0
+            for i in range(len(residuals)):
+                chi2 += (residuals[i])**2 / fit_rho[i]
+            ax1.text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
 
         if cols >= 2:
             fit_rho = new_fit_func(z_right,*popt2)

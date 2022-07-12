@@ -39,6 +39,24 @@ class star:
             #     self.x = remainder-L/2
         # print(f"new z = {self.x}")
         # print(" ")
+    
+    def get_W(self,z,phi,L):
+        sigma = self.mass
+        dz = z[1]-z[0]
+        N = len(phi)
+
+        #Find the potential energy:
+        zz = self.x
+        n = int((zz+L/2)//dz)
+        rem = (zz+L/2) % dz 
+        Potential = 0
+        if n < N-1:
+            Potential = phi[n] + rem*(phi[n+1]-phi[n])/dz
+        elif n == N-1:
+            Potential = phi[-1]+rem*(phi[0]-phi[-1])/dz
+        Potential -= np.max(phi)
+        W = sigma*Potential
+        return W
 
     def evolve_star_dynamics(self,g,dt): #g: acceleration, dt: time-step
         a = g(self.x)

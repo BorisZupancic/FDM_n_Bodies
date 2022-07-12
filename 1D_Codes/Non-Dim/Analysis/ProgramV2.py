@@ -8,7 +8,7 @@ import cv2
 from PIL import Image 
 
 #Import My Library
-My_Package_PATH = "/home/boris/Documents/Research/Coding"
+My_Package_PATH = "/home/boris/Documents/Research/FDM_n_Bodies"
 import sys
 sys.path.insert(1, My_Package_PATH)
 import OneD.WaveNonDim as ND
@@ -52,6 +52,15 @@ dz = z[1]-z[0]
 
 ################
 #PROMPT FOR FULL SIMULATION OR SNAPSHOTS
+#Also prompt for fixed potential
+
+print("")
+print("Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]")
+fixed_phi = input()
+if fixed_phi == 'Y' or fixed_phi == 'y' or fixed_phi == None:
+    fixed_phi = True
+if fixed_phi == 'n':
+    fixed_phi = False
 print("")
 print("Do you want the full simulation [1] or snapshots [2]? Choose [1/2]")
 sim_choice2 = int(input())
@@ -89,7 +98,7 @@ track_stars = False
 if Num_stars != 0:
     track_stars = True
 
-stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = True, track_stars = track_stars, track_centroid=True)
+stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = True, track_stars = track_stars, track_centroid=True,fixed_phi = fixed_phi)
 print("Calculation and Plotting Done. Now Saving Data...")
 
 #os.chdir(Directory)#+"/"+dirExtension)
