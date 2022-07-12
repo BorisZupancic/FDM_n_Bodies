@@ -369,7 +369,7 @@ def main_plot(sim_choice1,L,eta,
     if track_centroid == True and Num_stars != 0:
         return centroid_z
 
-def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, v_s, L_s, Directory, folder_name, absolute_PLOT = True, track_stars = False, track_centroid = False, Long_time = False):
+def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, v_s, L_s, Directory, folder_name, absolute_PLOT = True, track_stars = False, track_centroid = False, Long_time = False, fixed_phi = False):
     #Re-calcualte Mass and Time scales
     M_s = v_s**2 * L_s
     T_s = L_s / v_s
@@ -388,8 +388,11 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
     # FOR THE FDM
     #Set an initial wavefunction
     b=0
-    print("Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):")
-    std = float(input())
+    if Num_bosons != 0:
+        print("Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):")
+        std = float(input())
+    else:
+        std = 0.1 #value doesn't matter (just not 0)
     std=std*L
     psi = np.sqrt(gauss(z,b,std)*Num_bosons)#*Num_particles / (L**3))
     chi = psi*L_s**(3/2)
@@ -397,9 +400,6 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
     #Calculate initial Density perturbation (non-dimensionalized and reduced)
     rho_FDM = mu*np.absolute(chi)**2 #just norm-squared of wavefunction
     
-    #Calculate initial (non-dim) potential
-    phi_FDM = fourier_potentialV2(rho_FDM,L) 
-
     #Check how it's normalized:
     print(f"integral of |chi|^2 : {np.sum(dz*rho_FDM)}")
     print(f"Numerically calculated integral of |psi|^2 : {np.sum(dz*np.absolute(psi)**2)}")
@@ -410,8 +410,11 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
     # FOR THE PARTICLES
     #Set initial distribution on grid
     b = 0 #center at zero
-    print("Choose the standard deviation of the Particle system (as fraction of the box width):")
-    std = float(input())
+    if Num_stars != 0:
+        print("Choose the standard deviation of the Particle system (as fraction of the box width):")
+        std = float(input())
+    else:
+        std = 0.1 #value doesn't matter (just not 0)
     std = std*L 
     z_0 = np.random.normal(b,std,Num_stars) #initial positions sampled from normal distribution
     stars = [NB.star(i,sigma,z_0[i],0) for i in range(len(z_0))] #create list of normally distributed stars, zero initial speed
@@ -440,7 +443,10 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
     #Calculate total density
     rho = rho_FDM + rho_part
     
-    
+    #Now option to freeze the potential:
+    if fixed_phi == True:
+        phi = 0.5*sigma*((z**2) / (L/2)**2 - 1)  #equal to 0 at boundaries 
+
     ###################################################
     #PHASE SPACE STUFF
     N = len(z)
@@ -544,8 +550,9 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         rho = rho_FDM + rho_part 
 
         #2. Calculate potential 
-        phi = fourier_potentialV2(rho,L)
- 
+        if fixed_phi == False:
+            phi = fourier_potentialV2(rho,L)
+        
         #3. Calculate Acceleration Field on Mesh:
         a_grid = NB.acceleration(phi,L) 
         
@@ -558,23 +565,12 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
             W_5stars = np.array([])
             for j in range(5):
                 star = stars[j]
-                g = NB.g(star,a_grid,dz)
-
-                W = - sigma*star.x*g
+                #g = NB.g(star,a_grid,dz)
+                #W = - sigma*star.x*g
         
-                #Find the potential energy:
-                # N = len(z)
-                # zz = stars[j].x
-                # n = int((zz+L/2)//dz)
-                # rem = (zz+L/2) % dz 
-                # Potential = 0
-                # if n < N-1:
-                #     Potential = phi[n] + rem*(phi[n+1]-phi[n])/dz
-                # elif n == N-1:
-                #     Potential = phi[-1]+rem*(phi[0]-phi[-1])/dz
-                # W = sigma*Potential
-                
-                K = 0.5*sigma*stars[j].v**2
+                W = star.get_W(z,phi,L) #Find the potential energy:
+                K = 0.5*sigma*stars[j].v**2 #Find kinetic energy
+
                 K_5stars = np.append(K_5stars,K)
                 W_5stars = np.append(W_5stars,W)
             if i == 0:
@@ -595,10 +591,10 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
                 W_array = np.array([])
                 for j in range(len(stars)):
                     star = stars[j]
-                    g = NB.g(star,a_grid,dz)
+                    #g = NB.g(star,a_grid,dz)
 
-                    W = - sigma*star.x*g
-        
+                    W = star.get_W(z,phi,L)#- sigma*star.x*g
+                    
                     # #Find the potential energy:
                     # N = len(z)
                     # zz = stars[j].x
@@ -704,7 +700,8 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         rho_FDM = mu*np.absolute(chi)**2 
         rho = rho_FDM + rho_part
         #Calculate potential 
-        phi = fourier_potentialV2(rho,L)
+        if fixed_phi == False: #if True, potential is fixed
+            phi = fourier_potentialV2(rho,L)
         #Calculate Acceleration Field on Mesh:
         a_grid = NB.acceleration(phi,L) 
 
