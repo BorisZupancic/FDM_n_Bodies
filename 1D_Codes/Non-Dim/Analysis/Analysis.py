@@ -679,3 +679,5 @@ def analysis(*args):
         ax[1].set_title("Residuals")
         plt.show()
 
+    return z_rms, v_rms
+

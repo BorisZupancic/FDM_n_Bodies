@@ -1,3 +1,6 @@
+import time
+st = time.time()
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -128,3 +131,8 @@ elif Num_bosons!=0 and Num_stars!=0:
     np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
 print("Data Saved.")
 
+et = time.time()
+elapsed_time = et-st
+print(f"Executed in {elapsed_time} seconds = {elapsed_time/60} minutes.")
+properties = ["Time Elapsed", elapsed_time]
+np.savetxt(f"Properties.csv", properties, delimiter = ",", fmt = "%s")
