@@ -134,5 +134,24 @@ print("Data Saved.")
 et = time.time()
 elapsed_time = et-st
 print(f"Executed in {elapsed_time} seconds = {elapsed_time/60} minutes.")
-properties = ["Time Elapsed", elapsed_time]
+properties = [["Time Elapsed:", elapsed_time],
+              ["Box Length:", L],
+              ["Boson Mass:",mu],
+              ["Number of bosons:",Num_bosons],
+              ["Particle mass:",sigma],
+              ["Number of Particles:",Num_stars]]
 np.savetxt(f"Properties.csv", properties, delimiter = ",", fmt = "%s")
+
+if sim_choice2 == 1:
+    print("Now Saving Video")
+    #WRITE TO VIDEO
+    video_name = "Video"
+    fps = 10
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    GF.animate(fourcc,Directory,folder_name,video_name,fps)
+    print("Video Saved.")
+# if sim_choice2 == 1:
+#     subprocess.call(["xdg-open", "FDM_n_Body.mp4"])
+# elif sim_choice2 == 2:
+#     subprocess.call(["xdg-open", "FDM_n_Body_Snapshots.mp4"]) 
+
