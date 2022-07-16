@@ -237,8 +237,8 @@ def analysis(*args):
     print(f"z_rms = {z_rms}")
     #v_rms = np.sqrt(np.sum([star.v**2 for star in stars])/Num_stars)
 
-    K = 0.5 * v_rms**2
-    print(f"K_avg = 0.5*m*v_rms^2 = {K} (m=1)")
+    K = 0.5 * sigma * v_rms**2
+    print(f"K_avg = 0.5*m*v_rms^2 = {K} (m={sigma})")
     print(F"=> 2*K_avg = {2*K}")
 
     print(f"W_avg = {z_rms*Num_stars}")
@@ -307,7 +307,7 @@ def analysis(*args):
     ax[2].legend()
     plt.show()
     
-    W_totals = np.array([np.sum(W_5stars_Energies[i,:]) for i in range(np.shape(W_5stars_Energies)[0])])
+    W_totals = 0.5 * np.array([np.sum(W_5stars_Energies[i,:]) for i in range(np.shape(W_5stars_Energies)[0])])
     K_totals = np.array([np.sum(K_5stars_Energies[i,:]) for i in range(np.shape(K_5stars_Energies)[0])])
     Virial_ratios = np.abs(K_totals/W_totals)
     #print(Virial_ratios)
@@ -328,7 +328,7 @@ def analysis(*args):
     ax[2].legend()
 
     ax[3].set_title("Virial Ratio $|K/W|$ over time")
-    ax[3].plot(Virial_ratios, "b--", marker = "o")
+    ax[3].plot(Virial_ratios, "b--",marker = ".")
     plt.show()
 
 
@@ -341,10 +341,10 @@ def analysis(*args):
     fig,ax = plt.subplots(1,4,figsize = (20,5))
     plt.suptitle("Energy Plots for Every Star, at Snapshot times/indices")
     ax[0].set_title("Potential Energy over time")
-    ax[0].plot(indices,W_totals,label = "$\\Sigma W$")
+    ax[0].plot(indices,W_totals,"--", marker = "o",label = "$\\Sigma W$")
     
     ax[1].set_title("Kinetic Energy over time")
-    ax[1].plot(indices,K_totals,label = "$\\Sigma K$")
+    ax[1].plot(indices,K_totals,"--", marker = "o",label = "$\\Sigma K$")
     ax[1].legend()
 
     #set the scale:
@@ -352,7 +352,7 @@ def analysis(*args):
     y_min = np.min(K_totals+W_totals)
     y_max = Dy + y_min
     ax[2].set_title("Total Energy K+W over time")
-    ax[2].plot(indices,K_totals+W_totals,label = "$\\Sigma E$")
+    ax[2].plot(indices,K_totals+W_totals,"--", marker = "o",label = "$\\Sigma E$")
     ax[2].set_ylim(y_min,y_max)
     ax[2].legend()
 
@@ -678,4 +678,6 @@ def analysis(*args):
         ax[1].plot(fit_z,fit_phi-GF.fourier_potentialV2(rho,L)[4:],'r,--')
         ax[1].set_title("Residuals")
         plt.show()
+
+    return z_rms, v_rms
 

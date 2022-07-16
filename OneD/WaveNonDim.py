@@ -99,10 +99,7 @@ def time_evolveV2(chi,phi,r,dz,dtau,m,L):
 ###################################################################################
 def Husimi_phase(chi,z,dz,L,eta):
     N = len(chi)
-    #eta = 0.25#/(2*np.pi*N)**0.5
-    #A = 1#/(2*np.pi*hbar)**0.5 
-    #B = 1#/(np.pi*eta**2)**0.25 
-
+    
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     #k = k/L #non-dimensionalize
     dk = k[1]-k[0]

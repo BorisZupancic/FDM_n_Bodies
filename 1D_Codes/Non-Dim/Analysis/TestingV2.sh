@@ -69,7 +69,7 @@ sim choice : %i
 Boson std = %f
 Particle std = %f \n \n' "2" "$percent" "$v_FDM" "$R_syst" "$de_Broglie" "$num_p" "$sim" "0.1" "0.1"
 
-            printf '%f\n%f\n%f\n%f\n%f\n%i\n%f\n%f' "2" "$percent" "$v_FDM" "$R_syst" "$de_Broglie" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Analysis/ProgramV2.py 
+            printf '%f\n%f\n%f\n%f\n%f\n%i\n%f\n%f' "2" "$percent" "$v_FDM" "$R_syst" "$de_Broglie" "$num_p" "$sim" "0.1" "0.1" | python3 -u 1D_Codes/Non-Dim/Analysis/ProgramV2.py 
         done
 
     fi
