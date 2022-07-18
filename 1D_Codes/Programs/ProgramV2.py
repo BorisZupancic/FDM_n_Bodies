@@ -20,8 +20,11 @@ import OneD.Global as GF
 
 #Set up Directory for saving files/images/videos
 # Will not rename this again
+print("Specify Path to create folder for saving images.")
+parent = str(input())
+
 dirExtension = "1D_Codes/Programs"
-Directory = os.getcwd()+"/"+dirExtension+"/Analysis" #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
+Directory = os.getcwd()+"/"+dirExtension+"/"+parent #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 print(Directory)
 
 ############################################
@@ -91,7 +94,7 @@ elif sim_choice2 == 2:
     elif Num_stars == 0:
         folder_name = f"OnlyFDM_r{r}_Snapshots"
 
-print(os.path.exists(Directory+"/"+folder_name))
+#print(os.path.exists(Directory+"/"+folder_name))
 if os.path.exists(Directory+"/"+folder_name) == True:
     for file in os.listdir(Directory+"/"+folder_name):
         os.remove(Directory+"/"+folder_name+"/"+file)
@@ -113,7 +116,7 @@ if Num_stars != 0:
 stars,chi = GF.gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
 
 #Run simulation on Initial Conditions:
-stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,
+stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,
                                                                                                       mu, Num_bosons, r, chi, 
                                                                                                       sigma,stars,
                                                                                                       v_s,L_s,
@@ -135,10 +138,9 @@ if Num_bosons == 0:
     np.savetxt(f"Chi.csv", chi,delimiter = ",")
     np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
 elif Num_stars == 0:
-    #np.savetxt(f"Stars_Pos_m{m}.csv",[star.x for star in stars], delimiter = ",")
-    #np.savetxt(f"Stars_Vel_m{m}.csv",[star.v for star in stars], delimiter = ",")
-    np.savetxt(f"FuzzyOnlyChi_r{r}.csv", chi)
-    #np.savetxt(f"Energies_m{m}.csv", E_storage, delimiter = ",")
+    np.savetxt(f"Chi.csv", chi, delimiter =",")
+    np.savetxt(f"W_FDM_storage.csv", W_FDM_storage, delimiter =",")
+
 elif Num_bosons!=0 and Num_stars!=0:
     np.savetxt(f"Stars_Pos.csv",[star.x for star in stars], delimiter = ",")
     np.savetxt(f"Stars_Vel.csv",[star.v for star in stars], delimiter = ",")

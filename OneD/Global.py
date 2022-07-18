@@ -311,7 +311,8 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
                     sigma, stars, 
                     v_s, L_s, 
                     Directory, folder_name, 
-                    absolute_PLOT = True, track_stars = False, track_centroid = False, Long_time = False, fixed_phi = False):
+                    absolute_PLOT = True, track_stars = False, track_centroid = False, Long_time = False, fixed_phi = False,
+                    track_FDM = False):
     
     #########################################
     #RETRIEVE INFO FROM INITIAL STARTUP/CONDITIONS
@@ -355,7 +356,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
     ###################################################
     #PHASE SPACE STUFF
     N = len(z)
-    eta = np.sqrt(1/(2*np.pi*N))#*r))
+    eta = 10*r #np.sqrt(1/(2*np.pi*N))#*r))
     #eta = 0.05*L*r**0.5 #resolution for Husimi
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     #rescale wavenumber k to velocity v:
@@ -528,6 +529,17 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
             W_storage = None
             #E_storage = None #to go in the main_plot loop
 
+        #Record Energies:
+        if i in track_snapshot_indices:
+            if track_FDM == True:
+                W = 0.5*np.sum(rho_FDM*phi)*dz  
+                if i == 0:
+                    W_FDM_storage = np.array([W])
+                else:
+                    W_FDM_storage = np.append (W_FDM_storage,W) 
+        else:
+            W_FDM_storage = None
+
         #################################################
         # PLOTTING
         # Plot everytime if sim_choice2 == 1
@@ -640,7 +652,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
     if track_centroid == False:
         centroids = None
     
-    return stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids        
+    return stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids, W_FDM_storage     
 
 ###########################################################
 # FOR ANIMATION IN POSITION SPACE
