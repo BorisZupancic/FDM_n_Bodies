@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import os
 import cv2 
 from PIL import Image
-from pyrsistent import mutant
 import OneD.Wave as Wave
 import OneD.NBody as NB
 import matplotlib.cm as cm
@@ -25,31 +24,6 @@ def checkMemory(mem_limit):
         overflow = True
     return overflow
 
-def Startup(hbar,L_scale,v_scale,M_scale):
-    print("")
-    print("Choose a (non-dimensional) box length:")
-    L = float(input())
-    print("")
-    
-    print("Choose a (non-dimensional) Boson mass:")
-    mu = float(input())
-    print("How many Bosons?")
-    Num_bosons = int(input())
-    #Calculate dimensional mass:
-    m = mu*M_scale
-    print(f"Mass mu = {mu}, m = mu*M = {m}")
-    #Calculate Fuzziness:
-    r = Wave.r(hbar,m,v_scale,L_scale)
-    print(f"Fuzziness: r = {r}")
-    
-    #Particles
-    print("")
-    print("Choose your particle/star mass (per unit area):")
-    sigma = float(input())
-    print("How many particles?")
-    Num_stars = int(input())
-    
-    return L, mu, Num_bosons, r, sigma, Num_stars
 
 def StartupV2(hbar,L_scale,v_scale):
 
@@ -107,71 +81,9 @@ def StartupV2(hbar,L_scale,v_scale):
     print(f"Num_Bosons = {Num_bosons}")
     print(f"mu = {mu}")
     
-    return L, mu, Num_bosons, r, sigma, Num_stars
+    return L, mu, Num_bosons, r, lambda_deB, R, sigma, Num_stars
 
-def StartupV3(hbar,L_scale,v_scale):
-
-    M_scale = L_scale*v_scale**2
-    
-    print("")
-    print("Choose a (non-dimensional) box length:")
-    L = float(input())
-    print("")
-
-    ##########################################
-    #Particles
-    print("")
-    print("Choose your particle/star mass (per unit area):")
-    sigma = float(input())
-    print("How many particles?")
-    Num_stars = int(input())
-    
-    print("Choose percentage (as a decimal) of FDM (by mass)")
-    percent_FDM = float(input())
-    print("")
-    
-    if percent_FDM != 0:
-        ##########################################
-        # FDM
-        print("Choose a FDM mass (in units of 10^-19 eV):")
-        m_real = float(input())
-
-        print("Choose a FDM velocity dispersion (in units of 1km/s)")
-        v_FDM = float(input())
-        
-        lambda_deB = 121 / (m_real * v_FDM) #in parsecs
-        print(f"lambda = {lambda_deB} pc")
-        
-        r = lambda_deB * v_FDM / (2*2*np.pi*v_scale*L_scale)
-        # r = ND.r(hbar, m, v_scale, L_scale)
-        print(f"Fuzzines: r = {r}")
-        
-        m = hbar/(2*r*v_scale*L_scale)
-
-        #Calculate dimensional mass:
-        mu = m/M_scale
-        #print(f"This gives non-dim mass: mu = {mu}")
-        print(f"Mass mu = {mu}, m = mu*M = {m}")
-        print("")
-        
-        if Num_stars != 0:
-            Total_mass = (Num_stars*sigma)/(1-percent_FDM)
-            #print("How much (non-dim) FDM mass in total?")
-            FDM_mass = Total_mass*percent_FDM #int(input())
-            Num_bosons = int(FDM_mass/mu)
-        else:
-            Total_mass = 10000
-            FDM_mass = Total_mass
-            Num_bosons = int(FDM_mass/mu)
-    else:
-        Num_bosons = 0
-        
-    print(f"=> Num_Bosons = {Num_bosons}")
-        
-    return L, mu, Num_bosons, r, sigma, Num_stars
-
-
-def gauss(x,b,std):
+def gaussian(x,b,std):
     return np.exp(-(x-b)**2/(2*std**2))/(np.sqrt(2*np.pi)*std)
 
 #########################################################3
@@ -195,33 +107,7 @@ def fourier_gradient(phi,length):
     grad = np.fft.irfft(grad_n,n) #use Phi_n as Fourier Coefficients
     
     grad = -grad #for some reason there's a negative sign error
-    
     return grad
-
-#Determine the potential from poisson's equation using fourier method
-def fourier_potential(chi,length):
-    n = len(chi)
-    L = length #length of box
-
-    #1. FFT the norm-squared of the wave-function (minus it's mean background)
-    rho = np.absolute(chi)**2
-    rho_avg = np.mean(rho)
-    p = rho-rho_avg
-    p_n = np.fft.rfft(p,n) #fft for real input
-    
-    #2. Compute the fourier coefficients of phi
-    phi_n = np.array([]) #empty for storage. Will hold the fourier coefficients
-    for nn in range(len(p_n)):
-        if nn == 0:
-            val = 0 #the "Jean's Swindle"
-        if nn >=1: #for the positive frequencies
-            k = 2*np.pi*nn/L
-            val = -p_n[nn]/k**2
-        phi_n = np.append(phi_n,val)
-    
-    #3. IFFT back to get Potential
-    phi = np.fft.irfft(phi_n,n) #use Phi_n as Fourier Coefficients
-    return phi
 
 def fourier_potentialV2(rho_nondim,length):
     """
@@ -371,19 +257,7 @@ def main_plot(sim_choice1,L,eta,
     if track_centroid == True and Num_stars != 0:
         return centroid_z
 
-def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars, v_s, L_s, Directory, folder_name, absolute_PLOT = True, track_stars = False, track_centroid = False, Long_time = False, fixed_phi = False):
-    #Re-calcualte Mass and Time scales
-    M_s = v_s**2 * L_s
-    T_s = L_s / v_s
-
-    #check whether to run FDM or NBody or both
-    if Num_bosons == 0:
-        sim_choice1 = 2 #revert to N-Body only calculation
-    elif Num_stars == 0: 
-        sim_choice1 = 1 #revert to FDM only calculation
-    else:
-        sim_choice1 = 3 #FDM and N-Body simultaneously
-
+def gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s):
     ########################################################
     # INITIAL SETUP
     ########################################################
@@ -396,17 +270,8 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
     else:
         std = 0.1 #value doesn't matter (just not 0)
     std=std*L
-    psi = np.sqrt(gauss(z,b,std)*Num_bosons)#*Num_particles / (L**3))
+    psi = np.sqrt(gaussian(z,b,std)*Num_bosons)#*Num_particles / (L**3))
     chi = psi*L_s**(3/2)
-
-    #Calculate initial Density perturbation (non-dimensionalized and reduced)
-    rho_FDM = mu*np.absolute(chi)**2 #just norm-squared of wavefunction
-    
-    #Check how it's normalized:
-    print(f"integral of |chi|^2 : {np.sum(dz*rho_FDM)}")
-    print(f"Numerically calculated integral of |psi|^2 : {np.sum(dz*np.absolute(psi)**2)}")
-
-    m = mu*M_s
 
     ####################################################
     # FOR THE PARTICLES
@@ -438,13 +303,51 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
             star.x = star.x - centroid_z #shift
             star.reposition(L) #reposition
 
+    return stars, chi
+
+
+def run_FDM_n_Bodies(sim_choice2, z, L, dz, 
+                    mu, Num_bosons, r, chi, 
+                    sigma, stars, 
+                    v_s, L_s, 
+                    Directory, folder_name, 
+                    absolute_PLOT = True, track_stars = False, track_centroid = False, Long_time = False, fixed_phi = False):
+    
+    #########################################
+    #RETRIEVE INFO FROM INITIAL STARTUP/CONDITIONS
+    #Re-calcualte Mass and Time scales
+    M_s = v_s**2 * L_s
+    T_s = L_s / v_s
+
+    Num_stars = len(stars)
+
+    #check whether to run FDM or NBody or both
+    if Num_bosons == 0:
+        sim_choice1 = 2 #revert to N-Body only calculation
+    elif Num_stars == 0: 
+        sim_choice1 = 1 #revert to FDM only calculation
+    else:
+        sim_choice1 = 3 #FDM and N-Body simultaneously
+
+    ##############################################
+    # INITIAL SETUP
+    #Calculate initial Density perturbation (non-dimensionalized and reduced)
+    rho_FDM = mu*np.absolute(chi)**2 #just norm-squared of wavefunction
+    psi = chi* L**(-3/2)
+
+    #Check how it's normalized:
+    print(f"integral of |chi|^2 : {np.sum(dz*rho_FDM)}")
+    print(f"Numerically calculated integral of |psi|^2 : {np.sum(dz*np.absolute(psi)**2)}")
+
+    m = mu*M_s
+    
     #Calculate distribution on Mesh
     grid_counts = NB.grid_count(stars,L,z)
     rho_part = (grid_counts/dz)*sigma #this is actually like chi x chi*
     
     #Calculate total density
     rho = rho_FDM + rho_part
-    
+
     #Now option to freeze the potential:
     if fixed_phi == True:
         phi = 0.5*sigma*((z**2) / (L/2)**2 - 1)  #equal to 0 at boundaries 
@@ -738,225 +641,6 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
         centroids = None
     
     return stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids        
-##################################################################
-##################################################################
-##################################################################
-# BELOW ARE ALL FUNCTIONS THAT ARE NO LONGER USED
-
-# def run_FDM(z, L, dz, mu, Num_bosons, r, v_s, L_s, Directory, folder_name):
-#     M_s = v_s**2 * L_s
-#     T = L_s / v_s
-#     #####################################################
-#     # INITIAL SETUP
-#     #####################################################
-#     #Set an initial wavefunction
-#     b=0
-#     #print("Choose the standard deviation of the initial distribution:")
-#     #std = float(input())
-#     std=0.1*L
-#     psi = np.sqrt(gauss(z,b,std)*Num_bosons)#*Num_particles / (L**3))
-#     chi = psi*L_s**(3/2)
-
-#     #Calculate initial Density perturbation (non-dimensionalized and reduced)
-#     rho = np.absolute(chi)**2 #just norm-squared of wavefunction
-    
-#     #Calculate initial (non-dim) potential
-#     phi = fourier_potentialV2(rho,L) 
-
-#     #Check how it's normalized:
-#     print(f"|chi|^2 = {np.sum(dz*np.absolute(chi)**2)}")
-#     print(f"Numerically calculated: |psi|^2 = {np.sum(dz*np.absolute(psi)**2)}")
-
-#     m = mu*M_s
-#     Rho_avg = m*np.mean(np.absolute(psi)**2)
-#     T_collapse = 1/Rho_avg**0.5
-#     tau_collapse = T_collapse/T
-#     print(f"(Non-dim) Collapse time: {tau_collapse}")
-    
-#     #To fix plot axis limits:
-#     #y0_max = np.max(phi)*1.5
-#     y0_max = np.max(rho)*10
-#     y1_max = v_s*100
-#     eta = 0.025*L #resolution for Husimi
-#     dtau = 0.01*tau_collapse
-#     tau_stop = tau_collapse*2 #t_stop/T
-#     time = 0
-#     i = 0
-#     while time <= tau_stop:
-#         ######################################
-#         #Evolve system forward by one time-step
-#         chi,phi,rho = ND.time_evolveV2(chi,phi,r,dz,dtau,m,L)
-
-#         #PHASE SPACE CALCULATION:
-#         k = 2*np.pi*np.fft.fftfreq(len(z),dz)
-#         #rescale wavenumber k to velocity v:
-#         hbar = 1
-#         v = k*(hbar/m)
-
-#         x_min, x_max = np.min(z), np.max(z)
-#         v_min, v_max = np.min(v), np.max(v)
-        
-#         F = ND.Husimi_phase(chi,z,dz,L,eta)
-        
-#         ######################################
-#         #Plot everything and save the file
-#         fig,ax = plt.subplots(1,2,figsize = (20,10))
-#         plt.suptitle("Time $\\tau = $"+ f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
-        
-#         ax[0].plot(z,chi.real, label = "Re[$\\chi$]")
-#         ax[0].plot(z,chi.imag, label = "Im[$\\chi$]")
-#         ax[0].plot(z,phi,label = "Potential [Fourier perturbation]")
-#         ax[0].plot(z,rho,label = "$\\rho = \\chi \\chi^*$")
-#         ax[0].set_ylim([-y0_max, y0_max] )
-#         ax[0].set_xlabel("$z = x/L$")
-#         ax[0].legend()
-        
-#         if i == 0:
-#             max_F = np.max(F) #max_F = 0.08
-#         ax[1].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.hot, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y1_max))
-#         ax[1].set_xlim([x_min,x_max])
-#         ax[1].set_ylim([-y1_max,y1_max]) #[v_min,v_max])
-#         ax[1].set_xlabel("$z = x/L$")
-#         #ax[1].colorbar()
-
-#         #now save it as a .jpg file:
-#         folder = Directory + "/" + folder_name
-#         filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
-#         plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
-#         plt.close() #close plot so it doesn't overlap with the next one
-
-#         time += dtau #forward on the clock
-#         i += 1
-    
-# def run_NBody(z,L,dz,sigma,Num_stars, v_scale, L_scale, Directory):
-#     M_scale = v_scale**2 * L_scale
-#     T_scale = L_scale / v_scale
-#     ########################################################
-#     # INITIAL SETUP
-#     ########################################################
-#     #Set initial distribution on grid
-#     b = 0 #center at zero
-#     std = 0.1*L #standard deviation of 1
-#     z_0 = np.random.normal(b,std,Num_stars) #initial positions sampled from normal distribution
-#     stars = [NB.star(i,sigma,z_0[i],0) for i in range(len(z_0))] #create list of normally distributed stars, zero initial speed
-    
-#     #reposition stars if they were generated outside the box
-#     for star in stars:
-#         if np.absolute(star.x) > L/2:
-#                 star.reposition(L)
-    
-#     folder_name = "SelfGrav_NBody_Images"
-#     os.chdir(Directory + "/" + folder_name)
-
-#     #Calculate distirubtion on Mesh
-#     grid_counts = NB.grid_count(stars,L,z)
-#     rho = (grid_counts/dz)*sigma 
-        
-#     #m = mu*M_scale
-#     Rho_avg = M_scale*np.mean(rho)/L_scale
-#     T_collapse = 1/(Rho_avg)**0.5
-#     tau_collapse = T_collapse/T_scale
-#     print(f"(Non-dim) Collapse time: {tau_collapse}")
-    
-#     dtau = 0.01*tau_collapse
-#     tau_stop = tau_collapse*2 #t_stop/T
-#     time = 0
-#     i = 0 #counter, for saving images
-#     while time <= tau_stop:
-#         #################################################
-#         #CALCULATION OF PHYSICAL QUANTITIES
-#         #################################################
-#         #Calculate distirubtion on Mesh
-#         grid_counts = NB.grid_count(stars,L,z)
-#         rho = (grid_counts/dz)*sigma 
-        
-#         #Calculate potential 
-#         phi = fourier_potentialV2(rho,L)
-        
-#         #Calculate Acceleration Field on Mesh:
-#         a_grid = NB.acceleration(phi,L) 
-        
-#         #################################################
-#         # PLOTTING
-#         #################################################
-#         fig,ax = plt.subplots(1,3)#3)
-#         fig.set_size_inches(30,10)
-#         plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5))
-        
-#         ax[0].plot(z,phi,label = "Potential")
-#         ax[0].plot(z,rho,label = "Number density")
-#         ax[0].plot(z,a_grid)
-#         ax[0].set_xlim([-L/2,L/2])
-#         ax[0].set_ylim([-0.1*Num_stars/dz,0.1*Num_stars/dz])
-        
-#         #Plot the Phase Space distribution
-#         x_s = np.array([star.x for star in stars])
-#         v_s = np.array([star.v for star in stars])
-#         ax[1].plot(x_s,v_s,'.',label = "Phase Space Distribution")
-#         ax[1].set_ylim([-v_scale*50,v_scale*50])
-#         ax[1].set_xlim([-L/2,L/2])
-#         ax[1].legend()
-
-#         #Plot Phase space distribution in another way
-#         heat = ax[2].hist2d(x_s,v_s,bins = [200,200],range = [[-L/2,L/2],[-2,2]],cmap = cm.hot)
-#         #ax[2].set_colorbar()
-#         ax[2].set_xlim(-L/2,L/2)
-#         ax[2].set_ylim(-15,15)
-#         #fig.colorbar(heat[3], ax[2])
-
-#         #ADDITIONAL:
-#         #PLOT CENTER OF MASS
-#         centroid_z = 0
-#         for j in range(len(grid_counts)):
-#             centroid_z += z[j]*grid_counts[j]
-#         centroid_z = centroid_z / Num_stars
-#         ax[1].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
-        
-#         #now save it as a .jpg file:
-#         folder = Directory + "/" + folder_name
-#         filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
-#         plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
-#         plt.close() #close plot so it doesn't overlap with the next one
-        
-#         ############################################################
-#         #EVOLVE SYSTEM (After calculations on the Mesh)
-#         ############################################################
-#         #1,2: Kick+Drift
-#         g = NB.accel_funct(a_grid,L,dz)
-
-#         for star in stars:
-#             #print(star.x)
-#             star.kick_star(g,dtau/2)
-#             star.drift_star(dtau)
-
-#             #corrective maneuvers on star position
-#             #(for positions that drift outside of the box...
-#             # must apply periodicity)
-#             if np.absolute(star.x) > L/2:
-#                 print(f"z = {star.x}")
-#                 modulo = (star.x // (L/2))
-#                 remainder = star.x % (L/2)
-#                 print(f"mod = {modulo}, remainder = {remainder}")
-#                 if modulo % 2 == 0: #check if modulo is even
-#                     star.x = remainder 
-#                 else: #if modulo is odd, further check:
-#                     if star.x > 0:
-#                         star.x = remainder-L/2
-#                     elif star.x < 0:
-#                         star.x = remainder+L/2
-#                 print(f"new z = {star.x}")
-#                 print(" ")
-#         #3,4: Re-update potential and acceleration fields, + Kick
-#         grid_counts = NB.grid_count(stars,L,z)
-#         rho = (grid_counts/dz)*sigma 
-#         phi = fourier_potentialV2(rho,L)
-#         a_grid = NB.acceleration(phi,L) 
-#         g = NB.accel_funct(a_grid,L,dz)
-#         for star in stars:
-#             star.kick_star(g,dtau/2)
-            
-#         time += dtau
-#         i += 1
 
 ###########################################################
 # FOR ANIMATION IN POSITION SPACE
@@ -1039,11 +723,12 @@ def animate(fourcc,Directory: str,folder_name: str, video_name: str, dt):
     #print(num_of_images)
     
     for file in os.listdir(path):
-        im = Image.open(os.path.join(path, file))
-        width, height = im.size
-        mean_width += width
-        mean_height += height
-        # im.show()   # uncomment this for displaying the image
+        if file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".png"):
+            im = Image.open(os.path.join(path, file))
+            width, height = im.size
+            mean_width += width
+            mean_height += height
+            # im.show()   # uncomment this for displaying the image
     
     # Finding the mean height and width of all images.
     # This is required because the video frame needs
@@ -1075,3 +760,94 @@ def animate(fourcc,Directory: str,folder_name: str, video_name: str, dt):
     
     # Calling the generate_video function
     generate_video(fourcc,Directory, folder_name, video_name,dt)
+
+
+###############################################
+###############################################
+#OLD STUFF
+# def Startup(hbar,L_scale,v_scale,M_scale):
+#     print("")
+#     print("Choose a (non-dimensional) box length:")
+#     L = float(input())
+#     print("")
+    
+#     print("Choose a (non-dimensional) Boson mass:")
+#     mu = float(input())
+#     print("How many Bosons?")
+#     Num_bosons = int(input())
+#     #Calculate dimensional mass:
+#     m = mu*M_scale
+#     print(f"Mass mu = {mu}, m = mu*M = {m}")
+#     #Calculate Fuzziness:
+#     r = Wave.r(hbar,m,v_scale,L_scale)
+#     print(f"Fuzziness: r = {r}")
+    
+#     #Particles
+#     print("")
+#     print("Choose your particle/star mass (per unit area):")
+#     sigma = float(input())
+#     print("How many particles?")
+#     Num_stars = int(input())
+    
+#     return L, mu, Num_bosons, r, sigma, Num_stars
+
+# def StartupV3(hbar,L_scale,v_scale):
+
+#     M_scale = L_scale*v_scale**2
+    
+#     print("")
+#     print("Choose a (non-dimensional) box length:")
+#     L = float(input())
+#     print("")
+
+#     ##########################################
+#     #Particles
+#     print("")
+#     print("Choose your particle/star mass (per unit area):")
+#     sigma = float(input())
+#     print("How many particles?")
+#     Num_stars = int(input())
+    
+#     print("Choose percentage (as a decimal) of FDM (by mass)")
+#     percent_FDM = float(input())
+#     print("")
+    
+#     if percent_FDM != 0:
+#         ##########################################
+#         # FDM
+#         print("Choose a FDM mass (in units of 10^-19 eV):")
+#         m_real = float(input())
+
+#         print("Choose a FDM velocity dispersion (in units of 1km/s)")
+#         v_FDM = float(input())
+        
+#         lambda_deB = 121 / (m_real * v_FDM) #in parsecs
+#         print(f"lambda = {lambda_deB} pc")
+        
+#         r = lambda_deB * v_FDM / (2*2*np.pi*v_scale*L_scale)
+#         # r = ND.r(hbar, m, v_scale, L_scale)
+#         print(f"Fuzzines: r = {r}")
+        
+#         m = hbar/(2*r*v_scale*L_scale)
+
+#         #Calculate dimensional mass:
+#         mu = m/M_scale
+#         #print(f"This gives non-dim mass: mu = {mu}")
+#         print(f"Mass mu = {mu}, m = mu*M = {m}")
+#         print("")
+        
+#         if Num_stars != 0:
+#             Total_mass = (Num_stars*sigma)/(1-percent_FDM)
+#             #print("How much (non-dim) FDM mass in total?")
+#             FDM_mass = Total_mass*percent_FDM #int(input())
+#             Num_bosons = int(FDM_mass/mu)
+#         else:
+#             Total_mass = 10000
+#             FDM_mass = Total_mass
+#             Num_bosons = int(FDM_mass/mu)
+#     else:
+#         Num_bosons = 0
+        
+#     print(f"=> Num_Bosons = {Num_bosons}")
+        
+#     return L, mu, Num_bosons, r, sigma, Num_stars

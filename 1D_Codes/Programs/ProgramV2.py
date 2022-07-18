@@ -20,8 +20,8 @@ import OneD.Global as GF
 
 #Set up Directory for saving files/images/videos
 # Will not rename this again
-dirExtension = "1D_Codes/Non-Dim/Programs"
-Directory = os.getcwd()+"/"+dirExtension #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
+dirExtension = "1D_Codes/Programs"
+Directory = os.getcwd()+"/"+dirExtension+"/Analysis" #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 print(Directory)
 
 ############################################
@@ -43,17 +43,23 @@ M_s = L_s*v_s**2
 print(f"Mass scale M = {M_s}")
 
 #L, choice = GF.Startup_Choice()
-L, mu, Num_bosons, r, sigma, Num_stars = GF.StartupV2(hbar, L_s, v_s)
+L, mu, Num_bosons, r, lambda_deB, R, sigma, Num_stars = GF.StartupV2(hbar, L_s, v_s)
 m = mu*M_s
 percent_FDM = Num_bosons * mu / (Num_bosons * mu + Num_stars * sigma)
 
 #Set up Grid
 L = L*L_s #new length. Length of the box
-N = 10**3
+N = 10**3 #number of grid points
+if Num_bosons != 0: #want to determine the proper number of grid points to have
+    lambda_deB = lambda_deB*R
+    N_new = int(np.ceil(L/lambda_deB)+1)
+    if N_new >= N:
+        N = N_new #overwrite number of grid points
+print(f"Number of Grid points: {N}")
 z = np.linspace(-L/2,L/2,N)
 dz = z[1]-z[0]
 
-################
+############################################################
 #PROMPT FOR FULL SIMULATION OR SNAPSHOTS
 #Also prompt for fixed potential
 
@@ -69,9 +75,8 @@ print("Do you want the full simulation [1] or snapshots [2]? Choose [1/2]")
 sim_choice2 = int(input())
 print("")
 
-#For te
-################
 
+####################################################################
 #SET UP FOLDERS:
 if sim_choice2 == 1: 
     folder_name = f"FDM{percent_FDM}_r{r}_Images"
@@ -86,24 +91,38 @@ elif sim_choice2 == 2:
     elif Num_stars == 0:
         folder_name = f"OnlyFDM_r{r}_Snapshots"
 
-#print(os.path.exists(dirExtension+"/"+folder_name))
-if os.path.exists(dirExtension+"/"+folder_name) == True:
+print(os.path.exists(Directory+"/"+folder_name))
+if os.path.exists(Directory+"/"+folder_name) == True:
     for file in os.listdir(Directory+"/"+folder_name):
         os.remove(Directory+"/"+folder_name+"/"+file)
     os.rmdir(Directory+"/"+folder_name)    
 os.mkdir(Directory+"/"+folder_name)
 
+#####################################################################
+# Set-Up is Done. Simulation next.
+#####################################################################
 #RUN SIMULATION/CALCULATION
 print("Calculating and Plotting...")
-#folder_name = "bla" 
+
 #Whether to track stars or not:
 track_stars = False
 if Num_stars != 0:
     track_stars = True
 
-stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,mu, Num_bosons, r, sigma,Num_stars,v_s,L_s,Directory,folder_name, absolute_PLOT = True, track_stars = track_stars, track_centroid=True,fixed_phi = fixed_phi)
+#Create Initial Conditions:
+stars,chi = GF.gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
+
+#Run simulation on Initial Conditions:
+stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids = GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,
+                                                                                                      mu, Num_bosons, r, chi, 
+                                                                                                      sigma,stars,
+                                                                                                      v_s,L_s,
+                                                                                                      Directory,folder_name, 
+                                                                                                      absolute_PLOT = True, track_stars = track_stars, track_centroid=True,fixed_phi = fixed_phi)
 print("Calculation and Plotting Done. Now Saving Data...")
 
+############################
+#Saving the Data
 #os.chdir(Directory)#+"/"+dirExtension)
 
 if Num_bosons == 0:
