@@ -11,6 +11,8 @@ import matplotlib.cm as cm
 from matplotlib.colors import LogNorm, Normalize
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 
+import multiprocessing as mp
+
 import psutil
 
 def checkMemory(mem_limit):
@@ -651,7 +653,18 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
                     F = Wave.Husimi_phase(chi,z,dz,L,eta)
                     max_F = np.max(F)/2
                 
+                # f1 = mp.Process(target=main_plot,args=[sim_choice1,L,eta,
+                # z,dz,chi,rho_FDM,rho_part,
+                # stars,Num_bosons,Num_stars,
+                # grid_counts,dtau,i,
+                # x_min,x_max,v_min,v_max,
+                # y00_max,y10_max,y01_max,y11_max,
+                # a_max,max_F,
+                # Directory,folder_name,track_stars,track_centroid])
                 
+                # f1.start()s
+                # centroid = f1.result()
+
                 centroid = main_plot(sim_choice1,L,eta,
                 z,dz,chi,rho_FDM,rho_part,
                 stars,Num_bosons,Num_stars,
@@ -674,7 +687,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz, mu, Num_bosons, r, sigma, Num_stars,
 
         #FUZZY DM
         #1. Kick in current potential
-        chi= Wave.kick(chi,phi/2,r,dtau/2)
+        chi = Wave.kick(chi,phi/2,r,dtau/2)
         #2. Drift in differential operator
         chi = Wave.drift(chi,r,dz,dtau)
 
