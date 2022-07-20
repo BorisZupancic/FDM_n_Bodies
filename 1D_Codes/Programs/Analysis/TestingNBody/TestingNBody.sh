@@ -1,4 +1,10 @@
-cd "/home/boris/Documents/Research/FDM_n_Bodies"
+pwd
+cd ..
+cd ..
+cd ..
+cd ..
+pwd
+
 parent="Analysis/TestingNBody"
 #Possible choices for number of Particles:
 num_particles=('5' '500' '1000' '5000' '10000' '50000' '100000')

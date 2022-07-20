@@ -416,7 +416,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
         snapshot_indices = np.multiply(collapse_index-1,[0,1,2,4,8,16,32,64])
         print(f"Snapshots at i = {snapshot_indices}")
     
-    if track_stars == True:
+    if track_stars == True or track_FDM == True:
         if Long_time:
             collapse_index = int(np.floor(tau_collapse/dtau))
             snapshot_indices = np.multiply(collapse_index-1,[0,1,2,4,8,16,32,64,100])
@@ -471,10 +471,8 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
             W_5stars = np.array([])
             for j in range(5):
                 star = stars[j]
-                #g = NB.g(star,a_grid,dz)
-                #W = - sigma*star.x*g
-        
                 W = star.get_W(z,phi,L) #Find the potential energy:
+                
                 K = 0.5*sigma*stars[j].v**2 #Find kinetic energy
 
                 K_5stars = np.append(K_5stars,K)
@@ -497,49 +495,43 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
                 W_array = np.array([])
                 for j in range(len(stars)):
                     star = stars[j]
-                    #g = NB.g(star,a_grid,dz)
-
                     W = star.get_W(z,phi,L)#- sigma*star.x*g
-                    
-                    # #Find the potential energy:
-                    # N = len(z)
-                    # zz = stars[j].x
-                    # n = int((zz+L/2)//dz)
-                    # rem = (zz+L/2) % dz 
-                    # PotentialE = 0
-                    # if n < N-1:
-                    #     PotentialE = phi[n] + rem*(phi[n+1]-phi[n])/dz
-                    # elif n == N-1:
-                    #     PotentialE = phi[-1]+rem*(phi[0]-phi[-1])/dz
-
-                    # W = sigma*PotentialE
-                    
+        
                     K = 0.5*sigma*stars[j].v**2
-                    #Energy =  + 
+
                     K_array = np.append(K_array,K)
                     W_array = np.append(W_array,W)
                 if i == 0:
-                    K_storage = np.array([K_array])
-                    W_storage = np.array([W_array])
+                    K_star_storage = np.array([K_array])
+                    W_star_storage = np.array([W_array])
                 else:
-                    K_storage = np.append(K_storage,[K_array],axis = 0)
-                    W_storage = np.append(W_storage,[W_array],axis = 0)
+                    K_star_storage = np.append(K_star_storage,[K_array],axis = 0)
+                    W_star_storage = np.append(W_star_storage,[W_array],axis = 0)
         else:
-            K_storage = None
-            W_storage = None
+            K_star_storage = None
+            W_star_storage = None
             #E_storage = None #to go in the main_plot loop
 
+        #########################################
+        #FDM DIAGNOSTICS
         #Record Energies:
-        if i in track_snapshot_indices:
-            if track_FDM == True:
-                W = 0.5*np.sum(rho_FDM*phi)*dz  
-                if i == 0:
-                    W_FDM_storage = np.array([W])
-                else:
-                    W_FDM_storage = np.append (W_FDM_storage,W) 
+        if track_FDM == True:
+            if i in track_snapshot_indices:
+                    W = 0.5*np.sum(rho_FDM*phi)*dz  
+                    #Kinetic Energy:
+                    chi_tilde = np.fft.fft(chi)
+                    k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
+                    K = r*np.sum(k**2 * np.absolute(chi_tilde)**2)
+        
+                    if i == 0:
+                        W_FDM_storage = np.array([[W]])
+                        K_FDM_storage = np.array([[K]])
+                    else:
+                        W_FDM_storage = np.append(W_FDM_storage,[[W]],axis=0) 
+                        K_FDM_storage = np.append(K_FDM_storage,[[K]],axis=0)
         else:
             W_FDM_storage = None
-
+            K_FDM_storage = None
         #################################################
         # PLOTTING
         # Plot everytime if sim_choice2 == 1
@@ -652,7 +644,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
     if track_centroid == False:
         centroids = None
     
-    return stars, chi, K_storage, W_storage, K_5stars_storage, W_5stars_storage, centroids, W_FDM_storage     
+    return stars, chi, K_star_storage, W_star_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage  
 
 ###########################################################
 # FOR ANIMATION IN POSITION SPACE

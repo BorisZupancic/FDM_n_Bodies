@@ -18,65 +18,158 @@ dirExtension = "1D_Codes/Non-Dim/Analysis"
 Directory = os.getcwd()#+"/"+dirExtension #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 print(Directory)
 
-def analysis(*args):
-    if len(args) == 0:
-        #r,m,Num_bosons,sigma,Num_stars = [0,0,0,0,0]
-        print("")
-        print("Input r, m, Num_bosons, sigma, Num_stars: ")
-        r = float(input())
-        m = float(input())
-        Num_bosons = int(input())
-        sigma = float(input())
-        Num_stars = int(input())
-    else:
-        r,m,Num_bosons,sigma,Num_stars = args
+######################################################
+# MY ONE BIG FUNCTION FOR ALL ANALYSIS:
+######################################################
+def analysis(folder: str):#,*args):
+    # if len(args) == 0:
+    #     #r,m,Num_bosons,sigma,Num_stars = [0,0,0,0,0]
+    #     print("")
+    #     print("Input r, m, Num_bosons, sigma, Num_stars: ")
+    #     r = float(input())
+    #     m = float(input())
+    #     Num_bosons = int(input())
+    #     sigma = float(input())
+    #     Num_stars = int(input())
+    # else:
+    #     r,m,Num_bosons,sigma,Num_stars = args
+    #print(os.getcwd())
+    #os.chdir(where_folder +"/"+folder)
+    #print(os.getcwd())
+    os.chdir(folder)
+    print(os.getcwd())
+
+    #Load in the necessary quantities:
+    Properties = np.loadtxt("Properties.csv", dtype = str, delimiter = ",")
+    L,m,Num_bosons,sigma,Num_stars,r,N = [np.float(Properties[1::,1][i]) for i in range(7)]
+    # m = Properties[2,1]
+    # Num_bosons = Properties[3,1]
+    # sigma = Properties[4,1]
+    # Num_stars = Properties[5,1]
+    # r = Properties[6,1]
 
     mu = m #M_scale = 1
     percent_FDM = Num_bosons*mu / (Num_bosons*mu + Num_stars*sigma)
 
-    L = 2
-    N = 10**3
+    #L = 2
+    #N = 10**3
+    N = int(N)
     z = np.linspace(-L/2,L/2,N)
     dz = z[1]-z[0]
 
     if Num_bosons == 0:
-        folder = f"{Num_stars}ParticlesOnly_Snapshots"
-        stars_x = np.loadtxt(folder+"/"+f"StarsOnly_Pos.csv", dtype = float, delimiter=",")
-        stars_v = np.loadtxt(folder+"/"+f"StarsOnly_Vel.csv", dtype = float, delimiter=",")
-        K_Energies = np.loadtxt(folder+"/"+"K_Energies.csv", dtype = float,delimiter = ",")
-        W_Energies = np.loadtxt(folder+"/"+"W_Energies.csv", dtype = float,delimiter = ",")
-        K_5stars_Energies = np.loadtxt(folder+"/"+"K_5stars_Energies.csv", dtype = float,delimiter = ",")
-        W_5stars_Energies = np.loadtxt(folder+"/"+"W_5stars_Energies.csv", dtype = float,delimiter = ",")
-    
-        chi = np.loadtxt(folder+"/"+f"Chi.csv", dtype = complex, delimiter=",")
+        #folder = f"{Num_stars}ParticlesOnly_Snapshots"
+        stars_x = np.loadtxt("StarsOnly_Pos.csv", dtype = float, delimiter=",")
+        stars_v = np.loadtxt("StarsOnly_Vel.csv", dtype = float, delimiter=",")
+        K_Energies = np.loadtxt("K_Energies.csv", dtype = float,delimiter = ",")
+        W_Energies = np.loadtxt("W_Energies.csv", dtype = float,delimiter = ",")
+        K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
+        W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
+        chi = np.loadtxt(f"Chi.csv", dtype = complex, delimiter=",")
         #chi = np.zeros_like(z)
-        centroids = np.loadtxt(folder+"/"+"Centroids.csv",dtype = float, delimiter=',')
+        centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
     elif Num_stars == 0:
-        folder = f"OnlyFDM_r{r}_Snapshots"
-        chi = np.loadtxt(folder+"/"+f"FuzzyOnlyChi_r{r}.csv", dtype = complex, delimiter=",")
-        Energies = None
+        #folder = f"OnlyFDM_r{r}_Snapshots"
+        chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
+        Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
+        Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
+        centroids = None
+        stars_x = None
+        star_v = None
+        K_5stars_Energies = None
+        W_5stars_Energies = None 
+        K_Energies = None 
+        W_Energies = None
     elif Num_bosons!=0 and Num_stars !=0:
-        folder = f"FDM{percent_FDM}_r{r}_Snapshots"
-        stars_x = np.loadtxt(folder+"/"+f"Stars_Pos.csv", dtype = float, delimiter=",")
-        stars_v = np.loadtxt(folder+"/"+f"Stars_Vel.csv", dtype = float, delimiter=",")
-        chi = np.loadtxt(folder+"/"+f"Chi.csv", dtype = complex, delimiter=",")
-        K_Energies = np.loadtxt(folder+"/"+"K_Energies.csv", dtype = float,delimiter = ",")
-        W_Energies = np.loadtxt(folder+"/"+"W_Energies.csv", dtype = float,delimiter = ",")
-        centroids = np.loadtxt(folder+"/"+f"Centroids.csv",dtype = float, delimiter=',')
+        #folder = f"FDM{percent_FDM}_r{r}_Snapshots"
+        stars_x = np.loadtxt("Stars_Pos.csv", dtype = float, delimiter=",")
+        stars_v = np.loadtxt("Stars_Vel.csv", dtype = float, delimiter=",")
+        chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
+        K_Energies = np.loadtxt("K_Energies.csv", dtype = float,delimiter = ",")
+        W_Energies = np.loadtxt("W_Energies.csv", dtype = float,delimiter = ",")
+        centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
+        Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
+        Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
+    
 
-    # stars_x = np.loadtxt(f"Stars_Pos.csv", dtype = float, delimiter=",")
-    # stars_v = np.loadtxt(f"Stars_Vel.csv", dtype = float, delimiter=",")
-    # chi = np.loadtxt(f"Chi.csv", dtype = complex, delimiter=",")
+    #Setup our data post-import:
+    if stars_x is not None:
+        stars = [NB.star(sigma,stars_x[i],star_v[i]) for i in range(len(stars_x))]
+    else: 
+        stars = []
+    rho_part, rho_FDM = plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi)
+    phi_part = GF.fourier_potentialV2(rho_part,L)
+    phi_FDM = GF.fourier_potentialV2(rho_FDM,L)
+    
+    #######################################################
+    ### FDM ANALAYSIS #######################################
+    if Num_bosons != 0:
+        plotFDM_E(2*Ks_FDM/N**2,Ws_FDM)
 
+    #######################################################
+    ### NBODY ANALYSIS ######################################
+    if Num_stars != 0:
+        indices = [0,100,200,400,800,1600,3200,6400]
+        plot_centroids(indices,centroids)
+        
+        #Calculate rms velocity and position
+        z_rms,v_rms = rms_stuff(sigma,stars)
+
+        v_distribution(stars,L)
+
+        select_stars_plots(z,K_5stars_Energies,W_5stars_Energies)
+
+        all_stars_plots(K_Energies,W_Energies)
+
+        # plot_DeltaE(K_Energies,W_Energies)
+
+        #Hist the final energies:
+        Energies = K_Energies+W_Energies
+        n_bins = int(np.floor(np.sqrt(len(Energies))))
+        plt.hist(Energies[-1,:],bins = n_bins)#100)
+        plt.show()
+
+        NBz_left,NBz_right,NBrho_left,NBrho_right = NBody_rho_distribution(z,rho_part)
+
+        curve_fitting(L,NBz_left,NBz_right,NBrho_left,NBrho_right)
+
+    if 'z_rms' in locals() and 'v_rms' in locals():
+        return z_rms, v_rms
+
+########################################################
+# ALL THE ACTUAL FUNCTIONS:
+########################################################
+def plotFDM_E(Ks,Ws):
+    fig, ax = plt.subplots(1,4, figsize = (12,4))
+    ax[0].plot(Ks)
+    ax[0].set_title("FDM Kinetic")
+    ax[1].plot(Ws)
+    ax[1].set_title("FDM Potential")
+
+    Dy = np.max(Ks)-np.min(Ks)
+    y_min = np.min(Ks+Ws)
+    y_min = y_min - Dy/2
+    y_max = Dy + y_min
+    ax[2].plot(Ks+Ws)
+    ax[2].set_title("FDM Total Energy")
+    ax[2].set_ylim(y_min,y_max)
+    ax[3].plot(np.abs(Ks/Ws))
+    ax[3].set_title("$\\frac{K}{|W|}$")
+    plt.show()
+
+def plot_centroids(indices,centroids):
     plt.figure()
     plt.title("Centroid over time")
-    indices = [0,100,200,400,800,1600,3200,6400]
     plt.plot(indices,centroids,'bo-')
     plt.show()
 
-
+def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi):
+    stars_x = [star.x for star in stars]
+    stars_v = [star.v for star in stars]
+    Num_stars = len(stars)
 
     #rescale wavenumber k to velocity v:
+    dz = z[1]-z[0]
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     hbar = 1
     v = k*(hbar/m)
@@ -183,7 +276,7 @@ def analysis(*args):
 
     #PHASE SPACE CALCULATION:
     #Don't calculate if sim_choice1 == '2'
-    eta = 0.05*L*r**0.5 #resolution for Husimi
+    eta = 10*r #resolution for Husimi
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     #rescale wavenumber k to velocity v:
     hbar = 1
@@ -192,9 +285,10 @@ def analysis(*args):
     v_min, v_max = np.min(v), np.max(v)
     F = Wave.Husimi_phase(chi,z,dz,L,eta)
     max_F = np.max(F)/2
-    ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.coolwarm, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*v_max))
+    y_max = 2
+    ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.coolwarm, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y_max))
     ax['upper right'].set_xlim(x_min,x_max)
-    #ax['upper right'].set_ylim(-y01_max,y01_max) #[v_min,v_max])
+    ax['upper right'].set_ylim(-y_max,y_max) #[v_min,v_max])
     ax['upper right'].set_xlabel("$z = x/L$")
     ax['upper right'].set_title("Phase Space Distributions", fontsize = 15)
         
@@ -226,7 +320,11 @@ def analysis(*args):
     
     plt.show()
 
-    #Calculate rms velocity and position
+    return rho_part, rho_FDM
+
+def rms_stuff(sigma,stars,phi_part,L,dz):
+    Num_stars = len(stars)
+
     v_rms = np.sqrt(np.mean([star.v**2 for star in stars]))
     z_rms = np.sqrt(np.mean([star.x**2 for star in stars]))
     print(f"v_rms = {v_rms}")
@@ -237,9 +335,11 @@ def analysis(*args):
     print(f"K_avg = 0.5*m*v_rms^2 = {K} (m={sigma})")
     print(F"=> 2*K_avg = {2*K}")
 
-    print(f"W_avg = {z_rms*Num_stars}")
-    
-    print("------------------")
+    W = z_rms*Num_stars
+    print(f"W_avg = {W}")
+
+    print("---------Now Different Routine---------")
+    ### Now differnet routine:
     # Compute total KE of stars:
     K = 0
     for star in stars:
@@ -260,7 +360,10 @@ def analysis(*args):
     print(f"W_tot = {W}")
     print(f"W_avg = {W/Num_stars}")
 
-
+    return v_rms, z_rms
+    
+def v_distribution(stars,L):
+    Num_stars= len(stars)
     #Plot <v^2> vs |z|
     num_bins = int(np.floor(np.sqrt(Num_stars)))
     bins = np.zeros(num_bins)
@@ -284,6 +387,7 @@ def analysis(*args):
 
     plt.show()
 
+def select_stars_plots(z,K_5stars_Energies,W_5stars_Energies):
     # Plot Energies of the 5 Stars:
     fig,ax = plt.subplots(1,3, figsize = (15,5))
     for j in range(np.shape(K_5stars_Energies)[1]):
@@ -327,7 +431,7 @@ def analysis(*args):
     ax[3].plot(Virial_ratios, "b--",marker = ".")
     plt.show()
 
-
+def all_stars_plots(K_Energies,W_Energies):
     W_totals = 0.5 * np.array([np.sum(W_Energies[i,:]) for i in range(np.shape(W_Energies)[0])])
     K_totals = np.array([np.sum(K_Energies[i,:]) for i in range(np.shape(K_Energies)[0])])
     Virial_ratios = np.abs(K_totals/W_totals)
@@ -346,6 +450,7 @@ def analysis(*args):
     #set the scale:
     Dy = np.max(K_totals)-np.min(K_totals)
     y_min = np.min(K_totals+W_totals)
+    y_min = y_min - Dy/2
     y_max = Dy + y_min
     ax[2].set_title("Total Energy K+W over time")
     ax[2].plot(indices,K_totals+W_totals,"--", marker = "o",label = "$\\Sigma E$")
@@ -356,6 +461,7 @@ def analysis(*args):
     ax[3].plot(indices, Virial_ratios, "b--", marker = "o")
     plt.show()
 
+def plot_DeltaE(K_Energies,W_Energies):
     Energies = K_Energies + W_Energies
     if Energies is None:
         pass
@@ -377,303 +483,301 @@ def analysis(*args):
             plt.xlabel("$E_{"+f"{indices[i]}"+"}$")
             plt.legend()
             plt.show()    
-            #for point in Energies[i,:]:
-                #print(i, point)
-             #   plt.scatter(indices[i],point,c = 'k', marker = '.')
-        # plt.xlabel("Time (index)",fontsize = 15)
-        # plt.ylabel("Energy")
-        # plt.show()
 
-    #Hist the final energies:
-    plt.hist(Energies[-1,:],bins = 100)
-    plt.show()
-
+        
+def NBody_rho_distribution(z,rho_part):
     ##########################################################
     # Split the distribution in half
     # Then add up to get rho vs |z|
     ##########################################################
-    if Num_stars != 0: #Only do this if there are particles
-        rho = rho_part
+    rho = rho_part
+    N = len(z)
 
 
-        # #METHOD 1: Split across peak of distribution
-        # #Find center of distribution / max value and index:
-        # i = 0
-        # max_bool = False
-        # while max_bool == False:
-        #     for j in range(len(rho)):
-        #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
-        #             #then set i equal to j
-        #             i = j 
-        #             #break
-        #         else:
-        #             max_index = i
-        #             max_bool = True
+    # #METHOD 1: Split across peak of distribution
+    # #Find center of distribution / max value and index:
+    # i = 0
+    # max_bool = False
+    # while max_bool == False:
+    #     for j in range(len(rho)):
+    #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
+    #             #then set i equal to j
+    #             i = j 
+    #             #break
+    #         else:
+    #             max_index = i
+    #             max_bool = True
 
-        # # max_rho = rho[max_index]
-        # # print(max_rho,max_index,z[i])
-
-
-        # i = max_index
-        # z = z-z[i]
-        # z_left = z[0:i]
-        # z_right = z[i:]
-        # rho_left = rho[0:i]
-        # rho_right = rho[i:]
-
-        # #rho_avgd = (rho_left[len(rho_left)-len(rho_right):][::-1]+rho_right)/2
-        # #rho_avgd = np.append(rho_avgd, rho_left[0:len(rho_left)-len(rho_right)][::-1])
-        # fig = plt.figure()
-        # plt.title("Density of Particles Split in Half")
-        # plt.plot(z_right,rho_right)
-        # plt.plot(z_left,rho_left)
-        # plt.plot(z[i],rho[i], "ro", label = "Peak of Distribution")
-        # plt.legend()
-        # plt.show()
-
-        fig = plt.figure()
-        plt.title("Density of Particles Split in Half")
-        plt.plot(z[N//2:],rho[N//2:])
-        plt.plot(z[0:N//2],rho[0:N//2])
-        plt.plot(z[N//2],rho[N//2],"bo", label = "Centroid of Distribution")
-        plt.legend()
-        plt.show()
+    # # max_rho = rho[max_index]
+    # # print(max_rho,max_index,z[i])
 
 
-        #Other method to accumulate left and right sides:
-        # for star in stars:
-        #     star.x = star.x - z[i] #shift
-        #     star.reposition(L) #reposition
+    # i = max_index
+    # z = z-z[i]
+    # z_left = z[0:i]
+    # z_right = z[i:]
+    # rho_left = rho[0:i]
+    # rho_right = rho[i:]
 
-        # grid_counts = NB.grid_count(stars,L,z)
-        # rho_part = (grid_counts/dz)*sigma 
-        # #Add the density from the FDM
-        # rho_FDM = np.absolute(chi)**2 
-        # rho = rho_FDM + rho_part
+    # #rho_avgd = (rho_left[len(rho_left)-len(rho_right):][::-1]+rho_right)/2
+    # #rho_avgd = np.append(rho_avgd, rho_left[0:len(rho_left)-len(rho_right)][::-1])
+    # fig = plt.figure()
+    # plt.title("Density of Particles Split in Half")
+    # plt.plot(z_right,rho_right)
+    # plt.plot(z_left,rho_left)
+    # plt.plot(z[i],rho[i], "ro", label = "Peak of Distribution")
+    # plt.legend()
+    # plt.show()
 
-        #Find center of distribution / max value and index:
-        # i = 0
-        # max_bool = False
-        # while max_bool == False:
-        #     for j in range(len(rho)):
-        #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
-        #             #then set i equal to j
-        #             i = j 
-        #             #break
-        #         else:
-        #             max_index = i
-        #             max_bool = True
-
-        # max_rho = rho[max_index]
-
-        #METHOD 2: Split across z = 0 (i.e: z[N//2])
-        rho_left = rho[0:N//2]
-        rho_right = rho[N//2:]
-        rho_whole = rho_left[::-1] + rho_right
-
-        z_left = z[0:N//2]
-        z_right = z[N//2:]
-
-        fig,ax = plt.subplots(1,2,figsize = (10,4))
-        plt.suptitle("Combined Left and Right halves of Distribution")
-        ax[0].plot(z_right,rho_whole,'--')
-        ax[0].set_xlabel("$|z|$")
-        ax[0].set_ylabel("$|rho|$")
-
-        ax[1].plot(np.log(z_right),np.log(rho_whole))
-        ax[1].set_xlabel("$log|z|$")
-        ax[1].set_ylabel("$log|rho|$")
-        plt.show()
-
-        ###################################################
-        # Curve Fitting
-        ###################################################
-
-        # Note: Before fitting, we have to shift the z_array up a tiny amount
-        # ...b/c if there is a z = 0.0, there will be a divide by zero error
-
-        #Just skip the very first element:
-        z_right = z_right[2:]#+1E-10
-        rho_whole = rho_whole[2:]
+    fig = plt.figure()
+    plt.title("Density of Particles Split in Half")
+    plt.plot(z[N//2:],rho[N//2:])
+    plt.plot(z[0:N//2],rho[0:N//2])
+    plt.plot(z[N//2],rho[N//2],"bo", label = "Centroid of Distribution")
+    plt.legend()
+    plt.show()
 
 
-        def fit_func(z,*pars):
-            C = pars[0]
-            a = pars[1]
-            return C/(z*(z+a)**2)
+    #Other method to accumulate left and right sides:
+    # for star in stars:
+    #     star.x = star.x - z[i] #shift
+    #     star.reposition(L) #reposition
 
-        def new_fit_func(z,*pars):
-            a0,a1,a2 = pars
-            og = a0/(z*(z+a1)**2)
-            correction = -a2/z
-            return og - correction
-        
-        def new_new_fit_func(z,*pars):
-            a0,a1,a2 = pars
-            og = a0/((z**a2) * (z+a1)**2)
-            return og
-        
-        def new_new_new_fit_func(z,*pars):
-            a0,a1,a2,a3 = pars
-            og = a0/((z**a2) * (z+a1)**a3)
-            return og
+    # grid_counts = NB.grid_count(stars,L,z)
+    # rho_part = (grid_counts/dz)*sigma 
+    # #Add the density from the FDM
+    # rho_FDM = np.absolute(chi)**2 
+    # rho = rho_FDM + rho_part
 
-        cols=0
-        try:
-            guess_params = [1,1]
-            popt1,pcov1 = opt.curve_fit(fit_func,z_right,rho_whole,guess_params,maxfev = 5000)
+    #Find center of distribution / max value and index:
+    # i = 0
+    # max_bool = False
+    # while max_bool == False:
+    #     for j in range(len(rho)):
+    #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
+    #             #then set i equal to j
+    #             i = j 
+    #             #break
+    #         else:
+    #             max_index = i
+    #             max_bool = True
+
+    # max_rho = rho[max_index]
+
+    #METHOD 2: Split across z = 0 (i.e: z[N//2])
+    rho_left = rho[0:N//2]
+    rho_right = rho[N//2:]
+    rho_whole = rho_left[::-1] + rho_right
+
+    z_left = z[0:N//2]
+    z_right = z[N//2:]
+
+    fig,ax = plt.subplots(1,2,figsize = (10,4))
+    plt.suptitle("Combined Left and Right halves of Distribution")
+    ax[0].plot(z_right,rho_whole,'--')
+    ax[0].set_xlabel("$|z|$")
+    ax[0].set_ylabel("$|rho|$")
+
+    ax[1].plot(np.log(z_right),np.log(rho_whole))
+    ax[1].set_xlabel("$log|z|$")
+    ax[1].set_ylabel("$log|rho|$")
+    plt.show()
+
+    return z_left,z_right,rho_left,rho_right
+
+def fit_func(z,*pars):
+        C = pars[0]
+        a = pars[1]
+        return C/(z*(z+a)**2)
+
+def new_fit_func(z,*pars):
+    a0,a1,a2 = pars
+    og = a0/(z*(z+a1)**2)
+    correction = -a2/z
+    return og - correction
+
+def new_new_fit_func(z,*pars):
+    a0,a1,a2 = pars
+    og = a0/((z**a2) * (z+a1)**2)
+    return og
+
+def new_new_new_fit_func(z,*pars):
+    a0,a1,a2,a3 = pars
+    og = a0/((z**a2) * (z+a1)**a3)
+    return og
+
+def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
+    rho_whole = rho_left[::-1] + rho_right
+    ###################################################
+    # Curve Fitting
+    ###################################################
+
+    # Note: Before fitting, we have to shift the z_array up a tiny amount
+    # ...b/c if there is a z = 0.0, there will be a divide by zero error
+
+    #Just skip the very first element:
+    z_right = z_right[2:]#+1E-10
+    rho_whole = rho_whole[2:]
+
+    cols=0
+    try:
+        guess_params = [1,1]
+        popt1,pcov1 = opt.curve_fit(fit_func,z_right,rho_whole,guess_params,maxfev = 5000)
+        print("Check")
+        cols += 1 
+        try: 
+            guess_params = [1,1,0]#np.append(popt,0)
+            popt2,pcov2 = opt.curve_fit(new_fit_func,z_right,rho_whole,guess_params)
             print("Check")
             cols += 1 
             try: 
                 guess_params = [1,1,0]#np.append(popt,0)
-                popt2,pcov2 = opt.curve_fit(new_fit_func,z_right,rho_whole,guess_params)
+                popt3,pcov3 = opt.curve_fit(new_new_fit_func,z_right,rho_whole,guess_params)
                 print("Check")
                 cols += 1 
-                try: 
-                    guess_params = [1,1,0]#np.append(popt,0)
-                    popt3,pcov3 = opt.curve_fit(new_new_fit_func,z_right,rho_whole,guess_params)
+                try:
+                    guess_params = np.append(popt3,2)# [1,1,0,2]
+                    popt4,pcov4 = opt.curve_fit(new_new_new_fit_func,z_right,rho_whole,guess_params,maxfev = 5000)
                     print("Check")
                     cols += 1 
-                    try:
-                        guess_params = np.append(popt3,2)# [1,1,0,2]
-                        popt4,pcov4 = opt.curve_fit(new_new_new_fit_func,z_right,rho_whole,guess_params,maxfev = 5000)
-                        print("Check")
-                        cols += 1 
-                    except:
-                        pass            
                 except:
-                    pass
+                    popt = popt4
+                    pass            
             except:
+                popt = popt3
                 pass
         except:
+            popt = popt2
             pass
-            
-        # plot = True
-        # if cols == 0:
-        #     plot = False
-        #     #cols = 1
-        print(f"#columns = {cols}")
-        if cols >= 1:
-            fig,ax = plt.subplots(2,cols,figsize = (30,10))
-            print(ax)
-            #special cases when cols == 1:
-            if cols == 1:
-               ax0 = ax[0]
-               ax1 = ax[1]
-            else:
-                ax0 = ax[0,0]
-                ax1 = ax[1,0]     
-            plt.suptitle("Density vs |z| with Curve fit",fontsize = 25)
-            
-            fit_rho = fit_func(z_right,*popt1)
-            ax0.plot(z_right,rho_whole)
-            ax0.plot(z_right,fit_rho,'r--',label="Curve Fit")
-            ax0.set_xlim(-0.1,1.1)#L/2)
-            ax0.text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|(|z|+a_1)^2}$",fontsize = 30)
-            ax0.text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt1[0]}$",fontsize = 15)
-            ax0.text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt1[1]}$",fontsize = 15)
-            
-            ax0.legend(fontsize = 25)
-
-            residuals = fit_rho-rho_whole
-            resid_y_max = np.max(residuals)
-            ax1.plot(z_right,residuals,"r.--")
-            ax1.set_xlim(-0.1,1.1)#L/2)
-            ax1.set_ylim((-resid_y_max,resid_y_max))
-            #ax[1,0].legend()
-
-            chi2 = 0
-            for i in range(len(residuals)):
-                chi2 += (residuals[i])**2 / fit_rho[i]
-            ax1.text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
-
-        if cols >= 2:
-            fit_rho = new_fit_func(z_right,*popt2)
-            ax[0,1].plot(z_right,rho_whole)
-            ax[0,1].plot(z_right,fit_rho,'r--',label="Curve Fit")
-            ax[0,1].set_xlim(-0.1,1.1)#L/2)
-            ax[0,1].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|(|z|+a_1)^2}-\\frac{a_2}{|z|}$",fontsize = 30)
-            ax[0,1].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt2[0]}$",fontsize = 15)
-            ax[0,1].text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt2[1]}$",fontsize = 15)
-            ax[0,1].text(L/8,0.70*max(rho_whole)*1/2, f"$a_2 = {popt2[2]}$",fontsize = 15)
-            
-            ax[0,1].legend(fontsize = 25)
-
-            residuals = fit_rho-rho_whole
-            ax[1,1].plot(z_right,residuals,"r.--")
-            ax[1,1].set_xlim(-0.1,1.1)
-            ax[1,1].set_ylim((-resid_y_max,resid_y_max))
+    except:
+        popt = popt1
+        pass
+    
+    # plot = True
+    # if cols == 0:
+    #     plot = False
+    #     #cols = 1
+    print(f"#columns = {cols}")
+    if cols >= 1:
+        fig,ax = plt.subplots(2,cols,figsize = (30,10))
+        print(ax)
+        #special cases when cols == 1:
+        if cols == 1:
+            ax0 = ax[0]
+            ax1 = ax[1]
+        else:
+            ax0 = ax[0,0]
+            ax1 = ax[1,0]     
+        plt.suptitle("Density vs |z| with Curve fit",fontsize = 25)
         
-            chi2 = 0
-            for i in range(len(residuals)):
-                chi2 += (residuals[i])**2 / fit_rho[i]
-            ax[1,1].text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
-
-        if cols >= 3:
-            fit_rho = new_new_fit_func(z_right,*popt3)
-            ax[0,2].plot(z_right,rho_whole)
-            ax[0,2].plot(z_right,fit_rho,'r--',label="Curve Fit")
-            ax[0,2].set_xlim(-0.1,1.1)#L/2)
-            ax[0,2].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|^{a_2}(|z|+a_1)^2}$",fontsize = 30)
-            ax[0,2].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt3[0]}$",fontsize = 15)
-            ax[0,2].text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt3[1]}$",fontsize = 15)
-            ax[0,2].text(L/8,0.70*max(rho_whole)*1/2, f"$a_2 = {popt3[2]}$",fontsize = 15)
-            
-            ax[0,2].legend(fontsize = 25)
-
-            residuals = fit_rho-rho_whole
-            ax[1,2].plot(z_right,residuals,"r.--")
-            ax[1,2].set_xlim(-0.1,1.1)#L/2)
-            ax[1,2].set_ylim((-resid_y_max,resid_y_max))
+        fit_rho = fit_func(z_right,*popt1)
+        ax0.plot(z_right,rho_whole)
+        ax0.plot(z_right,fit_rho,'r--',label="Curve Fit")
+        ax0.set_xlim(-0.1,1.1)#L/2)
+        ax0.text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|(|z|+a_1)^2}$",fontsize = 30)
+        ax0.text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt1[0]}$",fontsize = 15)
+        ax0.text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt1[1]}$",fontsize = 15)
         
-            #ax[1].legend()
+        ax0.legend(fontsize = 25)
 
-            chi2 = 0
-            for i in range(len(residuals)):
-                chi2 += (residuals[i])**2 / fit_rho[i]
-            ax[1,2].text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
+        residuals = fit_rho-rho_whole
+        resid_y_max = np.max(residuals)
+        ax1.plot(z_right,residuals,"r.--")
+        ax1.set_xlim(-0.1,1.1)#L/2)
+        ax1.set_ylim((-resid_y_max,resid_y_max))
+        #ax[1,0].legend()
 
-        if cols >= 4:    
-            fit_rho = new_new_new_fit_func(z_right,*popt4)
-            ax[0,3].plot(z_right,rho_whole)
-            ax[0,3].plot(z_right,fit_rho,'r--',label="Curve Fit")
-            ax[0,3].set_xlim(-0.1,1.1)#L/2)
-            ax[0,3].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|^{a_2}(|z|+a_1)^{a_3}}$",fontsize = 30)
-            ax[0,3].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt4[0]}$",fontsize = 15)
-            ax[0,3].text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt4[1]}$",fontsize = 15)
-            ax[0,3].text(L/8,0.70*max(rho_whole)*1/2, f"$a_2 = {popt4[2]}$",fontsize = 15)
-            ax[0,3].text(L/8,0.55*max(rho_whole)*1/2, f"$a_3 = {popt4[3]}$",fontsize = 15)
-            
-            ax[0,3].legend(fontsize = 25)
+        chi2 = 0
+        for i in range(len(residuals)):
+            chi2 += (residuals[i])**2 / fit_rho[i]
+        ax1.text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
 
-            residuals = fit_rho-rho_whole
-            ax[1,3].plot(z_right,residuals,"r.--")
-            ax[1,3].set_xlim(-0.1,1.1)#L/2)
-            ax[1,3].set_ylim((-resid_y_max,resid_y_max))
+    if cols >= 2:
+        fit_rho = new_fit_func(z_right,*popt2)
+        ax[0,1].plot(z_right,rho_whole)
+        ax[0,1].plot(z_right,fit_rho,'r--',label="Curve Fit")
+        ax[0,1].set_xlim(-0.1,1.1)#L/2)
+        ax[0,1].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|(|z|+a_1)^2}-\\frac{a_2}{|z|}$",fontsize = 30)
+        ax[0,1].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt2[0]}$",fontsize = 15)
+        ax[0,1].text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt2[1]}$",fontsize = 15)
+        ax[0,1].text(L/8,0.70*max(rho_whole)*1/2, f"$a_2 = {popt2[2]}$",fontsize = 15)
         
-            #ax[1].legend()
+        ax[0,1].legend(fontsize = 25)
 
-            chi2 = 0
-            for i in range(len(residuals)):
-                chi2 += (residuals[i])**2 / fit_rho[i]
-            ax[1,3].text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
+        residuals = fit_rho-rho_whole
+        ax[1,1].plot(z_right,residuals,"r.--")
+        ax[1,1].set_xlim(-0.1,1.1)
+        ax[1,1].set_ylim((-resid_y_max,resid_y_max))
+    
+        chi2 = 0
+        for i in range(len(residuals)):
+            chi2 += (residuals[i])**2 / fit_rho[i]
+        ax[1,1].text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
 
-        plt.show()
+    if cols >= 3:
+        fit_rho = new_new_fit_func(z_right,*popt3)
+        ax[0,2].plot(z_right,rho_whole)
+        ax[0,2].plot(z_right,fit_rho,'r--',label="Curve Fit")
+        ax[0,2].set_xlim(-0.1,1.1)#L/2)
+        ax[0,2].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|^{a_2}(|z|+a_1)^2}$",fontsize = 30)
+        ax[0,2].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt3[0]}$",fontsize = 15)
+        ax[0,2].text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt3[1]}$",fontsize = 15)
+        ax[0,2].text(L/8,0.70*max(rho_whole)*1/2, f"$a_2 = {popt3[2]}$",fontsize = 15)
+        
+        ax[0,2].legend(fontsize = 25)
 
-        ###################################################
-        fig,ax = plt.subplots(2,1, figsize = (8,10), gridspec_kw = {"height_ratios": [2,1]})
-        plt.suptitle("Gravitational Potential in the Box")
-        fit_rho = np.append(fit_rho[::-1],fit_rho)/ 2 #have to divide by 2 becasue we are double counting on the grid
-        fit_phi = GF.fourier_potentialV2(fit_rho,L) 
-        fit_z = np.linspace(-L/2,L/2,len(fit_phi))
-        ax[0].plot(fit_z,fit_phi,label = "Analytic Model")
-        rho = np.append(rho_left,rho_right)
-        ax[0].plot(z,GF.fourier_potentialV2(rho,L), label = "Exact NBody Potential")
-        ax[0].legend()
+        residuals = fit_rho-rho_whole
+        ax[1,2].plot(z_right,residuals,"r.--")
+        ax[1,2].set_xlim(-0.1,1.1)#L/2)
+        ax[1,2].set_ylim((-resid_y_max,resid_y_max))
+    
+        #ax[1].legend()
 
-        ax[1].plot(fit_z,fit_phi-GF.fourier_potentialV2(rho,L)[4:],'r,--')
-        ax[1].set_title("Residuals")
-        plt.show()
+        chi2 = 0
+        for i in range(len(residuals)):
+            chi2 += (residuals[i])**2 / fit_rho[i]
+        ax[1,2].text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
 
-    return z_rms, v_rms
+    if cols >= 4:    
+        fit_rho = new_new_new_fit_func(z_right,*popt4)
+        ax[0,3].plot(z_right,rho_whole)
+        ax[0,3].plot(z_right,fit_rho,'r--',label="Curve Fit")
+        ax[0,3].set_xlim(-0.1,1.1)#L/2)
+        ax[0,3].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|^{a_2}(|z|+a_1)^{a_3}}$",fontsize = 30)
+        ax[0,3].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt4[0]}$",fontsize = 15)
+        ax[0,3].text(L/8,0.85*max(rho_whole)*1/2, f"$a_1 = {popt4[1]}$",fontsize = 15)
+        ax[0,3].text(L/8,0.70*max(rho_whole)*1/2, f"$a_2 = {popt4[2]}$",fontsize = 15)
+        ax[0,3].text(L/8,0.55*max(rho_whole)*1/2, f"$a_3 = {popt4[3]}$",fontsize = 15)
+        
+        ax[0,3].legend(fontsize = 25)
 
+        residuals = fit_rho-rho_whole
+        ax[1,3].plot(z_right,residuals,"r.--")
+        ax[1,3].set_xlim(-0.1,1.1)#L/2)
+        ax[1,3].set_ylim((-resid_y_max,resid_y_max))
+    
+        #ax[1].legend()
+
+        chi2 = 0
+        for i in range(len(residuals)):
+            chi2 += (residuals[i])**2 / fit_rho[i]
+        ax[1,3].text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
+
+    plt.show()
+
+    ###################################################
+    fig,ax = plt.subplots(2,1, figsize = (8,10), gridspec_kw = {"height_ratios": [2,1]})
+    plt.suptitle("Gravitational Potential in the Box")
+    fit_rho = np.append(fit_rho[::-1],fit_rho)/ 2 #have to divide by 2 becasue we are double counting on the grid
+    fit_phi = GF.fourier_potentialV2(fit_rho,L) 
+    fit_z = np.linspace(-L/2,L/2,len(fit_phi))
+    ax[0].plot(fit_z,fit_phi,label = "Analytic Model")
+    rho = np.append(rho_left,rho_right)
+    ax[0].plot(z,GF.fourier_potentialV2(rho,L), label = "Exact NBody Potential")
+    ax[0].legend()
+
+    ax[1].plot(fit_z,fit_phi-GF.fourier_potentialV2(rho,L)[4:],'r,--')
+    ax[1].set_title("Residuals")
+    plt.show()
+
+    return popt
