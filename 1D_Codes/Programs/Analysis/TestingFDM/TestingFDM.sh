@@ -15,8 +15,8 @@ simulation_choice2=('2') #want it to run a long time
 
 #Mass ratios:
 percent='1'
-v_rms=0.57551038
-z_rms=0.15924094
+v_rms=0.58
+z_rms=0.158
     
 #Run through just particles:
 for lambda in "${de_Broglie[@]}"; do

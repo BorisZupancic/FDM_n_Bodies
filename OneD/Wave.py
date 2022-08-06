@@ -101,7 +101,6 @@ def Husimi_phase(chi,z,dz,L,eta):
     N = len(chi)
     
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
-    #k = k/L #non-dimensionalize
     dk = k[1]-k[0]
     #print(f"k[N//2-1] = {k[N//2 -1]}, k[N//2] = {k[N//2]}")
 

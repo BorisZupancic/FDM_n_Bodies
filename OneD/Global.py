@@ -59,6 +59,9 @@ def StartupV2(hbar,L_scale,v_scale):
     elif percent_FDM == 0:
         r = 0.5
         mu = 1 #set as default
+        R = None
+        lambda_deB = None 
+
 
     print("")
     if percent_FDM != 1:
@@ -361,7 +364,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     #rescale wavenumber k to velocity v:
     hbar = 1
-    v = k*(hbar/m)
+    v = k*(hbar/mu)
     x_min, x_max = np.min(z), np.max(z)
     v_min, v_max = np.min(v), np.max(v)
     print(f"v_min = {v_min}, v_max = {v_max}")
@@ -521,7 +524,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
                     #Kinetic Energy:
                     chi_tilde = np.fft.fft(chi)
                     k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
-                    K = r*np.sum(k**2 * np.absolute(chi_tilde)**2)
+                    K = (2/(N**2))*r*np.sum(k**2 * np.absolute(chi_tilde)**2)
         
                     if i == 0:
                         W_FDM_storage = np.array([[W]])

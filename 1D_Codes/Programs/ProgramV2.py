@@ -57,7 +57,7 @@ if Num_bosons != 0: #want to determine the proper number of grid points to have
     lambda_deB = lambda_deB*R
     N_new = int(np.ceil(L/lambda_deB)+1)
     if N_new >= N:
-        N = N_new #overwrite number of grid points
+        N = 8*N_new #overwrite number of grid points
 print(f"Number of Grid points: {N}")
 z = np.linspace(-L/2,L/2,N)
 dz = z[1]-z[0]
@@ -171,7 +171,7 @@ np.savetxt(f"Properties.csv", properties, delimiter = ",", fmt = "%s")
 if sim_choice2 == 1:
     print("Now Saving Video")
     #WRITE TO VIDEO
-    video_name = "Video"
+    video_name = "Video.mp4"
     fps = 10
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     GF.animate(fourcc,Directory,folder_name,video_name,fps)
