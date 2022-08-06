@@ -1,0 +1,314 @@
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingFDM
+/home/boris/Documents/Research/FDM_n_Bodies
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 1.000000 
+v_FDM dispersion = 0.580000
+Characteristic Radius: R_syst = 0.158000
+de Broglie Wavelength = 2.000000
+Fixed Phi? n
+sim choice : 2
+Boson std = 0.100000
+Particle std = 0.000000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingFDM
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 0.0
+
+Choose a FDM fuzziness.
+Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
+lambda_deB = 0.316
+Fuzziness: r = 0.014584958984941289
+Mass mu = 34.28189277160403, m = mu*M = 34.28189277160403
+
+Num_stars = 0
+sigma = 0
+Num_Bosons = 0.029169917969882577
+mu = 34.28189277160403
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
+integral of |chi|^2 : 0.9999994414547742
+Numerically calculated integral of |psi|^2 : 0.0036462377096455204
+v_min = -45.77418000000103, v_max = 45.68263164000103
+v_min = -45.77418000000103, v_max = 45.77418000000103
+0.499499721006671
+(Non-dim) Collapse time: 1.4149215950755862
+Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
+Sim will stop at tau = 90.55498208483752
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 140.8605556488037 seconds = 2.347675927480062 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 1.000000 
+v_FDM dispersion = 0.580000
+Characteristic Radius: R_syst = 0.158000
+de Broglie Wavelength = 1.000000
+Fixed Phi? n
+sim choice : 2
+Boson std = 0.100000
+Particle std = 0.000000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingFDM
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 0.0
+
+Choose a FDM fuzziness.
+Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
+lambda_deB = 0.158
+Fuzziness: r = 0.007292479492470644
+Mass mu = 68.56378554320806, m = mu*M = 68.56378554320806
+
+Num_stars = 0
+sigma = 0
+Num_Bosons = 0.014584958984941289
+mu = 68.56378554320806
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
+integral of |chi|^2 : 0.9999994414547742
+Numerically calculated integral of |psi|^2 : 0.0018231188548227602
+v_min = -22.887090000000516, v_max = 22.841315820000514
+v_min = -22.887090000000516, v_max = 22.887090000000516
+0.499499721006671
+(Non-dim) Collapse time: 1.4149215950755862
+Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
+Sim will stop at tau = 90.55498208483752
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 140.47087574005127 seconds = 2.341181262334188 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 1.000000 
+v_FDM dispersion = 0.580000
+Characteristic Radius: R_syst = 0.158000
+de Broglie Wavelength = 0.500000
+Fixed Phi? n
+sim choice : 2
+Boson std = 0.100000
+Particle std = 0.000000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingFDM
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 0.0
+
+Choose a FDM fuzziness.
+Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
+lambda_deB = 0.079
+Fuzziness: r = 0.003646239746235322
+Mass mu = 137.1275710864161, m = mu*M = 137.1275710864161
+
+Num_stars = 0
+sigma = 0
+Num_Bosons = 0.007292479492470644
+mu = 137.1275710864161
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
+integral of |chi|^2 : 0.9999994414547742
+Numerically calculated integral of |psi|^2 : 0.0009115594274113801
+v_min = -11.443545000000258, v_max = 11.420657910000257
+v_min = -11.443545000000258, v_max = 11.443545000000258
+0.499499721006671
+(Non-dim) Collapse time: 1.4149215950755862
+Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
+Sim will stop at tau = 90.55498208483752
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 153.6491584777832 seconds = 2.5608193079630532 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 1.000000 
+v_FDM dispersion = 0.580000
+Characteristic Radius: R_syst = 0.158000
+de Broglie Wavelength = 0.100000
+Fixed Phi? n
+sim choice : 2
+Boson std = 0.100000
+Particle std = 0.000000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingFDM
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 0.0
+
+Choose a FDM fuzziness.
+Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
+lambda_deB = 0.0158
+Fuzziness: r = 0.0007292479492470644
+Mass mu = 685.6378554320805, m = mu*M = 685.6378554320805
+
+Num_stars = 0
+sigma = 0
+Num_Bosons = 0.001458495898494129
+mu = 685.6378554320805
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
+integral of |chi|^2 : 0.9999994414547742
+Numerically calculated integral of |psi|^2 : 0.00018231188548227604
+v_min = -2.288709000000052, v_max = 2.284131582000051
+v_min = -2.288709000000052, v_max = 2.288709000000052
+0.499499721006671
+(Non-dim) Collapse time: 1.4149215950755862
+Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
+Sim will stop at tau = 90.55498208483752
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 156.81625604629517 seconds = 2.613604267438253 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 1.000000 
+v_FDM dispersion = 0.580000
+Characteristic Radius: R_syst = 0.158000
+de Broglie Wavelength = 0.050000
+Fixed Phi? n
+sim choice : 2
+Boson std = 0.100000
+Particle std = 0.000000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingFDM
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 0.0
+
+Choose a FDM fuzziness.
+Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
+lambda_deB = 0.0079
+Fuzziness: r = 0.0003646239746235322
+Mass mu = 1371.275710864161, m = mu*M = 1371.275710864161
+
+Num_stars = 0
+sigma = 0
+Num_Bosons = 0.0007292479492470644
+mu = 1371.275710864161
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
+integral of |chi|^2 : 0.9999994414547742
+Numerically calculated integral of |psi|^2 : 9.115594274113801e-05
+v_min = -1.144354500000026, v_max = 1.1420657910000256
+v_min = -1.144354500000026, v_max = 1.144354500000026
+0.499499721006671
+(Non-dim) Collapse time: 1.4149215950755862
+Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
+Sim will stop at tau = 90.55498208483752
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 145.35580372810364 seconds = 2.4225967288017274 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 1.000000 
+v_FDM dispersion = 0.580000
+Characteristic Radius: R_syst = 0.158000
+de Broglie Wavelength = 0.010000
+Fixed Phi? n
+sim choice : 2
+Boson std = 0.100000
+Particle std = 0.000000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingFDM
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 0.0
+
+Choose a FDM fuzziness.
+Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
+lambda_deB = 0.00158
+Fuzziness: r = 7.292479492470644e-05
+Mass mu = 6856.378554320806, m = mu*M = 6856.378554320806
+
+Num_stars = 0
+sigma = 0
+Num_Bosons = 0.0001458495898494129
+mu = 6856.378554320806
+Number of Grid points: 5068
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
+integral of |chi|^2 : 0.9999994296260701
+Numerically calculated integral of |psi|^2 : 1.823118833257615e-05
+v_min = -1.160849700000096, v_max = 1.160391590410514
+v_min = -1.160849700000096, v_max = 1.160849700000096
+0.4999010566215189
+(Non-dim) Collapse time: 1.4143535102115605
+Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
+Sim will stop at tau = 90.51862465353987
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 723.7759771347046 seconds = 12.062932952245076 minutes.

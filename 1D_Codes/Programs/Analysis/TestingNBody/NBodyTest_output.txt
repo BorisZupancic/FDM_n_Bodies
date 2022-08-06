@@ -1,0 +1,385 @@
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingNBody
+/home/boris/Documents/Research/FDM_n_Bodies
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.000000 
+Num_particles 5
+Fixed Potential: y
+sim choice : 2
+Boson std: No Bosons
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingNBody
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 1.0
+
+
+How many particles?
+Num_stars = 5
+sigma = 0.2
+Num_Bosons = 0.0
+mu = 1
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the Particle system (as fraction of the box width):
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+v_min = -1569.225530468137, v_max = 1566.0870794072007
+v_min = -1569.225530468137, v_max = 1569.225530468137
+0.49950000000001127
+(Non-dim) Collapse time: 1.4149211999266802
+Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
+Sim will stop at tau = 90.55495679530753
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Wave.py:125: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 101.2069046497345 seconds = 1.6867817441622417 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.000000 
+Num_particles 500
+Fixed Potential: n
+sim choice : 2
+Boson std: No Bosons
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingNBody
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 1.0
+
+
+How many particles?
+Num_stars = 500
+sigma = 0.002
+Num_Bosons = 0.0
+mu = 1
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the Particle system (as fraction of the box width):
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+v_min = -1569.225530468137, v_max = 1566.0870794072007
+v_min = -1569.225530468137, v_max = 1569.225530468137
+0.4995000000000114
+(Non-dim) Collapse time: 1.4149211999266802
+Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
+Sim will stop at tau = 90.55495679530753
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Wave.py:125: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 136.64522886276245 seconds = 2.277420481046041 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.000000 
+Num_particles 1000
+Fixed Potential: n
+sim choice : 2
+Boson std: No Bosons
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingNBody
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 1.0
+
+
+How many particles?
+Num_stars = 1000
+sigma = 0.001
+Num_Bosons = 0.0
+mu = 1
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the Particle system (as fraction of the box width):
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+v_min = -1569.225530468137, v_max = 1566.0870794072007
+v_min = -1569.225530468137, v_max = 1569.225530468137
+0.4995000000000114
+(Non-dim) Collapse time: 1.4149211999266802
+Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
+Sim will stop at tau = 90.55495679530753
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Wave.py:125: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 152.50866150856018 seconds = 2.5418110251426698 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.000000 
+Num_particles 5000
+Fixed Potential: n
+sim choice : 2
+Boson std: No Bosons
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingNBody
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 1.0
+
+
+How many particles?
+Num_stars = 5000
+sigma = 0.0002
+Num_Bosons = 0.0
+mu = 1
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the Particle system (as fraction of the box width):
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+v_min = -1569.225530468137, v_max = 1566.0870794072007
+v_min = -1569.225530468137, v_max = 1569.225530468137
+0.49950000000001127
+(Non-dim) Collapse time: 1.4149211999266802
+Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
+Sim will stop at tau = 90.55495679530753
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Wave.py:125: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 273.4882917404175 seconds = 4.558138195673624 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.000000 
+Num_particles 10000
+Fixed Potential: n
+sim choice : 2
+Boson std: No Bosons
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingNBody
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 1.0
+
+
+How many particles?
+Num_stars = 10000
+sigma = 0.0001
+Num_Bosons = 0.0
+mu = 1
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the Particle system (as fraction of the box width):
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+v_min = -1569.225530468137, v_max = 1566.0870794072007
+v_min = -1569.225530468137, v_max = 1569.225530468137
+0.49950000000001127
+(Non-dim) Collapse time: 1.4149211999266802
+Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
+Sim will stop at tau = 90.55495679530753
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Wave.py:125: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 396.357697725296 seconds = 6.605961628754934 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.000000 
+Num_particles 50000
+Fixed Potential: n
+sim choice : 2
+Boson std: No Bosons
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingNBody
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 1.0
+
+
+How many particles?
+Num_stars = 50000
+sigma = 2e-05
+Num_Bosons = 0.0
+mu = 1
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the Particle system (as fraction of the box width):
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+v_min = -1569.225530468137, v_max = 1566.0870794072007
+v_min = -1569.225530468137, v_max = 1569.225530468137
+0.4995000000000113
+(Non-dim) Collapse time: 1.4149211999266802
+Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
+Sim will stop at tau = 90.55495679530753
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Wave.py:125: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 1552.59934091568 seconds = 25.876655681928 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.000000 
+Num_particles 100000
+Fixed Potential: n
+sim choice : 2
+Boson std: No Bosons
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingNBody
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 1.0
+
+
+How many particles?
+Num_stars = 100000
+sigma = 1e-05
+Num_Bosons = 0.0
+mu = 1
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the Particle system (as fraction of the box width):
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+v_min = -1569.225530468137, v_max = 1566.0870794072007
+v_min = -1569.225530468137, v_max = 1569.225530468137
+0.4995000000000114
+(Non-dim) Collapse time: 1.4149211999266802
+Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
+Sim will stop at tau = 90.55495679530753
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Wave.py:125: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 4374.096168518066 seconds = 72.90160280863444 minutes.
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.000000 
+Num_particles 500000
+Fixed Potential: n
+sim choice : 2
+Boson std: No Bosons
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingNBody
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 1.0
+
+
+How many particles?
+Num_stars = 500000
+sigma = 2e-06
+Num_Bosons = 0.0
+mu = 1
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the Particle system (as fraction of the box width):
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+v_min = -1569.225530468137, v_max = 1566.0870794072007
+v_min = -1569.225530468137, v_max = 1569.225530468137
+0.49950000000001116
+(Non-dim) Collapse time: 1.4149211999266804
+Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
+Sim will stop at tau = 90.55495679530755
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Wave.py:125: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Global.py:255: UserWarning: Creating legend with loc="best" can be slow with large amounts of data.
+  plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
