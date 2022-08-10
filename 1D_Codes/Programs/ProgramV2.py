@@ -171,7 +171,7 @@ np.savetxt(f"Properties.csv", properties, delimiter = ",", fmt = "%s")
 if sim_choice2 == 1:
     print("Now Saving Video")
     #WRITE TO VIDEO
-    video_name = "Video.mp4"
+    video_name = f"r{r}_NumP_{Num_stars}_Video.mp4"
     fps = 10
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     GF.animate(fourcc,Directory,folder_name,video_name,fps)

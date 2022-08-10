@@ -62,6 +62,7 @@ def v_distribution(z,L,chi,r,mu):
     plt.plot(v,v_dist)
     plt.ylabel("Density (Normalized)")
     plt.xlabel("Velocity $v$")
+    plt.title("FDM Virialized Velocity Distribution")
     plt.show()
     
     return v_dist

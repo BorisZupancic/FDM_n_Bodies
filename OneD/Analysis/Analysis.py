@@ -25,20 +25,6 @@ print(Directory)
 # MY ONE BIG FUNCTION FOR ALL ANALYSIS:
 ######################################################
 def analysis(folder: str):#,*args):
-    # if len(args) == 0:
-    #     #r,m,Num_bosons,sigma,Num_stars = [0,0,0,0,0]
-    #     print("")
-    #     print("Input r, m, Num_bosons, sigma, Num_stars: ")
-    #     r = float(input())
-    #     m = float(input())
-    #     Num_bosons = int(input())
-    #     sigma = float(input())
-    #     Num_stars = int(input())
-    # else:
-    #     r,m,Num_bosons,sigma,Num_stars = args
-    #print(os.getcwd())
-    #os.chdir(where_folder +"/"+folder)
-    #print(os.getcwd())
     os.chdir(folder)
     print(os.getcwd())
 
@@ -46,22 +32,14 @@ def analysis(folder: str):#,*args):
     Properties = np.loadtxt("Properties.csv", dtype = str, delimiter = ",")
     L,mu,Num_bosons,sigma,Num_stars,r,N = [np.float(Properties[1::,1][i]) for i in range(7)]
     print(r,Num_stars)
-    # m = Properties[2,1]
-    # Num_bosons = Properties[3,1]
-    # sigma = Properties[4,1]
-    # Num_stars = Properties[5,1]
-    # r = Properties[6,1]
 
     percent_FDM = Num_bosons*mu / (Num_bosons*mu + Num_stars*sigma)
 
-    #L = 2
-    #N = 10**3
     N = int(N)
     z = np.linspace(-L/2,L/2,N)
     dz = z[1]-z[0]
 
     if Num_bosons == 0:
-        #folder = f"{Num_stars}ParticlesOnly_Snapshots"
         stars_x = np.loadtxt("StarsOnly_Pos.csv", dtype = float, delimiter=",")
         stars_v = np.loadtxt("StarsOnly_Vel.csv", dtype = float, delimiter=",")
         K_Energies = np.loadtxt("K_star_Energies.csv", dtype = float,delimiter = ",")
@@ -69,10 +47,8 @@ def analysis(folder: str):#,*args):
         K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
         W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
         chi = np.loadtxt(f"Chi.csv", dtype = complex, delimiter=",")
-        #chi = np.zeros_like(z)
         centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
     elif Num_stars == 0:
-        #folder = f"OnlyFDM_r{r}_Snapshots"
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
@@ -84,7 +60,6 @@ def analysis(folder: str):#,*args):
         K_Energies = None 
         W_Energies = None
     elif Num_bosons!=0 and Num_stars !=0:
-        #folder = f"FDM{percent_FDM}_r{r}_Snapshots"
         stars_x = np.loadtxt("Stars_Pos.csv", dtype = float, delimiter=",")
         stars_v = np.loadtxt("Stars_Vel.csv", dtype = float, delimiter=",")
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
@@ -146,6 +121,39 @@ def analysis(folder: str):#,*args):
 
         popt = curve_fitting(L,z,NBz_left,NBz_right,NBrho_left,NBrho_right)
         print(f"fit params = {popt}")
+
+    if Num_bosons != 0 and Num_stars != 0:
+        W_totals = 0.5 * np.array([np.sum(W_Energies[i,:]) for i in range(np.shape(W_Energies)[0])])
+        K_totals = np.array([np.sum(K_Energies[i,:]) for i in range(np.shape(K_Energies)[0])])
+
+        #Check that total energy is conserved:
+        K = K_totals + Ks_FDM
+        W = W_totals + Ws_FDM
+        Virial_ratios = np.abs(K/W)
+    
+        fig,ax = plt.subplots(1,4,figsize = (20,5))
+        plt.suptitle("Energy Plots for Every Star, at Snapshot times/indices")
+        ax[0].set_title("Potential Energy over time")
+        ax[0].plot(indices,W,"--", marker = "o",label = "$\\Sigma W$")
+        
+        ax[1].set_title("Kinetic Energy over time")
+        ax[1].plot(indices,K,"--", marker = "o",label = "$\\Sigma K$")
+        ax[1].legend()
+
+        #set the scale:
+        Dy = np.max(K)-np.min(K)
+        y_min = np.min(K+W)
+        y_min = y_min - Dy/2
+        y_max = Dy + y_min
+        ax[2].set_title("Total Energy K+W over time")
+        ax[2].plot(indices,K+W,"--", marker = "o",label = "$\\Sigma E$")
+        ax[2].set_ylim(y_min,y_max)
+        ax[2].legend()
+
+        ax[3].set_title("Virial Ratio $|K/W|$ over time")
+        ax[3].plot(indices, Virial_ratios, "b--", marker = "o")
+        plt.show()
+
 
     if 'FDM_z_rms' in locals() and 'FDM_v_rms' in locals() and 'z_rms' in locals() and 'v_rms' in locals():
         return r, Num_stars, FDM_z_rms, FDM_v_rms, z_rms,v_rms
@@ -237,10 +245,11 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi):
         rho_FDM = mu*np.absolute(chi)**2 
         rho = rho_FDM + rho_part
 
-        # centroid_z = 0
-        # for j in range(len(grid_counts)):
-        #     centroid_z += z[j]*grid_counts[j]
-        # centroid_z = centroid_z / Num_stars
+
+        centroid_z = 0
+        for j in range(len(grid_counts)):
+            centroid_z += z[j]*grid_counts[j]
+        centroid_z = centroid_z / Num_stars
         ax['lower right'].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
 
 

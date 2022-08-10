@@ -16,6 +16,7 @@ def plot_centroids(indices,centroids):
     plt.figure()
     plt.title("Centroid over time")
     plt.plot(indices,centroids,'bo-')
+    plt.ylim(-1,1)
     plt.show()
 
 
