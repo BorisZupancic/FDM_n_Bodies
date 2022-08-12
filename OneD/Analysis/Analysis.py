@@ -117,9 +117,9 @@ def analysis(folder: str):#,*args):
         plt.hist(Energies[-1,:],bins = n_bins)#100)
         plt.show()
 
-        NBz_left,NBz_right,NBrho_left,NBrho_right = NBody.rho_distribution(z,rho_part)
+        NBz_whole,NBrho_whole = NBody.rho_distribution(z,rho_part)
 
-        popt = curve_fitting(L,z,NBz_left,NBz_right,NBrho_left,NBrho_right)
+        popt = curve_fitting(L,NBz_whole,NBrho_whole)
         print(f"fit params = {popt}")
 
     if Num_bosons != 0 and Num_stars != 0:
@@ -348,8 +348,7 @@ def new_new_new_fit_func(z,*pars):
     og = a0/((z**a2) * (z+a1)**a3)
     return og
 
-def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
-    rho_whole = rho_left[::-1] + rho_right
+def curve_fitting(L, z_whole,rho_whole):#z_left,z_right,rho_left,rho_right):
     ###################################################
     # Curve Fitting
     ###################################################
@@ -357,33 +356,29 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
     # Note: Before fitting, we have to shift the z_array up a tiny amount
     # ...b/c if there is a z = 0.0, there will be a divide by zero error
 
-    #Just skip the very first element:
-    z_right = z_right[2:]#+1E-10
-    rho_whole = rho_whole[2:]
-
     cols=0
     popt = None
     try:
         guess_params = [1,1]
-        popt1,pcov1 = opt.curve_fit(fit_func,z_right,rho_whole,guess_params,maxfev = 5000)
+        popt1,pcov1 = opt.curve_fit(fit_func,z_whole,rho_whole,guess_params,maxfev = 5000)
         print("Check")
         popt = popt1
         cols += 1 
         try: 
             guess_params = [1,1,0]#np.append(popt,0)
-            popt2,pcov2 = opt.curve_fit(new_fit_func,z_right,rho_whole,guess_params)
+            popt2,pcov2 = opt.curve_fit(new_fit_func,z_whole,rho_whole,guess_params)
             print("Check")
             popt = popt2
             cols += 1 
             try: 
                 guess_params = [1,1,0]#np.append(popt,0)
-                popt3,pcov3 = opt.curve_fit(new_new_fit_func,z_right,rho_whole,guess_params)
+                popt3,pcov3 = opt.curve_fit(new_new_fit_func,z_whole,rho_whole,guess_params)
                 print("Check")
                 popt = popt3
                 cols += 1 
                 try:
                     guess_params = np.append(popt3,2)# [1,1,0,2]
-                    popt4,pcov4 = opt.curve_fit(new_new_new_fit_func,z_right,rho_whole,guess_params,maxfev = 5000)
+                    popt4,pcov4 = opt.curve_fit(new_new_new_fit_func,z_whole,rho_whole,guess_params,maxfev = 5000)
                     print("Check")
                     popt = popt4
                     cols += 1 
@@ -417,9 +412,9 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
             ax1 = ax[1,0]     
         plt.suptitle("Density vs |z| with Curve fit",fontsize = 25)
         
-        fit_rho = fit_func(z_right,*popt1)
-        ax0.plot(z_right,rho_whole)
-        ax0.plot(z_right,fit_rho,'r--',label="Curve Fit")
+        fit_rho = fit_func(z_whole,*popt1)
+        ax0.plot(z_whole,rho_whole)
+        ax0.plot(z_whole,fit_rho,'r--',label="Curve Fit")
         ax0.set_xlim(-0.1,1.1)#L/2)
         ax0.text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|(|z|+a_1)^2}$",fontsize = 30)
         ax0.text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt1[0]}$",fontsize = 15)
@@ -429,7 +424,7 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
 
         residuals = fit_rho-rho_whole
         resid_y_max = np.max(residuals)
-        ax1.plot(z_right,residuals,"r.--")
+        ax1.plot(z_whole,residuals,"r.--")
         ax1.set_xlim(-0.1,1.1)#L/2)
         ax1.set_ylim((-resid_y_max,resid_y_max))
         #ax[1,0].legend()
@@ -440,9 +435,9 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
         ax1.text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
 
     if cols >= 2:
-        fit_rho = new_fit_func(z_right,*popt2)
-        ax[0,1].plot(z_right,rho_whole)
-        ax[0,1].plot(z_right,fit_rho,'r--',label="Curve Fit")
+        fit_rho = new_fit_func(z_whole,*popt2)
+        ax[0,1].plot(z_whole,rho_whole)
+        ax[0,1].plot(z_whole,fit_rho,'r--',label="Curve Fit")
         ax[0,1].set_xlim(-0.1,1.1)#L/2)
         ax[0,1].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|(|z|+a_1)^2}-\\frac{a_2}{|z|}$",fontsize = 30)
         ax[0,1].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt2[0]}$",fontsize = 15)
@@ -452,7 +447,7 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
         ax[0,1].legend(fontsize = 25)
 
         residuals = fit_rho-rho_whole
-        ax[1,1].plot(z_right,residuals,"r.--")
+        ax[1,1].plot(z_whole,residuals,"r.--")
         ax[1,1].set_xlim(-0.1,1.1)
         ax[1,1].set_ylim((-resid_y_max,resid_y_max))
     
@@ -462,9 +457,9 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
         ax[1,1].text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
 
     if cols >= 3:
-        fit_rho = new_new_fit_func(z_right,*popt3)
-        ax[0,2].plot(z_right,rho_whole)
-        ax[0,2].plot(z_right,fit_rho,'r--',label="Curve Fit")
+        fit_rho = new_new_fit_func(z_whole,*popt3)
+        ax[0,2].plot(z_whole,rho_whole)
+        ax[0,2].plot(z_whole,fit_rho,'r--',label="Curve Fit")
         ax[0,2].set_xlim(-0.1,1.1)#L/2)
         ax[0,2].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|^{a_2}(|z|+a_1)^2}$",fontsize = 30)
         ax[0,2].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt3[0]}$",fontsize = 15)
@@ -474,7 +469,7 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
         ax[0,2].legend(fontsize = 25)
 
         residuals = fit_rho-rho_whole
-        ax[1,2].plot(z_right,residuals,"r.--")
+        ax[1,2].plot(z_whole,residuals,"r.--")
         ax[1,2].set_xlim(-0.1,1.1)#L/2)
         ax[1,2].set_ylim((-resid_y_max,resid_y_max))
     
@@ -486,9 +481,9 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
         ax[1,2].text(L/4, 0.8*np.max(residuals), f"$chi^2$ = {chi2}")
 
     if cols >= 4:    
-        fit_rho = new_new_new_fit_func(z_right,*popt4)
-        ax[0,3].plot(z_right,rho_whole)
-        ax[0,3].plot(z_right,fit_rho,'r--',label="Curve Fit")
+        fit_rho = new_new_new_fit_func(z_whole,*popt4)
+        ax[0,3].plot(z_whole,rho_whole)
+        ax[0,3].plot(z_whole,fit_rho,'r--',label="Curve Fit")
         ax[0,3].set_xlim(-0.1,1.1)#L/2)
         ax[0,3].text(L/8,max(rho_whole)*3/4, "$f(|z|) = \\frac{a_0}{|z|^{a_2}(|z|+a_1)^{a_3}}$",fontsize = 30)
         ax[0,3].text(L/8,max(rho_whole)*1/2, f"$a_0 = {popt4[0]}$",fontsize = 15)
@@ -499,7 +494,7 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
         ax[0,3].legend(fontsize = 25)
 
         residuals = fit_rho-rho_whole
-        ax[1,3].plot(z_right,residuals,"r.--")
+        ax[1,3].plot(z_whole,residuals,"r.--")
         ax[1,3].set_xlim(-0.1,1.1)#L/2)
         ax[1,3].set_ylim((-resid_y_max,resid_y_max))
     
@@ -515,15 +510,16 @@ def curve_fitting(L, z, z_left,z_right,rho_left,rho_right):
     ###################################################
     fig,ax = plt.subplots(2,1, figsize = (8,10), gridspec_kw = {"height_ratios": [2,1]})
     plt.suptitle("Gravitational Potential in the Box")
-    fit_rho = np.append(fit_rho[::-1],fit_rho)/ 2 #have to divide by 2 becasue we are double counting on the grid
+    fit_rho = np.append(fit_rho[::-1],fit_rho)#/ 2 #have to divide by 2 becasue we are double counting on the grid
     fit_phi = GF.fourier_potentialV2(fit_rho,L) 
     fit_z = np.linspace(-L/2,L/2,len(fit_phi))
     ax[0].plot(fit_z,fit_phi,label = "Analytic Model")
-    rho = np.append(rho_left,rho_right)
-    ax[0].plot(z,GF.fourier_potentialV2(rho,L), label = "Exact NBody Potential")
+    rho_whole = np.append(rho_whole[::-1],rho_whole)#np.append(rho_left,rho_right)
+    z_whole = np.append(-z_whole[::-1],z_whole)
+    ax[0].plot(z_whole,GF.fourier_potentialV2(rho_whole,L), label = "Exact NBody Potential")
     ax[0].legend()
 
-    ax[1].plot(fit_z,fit_phi-GF.fourier_potentialV2(rho,L)[4:],'r,--')
+    ax[1].plot(fit_z,fit_phi-GF.fourier_potentialV2(rho_whole,L),'r,--')
     ax[1].set_title("Residuals")
     plt.show()
 

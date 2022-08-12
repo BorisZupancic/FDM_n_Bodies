@@ -19,9 +19,9 @@ percent='0.5'
 num_p='100000'
 
 #Run through just particles:
-v_rms=0.22
-z_rms=0.17
-lambdas=('0.5' '0.1') # '1'
+v_rms=0.58 #0.22
+z_rms=0.158 #0.17
+lambdas=('2' '1' '0.5' '0.1' '0.05' '0.01') # '1'
 
 for lambda in "${lambdas[@]}"; do
 

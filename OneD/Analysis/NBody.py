@@ -201,94 +201,47 @@ def rho_distribution(z,rho_part):
     rho = rho_part
     N = len(z)
 
+    #METHOD 1: Split across peak of distribution
+    #Find center of distribution / max value and index:
+    i = 0
+    max_bool = False
+    while max_bool == False:
+        for j in range(len(rho)):
+            if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
+                #then set i equal to j
+                i = j 
+                #break
+            else:
+                max_index = i
+                max_bool = True
 
-    # #METHOD 1: Split across peak of distribution
-    # #Find center of distribution / max value and index:
-    # i = 0
-    # max_bool = False
-    # while max_bool == False:
-    #     for j in range(len(rho)):
-    #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
-    #             #then set i equal to j
-    #             i = j 
-    #             #break
-    #         else:
-    #             max_index = i
-    #             max_bool = True
+    i = max_index
+    #z = z-z[i]
 
-    # # max_rho = rho[max_index]
-    # # print(max_rho,max_index,z[i])
-
-
-    # i = max_index
-    # z = z-z[i]
-    # z_left = z[0:i]
-    # z_right = z[i:]
-    # rho_left = rho[0:i]
-    # rho_right = rho[i:]
-
-    # #rho_avgd = (rho_left[len(rho_left)-len(rho_right):][::-1]+rho_right)/2
-    # #rho_avgd = np.append(rho_avgd, rho_left[0:len(rho_left)-len(rho_right)][::-1])
-    # fig = plt.figure()
-    # plt.title("Density of Particles Split in Half")
-    # plt.plot(z_right,rho_right)
-    # plt.plot(z_left,rho_left)
-    # plt.plot(z[i],rho[i], "ro", label = "Peak of Distribution")
-    # plt.legend()
-    # plt.show()
+    z_left = z[0:i]
+    z_right = z[i:]
+    rho_left = rho[0:i]
+    rho_right = rho[i:]
 
     fig = plt.figure()
     plt.title("Density of Particles Split in Half")
-    plt.plot(z[N//2:],rho[N//2:])
-    plt.plot(z[0:N//2],rho[0:N//2])
-    plt.plot(z[N//2],rho[N//2],"bo", label = "Centroid of Distribution")
+    plt.plot(z_right,rho_right)
+    plt.plot(z_left,rho_left)
+    plt.plot(z[i],rho[i], "ro", label = "Peak of Distribution")
     plt.legend()
     plt.show()
 
-
-    #Other method to accumulate left and right sides:
-    # for star in stars:
-    #     star.x = star.x - z[i] #shift
-    #     star.reposition(L) #reposition
-
-    # grid_counts = NB.grid_count(stars,L,z)
-    # rho_part = (grid_counts/dz)*sigma 
-    # #Add the density from the FDM
-    # rho_FDM = np.absolute(chi)**2 
-    # rho = rho_FDM + rho_part
-
-    #Find center of distribution / max value and index:
-    # i = 0
-    # max_bool = False
-    # while max_bool == False:
-    #     for j in range(len(rho)):
-    #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
-    #             #then set i equal to j
-    #             i = j 
-    #             #break
-    #         else:
-    #             max_index = i
-    #             max_bool = True
-
-    # max_rho = rho[max_index]
-
-    #METHOD 2: Split across z = 0 (i.e: z[N//2])
-    rho_left = rho[0:N//2]
-    rho_right = rho[N//2:]
-    rho_whole = rho_left[::-1] + rho_right
-
-    z_left = z[0:N//2]
-    z_right = z[N//2:]
-
-    fig,ax = plt.subplots(1,2,figsize = (10,4))
-    plt.suptitle("Combined Left and Right halves of Distribution")
-    ax[0].plot(z_right,rho_whole,'--')
-    ax[0].set_xlabel("$|z|$")
-    ax[0].set_ylabel("$|rho|$")
-
-    ax[1].plot(np.log(z_right),np.log(rho_whole))
-    ax[1].set_xlabel("$log|z|$")
-    ax[1].set_ylabel("$log|rho|$")
+    rho_left = rho_left[::-1]
+    if len(rho_left) >= len(rho_right):
+        rho_whole = 0.5*(rho_left[0:len(rho_right)]+rho_right) #np.append(0.5*(rho_left[0:len(rho_right)]+rho_right) , rho_left[len(rho_right):])
+    elif len(rho_right)>len(rho_left):
+        rho_whole = 0.5*(rho_left+rho_right[0:len(rho_left)]) #np.append(0.5*(rho_left+rho_right[0:len(rho_left)]) , rho_left[len(rho_left):])
+    z_whole = np.linspace(0.001,1,len(rho_whole))
+    plt.figure()
+    plt.plot(z_whole,rho_whole)
+    plt.title("Particles Density Profile")
+    plt.xlabel("$|z|$")
+    plt.ylabel("$|\\rho|$")
     plt.show()
-
-    return z_left,z_right,rho_left,rho_right
+    
+    return z_whole, rho_whole #z_left,z_right,rho_left,rho_right
