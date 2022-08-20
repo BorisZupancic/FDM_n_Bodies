@@ -14,13 +14,18 @@ import OneD.Global as GF
 
 def plot_centroids(indices,centroids):
     plt.figure()
-    plt.title("Centroid over time")
-    plt.plot(indices,centroids,'bo-')
+    plt.title("Position Centroid over time")
+    plt.plot(indices,centroids[:,0],'bo-')
+    #plt.scatter(centroids[:,0],centroids[:,1])
     plt.ylim(-1,1)
     plt.show()
+    
+    plt.figure()
+    plt.title("Velocity Centroid over time")
+    plt.plot(indices,centroids[:,1],'ro-')
+    plt.show()
 
-
-def rms_stuff(sigma,stars,phi_part,L,z,dz):
+def rms_stuff(sigma,stars,phi_part,L,z,dz,type = 'Periodic'):
     Num_stars = len(stars)
 
     grid_counts = NB.grid_count(stars,L,z)
@@ -58,7 +63,7 @@ def rms_stuff(sigma,stars,phi_part,L,z,dz):
     print(f"K_avg = {K/Num_stars}")
 
     # Compute Total Potential of stars:
-    a_part = NB.acceleration(phi_part,L)
+    a_part = NB.acceleration(phi_part,L,type = type)
     W = 0
     for star in stars:
         g = NB.g(star,a_part,dz)
@@ -69,6 +74,25 @@ def rms_stuff(sigma,stars,phi_part,L,z,dz):
     print(f"W_avg = {W/Num_stars}")
 
     return z_rms, v_rms 
+
+
+def rms_plots(indices, z_rms_s,v_rms_s):
+    #i = 99*np.array([0,1,2,4,8,16,32,64])
+    
+    fig,ax = plt.subplots(1,2,figsize = (12,5))
+    plt.suptitle("RMS values over time")
+    
+    ax[0].plot(z_rms_s)
+    ax[0].set_xlabel("Time [index]")
+    ax[0].set_title("$z_{rms}$")
+    ax[0].set_ylim(0,1)
+
+    ax[1].plot(v_rms_s)
+    ax[1].set_xlabel("Time [index]")
+    ax[1].set_title("$v_{rms}$")
+    ax[1].set_ylim(0,1)
+    
+    plt.show()
     
 def v_distribution(stars,L):
     Num_stars= len(stars)
@@ -237,11 +261,19 @@ def rho_distribution(z,rho_part):
     elif len(rho_right)>len(rho_left):
         rho_whole = 0.5*(rho_left+rho_right[0:len(rho_left)]) #np.append(0.5*(rho_left+rho_right[0:len(rho_left)]) , rho_left[len(rho_left):])
     z_whole = np.linspace(0.001,1,len(rho_whole))
-    plt.figure()
-    plt.plot(z_whole,rho_whole)
-    plt.title("Particles Density Profile")
-    plt.xlabel("$|z|$")
-    plt.ylabel("$|\\rho|$")
+    
+    fig,ax = plt.subplots(1,2,figsize = (10,5))
+    
+    ax[0].plot(z_whole,rho_whole)
+    ax[0].set_title("Particles Density Profile")
+    ax[0].set_xlabel("$|z|$")
+    ax[0].set_ylabel("$|\\rho|$")
+    
+    ax[1].plot(np.log(z_whole),np.log(rho_whole))
+    ax[1].set_title("Particles Density Profile")
+    ax[1].set_xlabel("$ln|z|$")
+    ax[1].set_ylabel("$ln|\\rho|$")
+    
     plt.show()
     
     return z_whole, rho_whole #z_left,z_right,rho_left,rho_right

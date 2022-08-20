@@ -14,20 +14,20 @@ import OneD.Global as GF
 
 
 def plot_Energies(Ks,Ws):
-    fig, ax = plt.subplots(1,4, figsize = (12,4))
-    ax[0].plot(Ks)
+    fig, ax = plt.subplots(1,4, figsize = (15,5))
+    ax[0].plot(Ks,"o--")
     ax[0].set_title("FDM Kinetic")
-    ax[1].plot(Ws)
+    ax[1].plot(Ws,"o--")
     ax[1].set_title("FDM Potential")
 
     Dy = np.max(Ks)-np.min(Ks)
     y_min = np.min(Ks+Ws)
     y_min = y_min - Dy/2
     y_max = Dy + y_min
-    ax[2].plot(Ks+Ws)
+    ax[2].plot(Ks+Ws,"o--")
     ax[2].set_title("FDM Total Energy")
     ax[2].set_ylim(y_min,y_max)
-    ax[3].plot(np.abs(Ks/Ws))
+    ax[3].plot(np.abs(Ks/Ws),"o--")
     ax[3].set_title("$\\frac{K}{|W|}$")
     plt.show()
 

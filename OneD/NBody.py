@@ -97,8 +97,8 @@ def grid_count(stars,L,x):
     grid_counts = interp_bins(x,bin_counts)
     return grid_counts
 
-def acceleration(phi,L):
-    grad = GF.fourier_gradient(phi,L)
+def acceleration(phi,L,type):
+    grad = GF.gradient(phi,L,type = type)#GF.fourier_gradient(phi,L)
     #grad = np.gradient(phi,dz)
     Force = -grad
     

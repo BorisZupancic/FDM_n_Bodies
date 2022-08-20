@@ -28,6 +28,8 @@ def analysis(folder: str):#,*args):
     os.chdir(folder)
     print(os.getcwd())
 
+    
+
     #Load in the necessary quantities:
     Properties = np.loadtxt("Properties.csv", dtype = str, delimiter = ",")
     L,mu,Num_bosons,sigma,Num_stars,r,N = [np.float(Properties[1::,1][i]) for i in range(7)]
@@ -39,6 +41,17 @@ def analysis(folder: str):#,*args):
     z = np.linspace(-L/2,L/2,N)
     dz = z[1]-z[0]
 
+    print("Periodic [1] or Isolated [2] BC's?")
+    bc = int(input())
+    if bc == 1:
+        type = 'Periodic'
+        G_tilde = None
+    elif bc == 2:
+        type = 'Isolated'
+        G = z/2
+        G = np.append(G[::-1],G)
+        G_tilde = np.fft.rfft(G)
+
     if Num_bosons == 0:
         stars_x = np.loadtxt("StarsOnly_Pos.csv", dtype = float, delimiter=",")
         stars_v = np.loadtxt("StarsOnly_Vel.csv", dtype = float, delimiter=",")
@@ -48,6 +61,8 @@ def analysis(folder: str):#,*args):
         W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
         chi = np.loadtxt(f"Chi.csv", dtype = complex, delimiter=",")
         centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
+        z_rms_storage = None#np.loadtxt("z_rms_storage.csv", dtype = float, delimiter=",")
+        v_rms_storage = None#np.loadtxt("v_rms_storage.csv", dtype = float, delimiter=",")
     elif Num_stars == 0:
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
@@ -63,29 +78,39 @@ def analysis(folder: str):#,*args):
         stars_x = np.loadtxt("Stars_Pos.csv", dtype = float, delimiter=",")
         stars_v = np.loadtxt("Stars_Vel.csv", dtype = float, delimiter=",")
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
+        centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
+        z_rms_storage = np.loadtxt("z_rms_storage.csv", dtype = float, delimiter=",")
+        v_rms_storage = np.loadtxt("v_rms_storage.csv", dtype = float, delimiter=",")
+        
         K_Energies = np.loadtxt("K_star_Energies.csv", dtype = float,delimiter = ",")
         W_Energies = np.loadtxt("W_star_Energies.csv", dtype = float,delimiter = ",")
         K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
         W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
         
-        centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
-    
-
+        
     #Setup our data post-import:
     if stars_x is not None:
         stars = [NB.star(i,sigma,stars_x[i],stars_v[i]) for i in range(len(stars_x))]
     else: 
         stars = []
     m=mu #M_s = 1
-    rho_part, rho_FDM = plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi)
-    phi_part = GF.fourier_potentialV2(rho_part,L)
-    phi_FDM = GF.fourier_potentialV2(rho_FDM,L)
+    rho_part, rho_FDM = plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type,G_tilde)
+    phi_part = GF.fourier_potential(rho_part,L)
+    phi_FDM = GF.fourier_potential(rho_FDM,L)
     
     #######################################################
     ### FDM ANALAYSIS #######################################
     if Num_bosons != 0:
+        #check normalization of chi:
+        chi_tilde = np.fft.fft(chi,len(chi))
+        sum = np.sum(np.sum(np.absolute(chi_tilde)**2))
+        print(f"sum chi^2 = {sum}")
+
+        print((len(chi)**2)/2)
+        print(np.sum(dz*np.absolute(chi)**2))
+
         FDM.plot_Energies(Ks_FDM,Ws_FDM)
 
         v_dist = FDM.v_distribution(z,L,chi,r,mu)
@@ -101,7 +126,11 @@ def analysis(folder: str):#,*args):
         NBody.plot_centroids(indices,centroids)
         
         #Calculate rms velocity and position
-        z_rms,v_rms = NBody.rms_stuff(sigma,stars,phi_part,L,z,dz)
+        z_rms,v_rms = NBody.rms_stuff(sigma,stars,phi_part,L,z,dz,type = type)
+
+        z_rms_storage =np.append(z_rms_storage,z_rms)
+        v_rms_storage =np.append(v_rms_storage,v_rms)
+        NBody.rms_plots(indices,z_rms_storage,v_rms_storage)
 
         NBody.v_distribution(stars,L)
 
@@ -113,13 +142,14 @@ def analysis(folder: str):#,*args):
 
         #Hist the final energies:
         Energies = K_Energies+W_Energies
-        n_bins = int(np.floor(np.sqrt(len(Energies))))
+        n_bins = int(np.floor(np.sqrt(Num_stars)))#int(np.floor(np.sqrt(len(Energies))))
+        print(n_bins)
         plt.hist(Energies[-1,:],bins = n_bins)#100)
         plt.show()
 
         NBz_whole,NBrho_whole = NBody.rho_distribution(z,rho_part)
 
-        popt = curve_fitting(L,NBz_whole,NBrho_whole)
+        popt = curve_fitting(L,NBz_whole,NBrho_whole,type = type, G_tilde  = G_tilde)
         print(f"fit params = {popt}")
 
     if Num_bosons != 0 and Num_stars != 0:
@@ -155,17 +185,17 @@ def analysis(folder: str):#,*args):
         plt.show()
 
 
-    if 'FDM_z_rms' in locals() and 'FDM_v_rms' in locals() and 'z_rms' in locals() and 'v_rms' in locals():
-        return r, Num_stars, FDM_z_rms, FDM_v_rms, z_rms,v_rms
-    elif 'z_rms' in locals() and 'v_rms' in locals():
-        return r, Num_stars, z_rms, v_rms
-    elif 'FDM_z_rms' in locals() and 'FDM_v_rms' in locals():
+    if Num_stars != 0 and Num_bosons != 0:#'FDM_z_rms' in locals() and 'FDM_v_rms' in locals() and 'z_rms' in locals() and 'v_rms' in locals():
+        return r, Num_stars, FDM_z_rms, FDM_v_rms, z_rms,v_rms, popt
+    elif Num_stars != 0: #'z_rms' in locals() and 'v_rms' in locals():
+        return r, Num_stars, z_rms, v_rms, popt
+    elif Num_bosons != 0:#'FDM_z_rms' in locals() and 'FDM_v_rms' in locals():
         return r, Num_stars, FDM_z_rms, FDM_v_rms
 
 ########################################################
 # ALL THE ACTUAL FUNCTIONS:
 ########################################################
-def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi):
+def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type = 'Periodic', G_tilde = None):
     stars_x = [star.x for star in stars]
     stars_v = [star.v for star in stars]
     Num_stars = len(stars)
@@ -254,8 +284,8 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi):
 
 
     #ACCELERATIONS
-    Part_force = -GF.fourier_gradient(GF.fourier_potentialV2(rho_part,L),L)
-    FDM_force = -GF.fourier_gradient(GF.fourier_potentialV2(rho_FDM,L),L)
+    Part_force = -GF.gradient(GF.fourier_potential(rho_part,L,type = type,G_tilde = G_tilde),L,type = type)
+    FDM_force = -GF.gradient(GF.fourier_potential(rho_FDM,L,type=type,G_tilde = G_tilde),L,type = type)
     a1 = np.abs([np.max(Part_force),np.min(Part_force)])
     a2 = np.abs([np.max(FDM_force),np.min(FDM_force)])
     a_max = np.max(np.append(a1,a2))*2
@@ -269,7 +299,7 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi):
     #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
     #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
     #rho_FDM = np.abs(chi)**2 #already calculated this
-    phi_FDM = GF.fourier_potentialV2(rho_FDM,L)
+    phi_FDM = GF.fourier_potential(rho_FDM,L,type = type,G_tilde = G_tilde)
     ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$ [Fourier perturbation]")
     ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = \\chi \\chi^*$")
     #ax['upper left'].set_ylim([-y00_max, y00_max] )
@@ -298,7 +328,7 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi):
     ##############################################3
     # THE PARTICLES
     #rho_part = (grid_counts/dz)*sigma #already calculated this
-    phi_part = GF.fourier_potentialV2(rho_part,L)
+    phi_part = GF.fourier_potential(rho_part,L,type = type ,G_tilde = G_tilde)
     ax['lower left'].plot(z,phi_part,label = "$\\Phi_{Particles}$ [Fourier perturbation]")
     ax['lower left'].plot(z,rho_part,label = "$\\rho_{Particles}$")
     #ax['lower left'].set_xlim(-L/2,L/2)
@@ -348,7 +378,8 @@ def new_new_new_fit_func(z,*pars):
     og = a0/((z**a2) * (z+a1)**a3)
     return og
 
-def curve_fitting(L, z_whole,rho_whole):#z_left,z_right,rho_left,rho_right):
+def curve_fitting(L, z_whole,rho_whole,type = 'Periodic', G_tilde = None):#z_left,z_right,rho_left,rho_right):
+    z_whole = z_whole + 0.001
     ###################################################
     # Curve Fitting
     ###################################################
@@ -508,19 +539,83 @@ def curve_fitting(L, z_whole,rho_whole):#z_left,z_right,rho_left,rho_right):
     plt.show()
 
     ###################################################
+    fit_rho = np.append(fit_rho[::-1],fit_rho)#/ 2 #have to divide by 2 becasue we are double counting on the grid
+    fit_z = np.linspace(-L/2,L/2,len(fit_rho))
+    if type == 'Isolated':
+        G = fit_z/2
+        G = np.append(G[::-1],G)
+        G_tilde = np.fft.rfft(G)
+        plt.plot(G)
+        plt.show()
+    fit_phi = GF.fourier_potential(fit_rho,L,type = type,G_tilde = G_tilde) 
+    
     fig,ax = plt.subplots(2,1, figsize = (8,10), gridspec_kw = {"height_ratios": [2,1]})
     plt.suptitle("Gravitational Potential in the Box")
-    fit_rho = np.append(fit_rho[::-1],fit_rho)#/ 2 #have to divide by 2 becasue we are double counting on the grid
-    fit_phi = GF.fourier_potentialV2(fit_rho,L) 
-    fit_z = np.linspace(-L/2,L/2,len(fit_phi))
+
     ax[0].plot(fit_z,fit_phi,label = "Analytic Model")
     rho_whole = np.append(rho_whole[::-1],rho_whole)#np.append(rho_left,rho_right)
     z_whole = np.append(-z_whole[::-1],z_whole)
-    ax[0].plot(z_whole,GF.fourier_potentialV2(rho_whole,L), label = "Exact NBody Potential")
+    ax[0].plot(z_whole,GF.fourier_potential(rho_whole,L,type,G_tilde), label = "Exact NBody Potential")
     ax[0].legend()
 
-    ax[1].plot(fit_z,fit_phi-GF.fourier_potentialV2(rho_whole,L),'r,--')
+    ax[1].plot(fit_z,fit_phi-GF.fourier_potential(rho_whole,L),'r,--')
     ax[1].set_title("Residuals")
     plt.show()
 
     return popt
+
+def pars_track(params,num_s):
+    import numpy as np
+
+    p0 = []
+    p1 = []
+    p2 = []
+    p3 = []
+    for p in params:
+        if len(p) >= 1: 
+            p0.append(p[0])
+            if len(p)>= 2:
+                p1.append(p[1])
+                if len(p)>= 3:
+                    p2.append(p[2])
+                    if len(p)>= 4:
+                        p3.append(p[3])
+                    else:
+                        p3.append(None)
+                else:
+                    p2.append(None)
+            else:
+                p1.append(None)
+        else:
+            p0.append(None)
+
+    array1 = [[n,p] for n,p in zip(num_s,p0)]
+    array2 = [[n,p] for n,p in zip(num_s,p1)]
+    array3 = [[n,p] for n,p in zip(num_s,p2)]
+    array4 = [[n,p] for n,p in zip(num_s,p3)]
+    array1.sort()
+    array2.sort()
+    array3.sort()
+    array4.sort()
+    array1 = np.array(array1)
+    array2 = np.array(array2)
+    array3 = np.array(array3)
+    array4 = np.array(array4)
+
+    print(array1)
+    print(array2)
+    print(array3)
+    print(array4)
+
+    fig,ax = plt.subplots(1,4, figsize = (15,5))
+
+    ax[0].plot(array1[1:,0],array1[1:,1],"o--",color = "red")
+    ax[0].set_title("$a_0$")
+    ax[1].plot(array2[1:,0],array2[1:,1],"o--",color = "blue")
+    ax[1].set_title("$a_1$")
+    ax[2].plot(array3[1:,0],array3[1:,1],"o--",color = "green")
+    ax[2].set_title("$a_2$")
+    ax[3].plot(array4[1:,0],array4[1:,1],"o--",color = "orange")
+    ax[3].set_title("$a_3$")
+
+    plt.show()

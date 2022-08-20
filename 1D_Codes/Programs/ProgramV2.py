@@ -50,6 +50,8 @@ L, mu, Num_bosons, r, lambda_deB, R, sigma, Num_stars = GF.StartupV2(hbar, L_s, 
 m = mu*M_s
 percent_FDM = Num_bosons * mu / (Num_bosons * mu + Num_stars * sigma)
 
+print(f"lambda_deB = {lambda_deB}")
+
 #Set up Grid
 L = L*L_s #new length. Length of the box
 N = 10**3 #number of grid points
@@ -57,7 +59,8 @@ if Num_bosons != 0: #want to determine the proper number of grid points to have
     lambda_deB = lambda_deB*R
     N_new = int(np.ceil(L/lambda_deB)+1)
     if N_new >= N:
-        N = 8*N_new #overwrite number of grid points
+        N = 12 *N_new #overwrite number of grid points
+    #     N = 8*N_new #overwrite number of grid points
 print(f"Number of Grid points: {N}")
 z = np.linspace(-L/2,L/2,N)
 dz = z[1]-z[0]
@@ -73,6 +76,13 @@ if fixed_phi == 'Y' or fixed_phi == 'y' or fixed_phi == None:
     fixed_phi = True
 if fixed_phi == 'n':
     fixed_phi = False
+print("")
+print("Isolated [1] or Periodic [2] boundary conditions?")
+bc_choice = int(input())
+# if bc_choice == 1:
+#     pass
+# elif bc_choice == 2:
+#     G = None
 print("")
 print("Do you want the full simulation [1] or snapshots [2]? Choose [1/2]")
 sim_choice2 = int(input())
@@ -111,17 +121,18 @@ print("Calculating and Plotting...")
 track_stars = False
 if Num_stars != 0:
     track_stars = True
+    track_stars_rms = True
 
 #Create Initial Conditions:
 stars,chi = GF.gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
 
 #Run simulation on Initial Conditions:
-stars, chi, K_star_storage, W_star_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, z,L,dz,
+stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, bc_choice, z,L,dz,
                                                                                                       mu, Num_bosons, r, chi, 
                                                                                                       sigma,stars,
                                                                                                       v_s,L_s,
                                                                                                       Directory,folder_name, 
-                                                                                                      absolute_PLOT = True, track_stars = track_stars, track_centroid=True,fixed_phi = fixed_phi, track_FDM=True)
+                                                                                                      absolute_PLOT = True, track_stars = track_stars, track_stars_rms = track_stars_rms, track_centroid=True, fixed_phi = fixed_phi, track_FDM=True)
 print("Calculation and Plotting Done. Now Saving Data...")
 
 ############################
@@ -131,6 +142,8 @@ print("Calculation and Plotting Done. Now Saving Data...")
 if Num_bosons == 0:
     np.savetxt(f"StarsOnly_Pos.csv",[star.x for star in stars], delimiter = ",")
     np.savetxt(f"StarsOnly_Vel.csv",[star.v for star in stars], delimiter = ",")
+    np.savetxt(f"z_rms_storage.csv", z_rms_storage, delimiter = ",")
+    np.savetxt(f"v_rms_storage.csv", v_rms_storage, delimiter = ",")
     np.savetxt(f"K_star_Energies.csv", K_star_storage, delimiter = ",")
     np.savetxt(f"W_star_Energies.csv", W_star_storage, delimiter = ",")
     np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
@@ -144,6 +157,8 @@ elif Num_stars == 0:
 elif Num_bosons!=0 and Num_stars!=0:
     np.savetxt(f"Stars_Pos.csv",[star.x for star in stars], delimiter = ",")
     np.savetxt(f"Stars_Vel.csv",[star.v for star in stars], delimiter = ",")
+    np.savetxt(f"z_rms_storage.csv", z_rms_storage, delimiter = ",")
+    np.savetxt(f"v_rms_storage.csv", v_rms_storage, delimiter = ",")
     np.savetxt(f"Chi.csv", chi)
     np.savetxt(f"W_FDM_storage.csv", W_FDM_storage, delimiter =",")
     np.savetxt(f"K_FDM_storage.csv", K_FDM_storage, delimiter =",")

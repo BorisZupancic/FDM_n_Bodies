@@ -112,16 +112,23 @@ def fourier_gradient(phi,length):
     grad = -grad #for some reason there's a negative sign error
     return grad
 
-def fourier_potentialV2(rho_nondim,length):
+def gradient(f,length,type = 'Periodic'):
+    if type == 'Isolated':
+        N = len(f)
+        dx = length/(N-1)
+        grad = np.gradient(f,dx,edge_order = 2)
+        return grad
+    elif type == 'Periodic':
+        grad = fourier_gradient(f,length)
+        return grad
+
+def Periodic_Poisson(rho,length):
     """
-    A FFT Poisson solver, taking as input a (non-dimensional) density array
-    and the length of the interval on which it is defined.
-
-    Differs from `fourier_potential()` as it takes in density instead of a wavefunction.
-
+    
+    Routine for solving Poisson's Equation with periodic boundary conditions.
+    
     """
-
-    rho = rho_nondim
+    
     n = len(rho)
     L = length #length of box
 
@@ -142,12 +149,64 @@ def fourier_potentialV2(rho_nondim,length):
     
     #3. IFFT back to get Potential
     phi = np.fft.irfft(phi_n,n) #use Phi_n as Fourier Coefficients
+    phi = phi - np.min(phi)
     return phi
 
+def Isolated_Poisson(rho,L,G_tilde):
+    """
+    
+    Routine for solving Poisson's Equation with isolated boundary conditions.
+    
+    """
+
+    N = len(rho)
+    dz = L/(N-1)
+    #num = np.sum(rho)
+    #print(f"num = {num}")
+
+    #1. Extend the density / wave-function
+    rho = np.append(rho,np.zeros_like(rho))
+
+    #2. FFT the norm-squared of the wave-function (minus it's mean background)
+    p = 4*np.pi*rho
+    p_n = np.fft.rfft(p) #fft for real input
+    
+    #3. Compute the fourier coefficients of phi
+    phi_n  = np.multiply(G_tilde,p_n)
+
+    #4. IFFT back to get Potential
+    phi = np.fft.irfft(phi_n) #use Phi_n as Fourier Coefficients
+    
+    #5. Truncate the potential back to original size of grid:
+    phi = phi[len(phi)//2:]
+    phi = phi*dz #normalize?
+    phi = phi - np.min(phi)
+    return phi
+
+def fourier_potential(rho,length = None, type = 'Periodic', G_tilde = None):
+    """
+    A FFT Poisson solver, taking as input a (non-dimensional) density array
+    and the length of the interval on which it is defined.
+
+    Has option for solving either Periodic or Isolated boundary conditions.
+
+    Differs from `fourier_potential()` as it takes in density instead of a wavefunction.
+
+    """
+    
+    if type == 'Periodic':
+        phi = Periodic_Poisson(rho,length)
+        return phi
+    elif type == 'Isolated':
+        phi = Isolated_Poisson(rho,length,G_tilde)
+        return phi
+    elif type == "James's":
+        pass
+    
 #####################################################3
 #Full Calculation/Simulation Functions
 
-def main_plot(sim_choice1,L,eta,
+def main_plot(sim_choice1,type,G_tilde,L,eta,
                 z,dz,chi,rho_FDM,rho_part,
                 stars,Num_bosons,Num_stars,
                 grid_counts,dtau,i,
@@ -178,8 +237,9 @@ def main_plot(sim_choice1,L,eta,
     
     ##############################################3
     #ACCELERATIONS
-    Part_force = -fourier_gradient(fourier_potentialV2(rho_part,L),L)
-    FDM_force = -fourier_gradient(fourier_potentialV2(rho_FDM,L),L)
+
+    Part_force = -gradient(fourier_potential(rho_part,L,type = type, G_tilde = G_tilde),L,type = type)
+    FDM_force = -gradient(fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde),L,type = type)
     ax['far right'].plot(z, Part_force, label = "Particle Contribution")
     ax['far right'].plot(z, FDM_force, label = "FDM Contribution")
     ax['far right'].set_ylim(-a_max,a_max)
@@ -189,7 +249,7 @@ def main_plot(sim_choice1,L,eta,
     # THE FDM
     #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
     #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
-    phi_FDM = fourier_potentialV2(rho_FDM,L)
+    phi_FDM = fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde)
     ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$ [Fourier perturbation]")
     ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = \\chi \\chi^*$")
     ax['upper left'].set_ylim([-y00_max, y00_max] )
@@ -217,7 +277,7 @@ def main_plot(sim_choice1,L,eta,
     ##############################################3
     # THE PARTICLES
     #rho_part = (grid_counts/dz)*sigma #already calculated this
-    phi_part = fourier_potentialV2(rho_part,L)
+    phi_part = fourier_potential(rho_part,L,type = type, G_tilde = G_tilde)
     ax['lower left'].plot(z,phi_part,label = "$\\Phi_{Particles}$ [Fourier perturbation]")
     ax['lower left'].plot(z,rho_part,label = "$\\rho_{Particles}$")
     #ax['lower left'].set_xlim(-L/2,L/2)
@@ -241,14 +301,23 @@ def main_plot(sim_choice1,L,eta,
         #    E_array = np.append(E_array,stars[j].v**2)
         #E_storage = np.append(E_storage,[E_array])
         
-    #PLOT STAR CENTER OF MASS
+    #PLOT CENTROID IN PHASE SPACE
     if Num_stars != 0:#only calculate if there are stars
         centroid_z = 0
-        for j in range(len(grid_counts)):
-            centroid_z += z[j]*grid_counts[j]
-        centroid_z = centroid_z / Num_stars
-        ax['lower right'].scatter(centroid_z,0,s = 100,c = "r",marker = "o")
+        #centroid_v = 0
+        # for j in range(len(grid_counts)):
+        #     centroid_z += z[j]*grid_counts[j]
+        # centroid_z = centroid_z / Num_stars
         
+        centroid_v = 0
+        for star in stars:
+            centroid_z += star.x
+            centroid_v += star.v
+        centroid_z = centroid_z / Num_stars    
+        centroid_v = centroid_v / Num_stars
+        
+        ax['lower right'].scatter(centroid_z,centroid_v,s = 100,c = "r",marker = "o")
+        centroid = np.array([centroid_z,centroid_v])
     #now save it as a .jpg file:
     folder = Directory + "/" + folder_name
     filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
@@ -258,7 +327,7 @@ def main_plot(sim_choice1,L,eta,
     plt.close(fig) #close plot so it doesn't overlap with the next one
 
     if track_centroid == True and Num_stars != 0:
-        return centroid_z
+        return centroid
 
 def gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s):
     ########################################################
@@ -309,12 +378,12 @@ def gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s):
     return stars, chi
 
 
-def run_FDM_n_Bodies(sim_choice2, z, L, dz, 
+def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz, 
                     mu, Num_bosons, r, chi, 
                     sigma, stars, 
                     v_s, L_s, 
                     Directory, folder_name, 
-                    absolute_PLOT = True, track_stars = False, track_centroid = False, Long_time = False, fixed_phi = False,
+                    absolute_PLOT = True, track_stars = False, track_stars_rms = False, track_centroid = False, Long_time = False, fixed_phi = False,
                     track_FDM = False):
     
     #########################################
@@ -324,6 +393,19 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
     T_s = L_s / v_s
 
     Num_stars = len(stars)
+
+    #Chooce Poisson-Solving Routine:
+    if bc_choice == 1:
+        type = 'Isolated'
+        G = z/2
+        G = np.append(G[::-1],G)
+        G_tilde = np.fft.rfft(G)
+        #plt.plot(G)
+        #plt.show()
+        
+    elif bc_choice == 2:
+        type = 'Periodic'
+        G_tilde = None
 
     #check whether to run FDM or NBody or both
     if Num_bosons == 0:
@@ -460,10 +542,10 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
 
         #2. Calculate potential 
         if fixed_phi == False:
-            phi = fourier_potentialV2(rho,L)
+            phi = fourier_potential(rho,L, type = type, G_tilde = G_tilde)
         
         #3. Calculate Acceleration Field on Mesh:
-        a_grid = NB.acceleration(phi,L) 
+        a_grid = NB.acceleration(phi,L,type = type) 
         
         
         ##########################################
@@ -515,6 +597,18 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
             W_star_storage = None
             #E_storage = None #to go in the main_plot loop
 
+        if track_stars_rms == True:
+            if i in track_snapshot_indices:
+                z_rms = np.sqrt(np.mean([star.x**2 for star in stars]))
+                v_rms = np.sqrt(np.mean([star.v**2 for star in stars]))
+    
+                if i == 0:
+                    z_rms_storage = np.array(z_rms)
+                    v_rms_storage = np.array(v_rms)
+                else:
+                    z_rms_storage = np.append(z_rms_storage,z_rms)
+                    v_rms_storage = np.append(v_rms_storage,v_rms)
+
         #########################################
         #FDM DIAGNOSTICS
         #Record Energies:
@@ -553,12 +647,20 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
                     
             if PLOT == True:
                 if i == 0: #want to set a limit on the acceleration graph
-                    Part_force = -fourier_gradient(fourier_potentialV2(rho_part,L),L)
-                    FDM_force = -fourier_gradient(fourier_potentialV2(rho_FDM,L),L)
+                    Part_force = -gradient(fourier_potential(rho_part,L, type = type, G_tilde = G_tilde),L,type = type)
+                    FDM_force = -gradient(fourier_potential(rho_FDM,L, type = type, G_tilde = G_tilde),L,type = type)
 
                     a1 = np.abs([np.max(Part_force),np.min(Part_force)])
                     a2 = np.abs([np.max(FDM_force),np.min(FDM_force)])
+                    plt.plot(z,-gradient(fourier_potential(rho_part,L,type = 'Periodic'),L,type = 'Periodic'),label = 'Periodic')
+                    plt.plot(z,fourier_potential(rho,L,type = 'Periodic'),label = 'Periodic')
+                    
+                    plt.plot(z,fourier_potential(rho_part,L, type = 'Isolated', G_tilde = G_tilde),label = 'Isolated')
+                    plt.plot(z,-gradient(fourier_potential(rho_part,L, type = type, G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
+                    plt.savefig("Initial Periodic vs Isolated")
+                    plt.clf()
                     a_max = np.max(np.append(a1,a2))*2
+                    print(f"a_max = {a_max}")
                 if i == 0:
                     F = Wave.Husimi_phase(chi,z,dz,L,eta)
                     max_F = np.max(F)/2
@@ -575,7 +677,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
                 # f1.start()s
                 # centroid = f1.result()
 
-                centroid = main_plot(sim_choice1,L,eta,
+                centroid = main_plot(sim_choice1,type,G_tilde,L,eta,
                 z,dz,chi,rho_FDM,rho_part,
                 stars,Num_bosons,Num_stars,
                 grid_counts,dtau,i,
@@ -624,9 +726,9 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
         rho = rho_FDM + rho_part
         #Calculate potential 
         if fixed_phi == False: #if True, potential is fixed
-            phi = fourier_potentialV2(rho,L)
+            phi = fourier_potential(rho,L, type = type, G_tilde = G_tilde)
         #Calculate Acceleration Field on Mesh:
-        a_grid = NB.acceleration(phi,L) 
+        a_grid = NB.acceleration(phi,L,type = type) 
 
         #4. KICK in updated potential
 
@@ -634,7 +736,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
         chi = Wave.kick(chi,phi/2,r,dtau/2)
 
         #PARTICLES
-        a_grid = NB.acceleration(phi,L) 
+        a_grid = NB.acceleration(phi,L,type = type) 
         g = NB.accel_funct(a_grid,L,dz)
         for star in stars:
             star.kick_star(g,dtau/2)
@@ -647,7 +749,7 @@ def run_FDM_n_Bodies(sim_choice2, z, L, dz,
     if track_centroid == False:
         centroids = None
     
-    return stars, chi, K_star_storage, W_star_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage  
+    return stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage  
 
 ###########################################################
 # FOR ANIMATION IN POSITION SPACE
