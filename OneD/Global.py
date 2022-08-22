@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import cv2 
 from PIL import Image
-import OneD.Wave as Wave
+import OneD.FDM as FDM
 import OneD.NBody as NB
 import matplotlib.cm as cm
 from matplotlib.colors import LogNorm, Normalize
@@ -132,7 +132,7 @@ def Periodic_Poisson(rho,length):
     n = len(rho)
     L = length #length of box
 
-    #1. FFT the norm-squared of the wave-function (minus it's mean background)
+    #1. FFT the norm-squared of the FDM-function (minus it's mean background)
     rho_avg = np.mean(rho)
     p = 4*np.pi*(rho-rho_avg)
     p_n = np.fft.rfft(p,n) #fft for real input
@@ -164,10 +164,10 @@ def Isolated_Poisson(rho,L,G_tilde):
     #num = np.sum(rho)
     #print(f"num = {num}")
 
-    #1. Extend the density / wave-function
+    #1. Extend the density / FDM-function
     rho = np.append(rho,np.zeros_like(rho))
 
-    #2. FFT the norm-squared of the wave-function (minus it's mean background)
+    #2. FFT the norm-squared of the FDM-function (minus it's mean background)
     p = 4*np.pi*rho
     p_n = np.fft.rfft(p) #fft for real input
     
@@ -260,7 +260,7 @@ def main_plot(sim_choice1,type,G_tilde,L,eta,
     if sim_choice1 == 1 or sim_choice1 == 3:
         #PHASE SPACE CALCULATION:
         #Don't calculate if sim_choice1 == '2'
-        F = Wave.Husimi_phase(chi,z,dz,L,eta)
+        F = FDM.Husimi_phase(chi,z,dz,L,eta)
         # if i == 0:
         #     max_F = np.max(F)/2
         ax['upper right'].set_title("Phase Space Distributions", fontsize = 15)
@@ -608,6 +608,9 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                 else:
                     z_rms_storage = np.append(z_rms_storage,z_rms)
                     v_rms_storage = np.append(v_rms_storage,v_rms)
+        else:
+            z_rms_storage = None
+            v_rms_storage = None
 
         #########################################
         #FDM DIAGNOSTICS
@@ -652,17 +655,28 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
 
                     a1 = np.abs([np.max(Part_force),np.min(Part_force)])
                     a2 = np.abs([np.max(FDM_force),np.min(FDM_force)])
-                    plt.plot(z,-gradient(fourier_potential(rho_part,L,type = 'Periodic'),L,type = 'Periodic'),label = 'Periodic')
-                    plt.plot(z,fourier_potential(rho,L,type = 'Periodic'),label = 'Periodic')
+                    fig, ax = plt.subplots(1,2,figsize = (15,5))
+                    ax[0].set_title("Fuzzy Dark Matter")
+                    ax[0].plot(z,-gradient(fourier_potential(rho_FDM,L,type = 'Periodic'),L,type = 'Periodic'),label = 'Periodic')
+                    ax[0].plot(z,fourier_potential(rho_FDM,L,type = 'Periodic'),label = 'Periodic')
+                    ax[0].plot(z,fourier_potential(rho_FDM,L, type = 'Isolated', G_tilde = G_tilde),label = 'Isolated')
+                    ax[0].plot(z,-gradient(fourier_potential(rho_FDM,L, type = type, G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
+                    ax[0].set_xlabel("$z$")
+                    ax[0].legend()
                     
-                    plt.plot(z,fourier_potential(rho_part,L, type = 'Isolated', G_tilde = G_tilde),label = 'Isolated')
-                    plt.plot(z,-gradient(fourier_potential(rho_part,L, type = type, G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
+                    ax[1].set_title("Particles")
+                    ax[1].plot(z,-gradient(fourier_potential(rho_part,L,type = 'Periodic'),L,type = 'Periodic'),label = 'Periodic')
+                    ax[1].plot(z,fourier_potential(rho_part,L,type = 'Periodic'),label = 'Periodic')
+                    ax[1].plot(z,fourier_potential(rho_part,L, type = 'Isolated', G_tilde = G_tilde),label = 'Isolated')
+                    ax[1].plot(z,-gradient(fourier_potential(rho_part,L, type = type, G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
+                    ax[1].set_xlabel("$z$")
+                    ax[1].legend()
                     plt.savefig("Initial Periodic vs Isolated")
                     plt.clf()
                     a_max = np.max(np.append(a1,a2))*2
                     print(f"a_max = {a_max}")
                 if i == 0:
-                    F = Wave.Husimi_phase(chi,z,dz,L,eta)
+                    F = FDM.Husimi_phase(chi,z,dz,L,eta)
                     max_F = np.max(F)/2
                 
                 # f1 = mp.Process(target=main_plot,args=[sim_choice1,L,eta,
@@ -699,9 +713,9 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
 
         #FUZZY DM
         #1. Kick in current potential
-        chi = Wave.kick(chi,phi/2,r,dtau/2)
+        chi = FDM.kick(chi,phi/2,r,dtau/2)
         #2. Drift in differential operator
-        chi = Wave.drift(chi,r,dz,dtau)
+        chi = FDM.drift(chi,r,dz,dtau)
 
         #PARTICLES
         g = NB.accel_funct(a_grid,L,dz)
@@ -733,7 +747,7 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
         #4. KICK in updated potential
 
         #FUZZY DM
-        chi = Wave.kick(chi,phi/2,r,dtau/2)
+        chi = FDM.kick(chi,phi/2,r,dtau/2)
 
         #PARTICLES
         a_grid = NB.acceleration(phi,L,type = type) 
@@ -888,7 +902,7 @@ def animate(fourcc,Directory: str,folder_name: str, video_name: str, dt):
 #     m = mu*M_scale
 #     print(f"Mass mu = {mu}, m = mu*M = {m}")
 #     #Calculate Fuzziness:
-#     r = Wave.r(hbar,m,v_scale,L_scale)
+#     r = FDM.r(hbar,m,v_scale,L_scale)
 #     print(f"Fuzziness: r = {r}")
     
 #     #Particles

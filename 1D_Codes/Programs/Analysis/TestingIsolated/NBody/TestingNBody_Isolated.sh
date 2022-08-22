@@ -3,6 +3,7 @@ cd ..
 cd ..
 cd ..
 cd ..
+cd ..
 pwd
 
 parent="Analysis/TestingIsolated"

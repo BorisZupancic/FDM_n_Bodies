@@ -14,7 +14,7 @@ from PIL import Image
 My_Package_PATH = "/home/boris/Documents/Research/FDM_n_Bodies"
 import sys
 sys.path.insert(1, My_Package_PATH)
-import OneD.Wave as Wave
+import OneD.FDM as FDM
 import OneD.NBody as NB
 import OneD.Global as GF
 
@@ -119,6 +119,7 @@ print("Calculating and Plotting...")
 
 #Whether to track stars or not:
 track_stars = False
+track_stars_rms = False
 if Num_stars != 0:
     track_stars = True
     track_stars_rms = True

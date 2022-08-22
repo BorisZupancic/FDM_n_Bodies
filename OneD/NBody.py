@@ -6,7 +6,7 @@ from matplotlib.colors import LogNorm, Normalize
 import os
 import cv2 
 from PIL import Image 
-import OneD.Wave as Wave
+import OneD.FDM as FDM
 import OneD.Global as GF
 
 class star:
