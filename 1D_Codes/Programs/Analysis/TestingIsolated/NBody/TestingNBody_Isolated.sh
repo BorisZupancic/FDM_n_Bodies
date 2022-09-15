@@ -6,7 +6,7 @@ cd ..
 cd ..
 pwd
 
-parent="Analysis/TestingIsolated"
+parent="Analysis/TestingIsolated/NBody"
 #Possible choices for number of Particles:
 num_particles=('5000' '10000' '50000' '100000' '500000')
 #Choices of either full simulation video or snapshots:

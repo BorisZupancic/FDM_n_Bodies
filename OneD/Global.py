@@ -294,7 +294,7 @@ def main_plot(sim_choice1,type,G_tilde,L,eta,
 
     #ADDITIONAL:
     # Plotting the paths of those select stars
-    if track_stars == True:
+    if track_stars == True and Num_stars >= 5:
         #E_array = np.array([])
         for j in range(5):
             ax['lower right'].scatter(stars[j].x, stars[j].v, c = 'k', s = 50, marker = 'o')
@@ -551,7 +551,7 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
         ##########################################
         # Tracking Some stars
         # This is independant of plotting
-        if track_stars == True:
+        if track_stars == True and Num_stars >= 5:
             K_5stars = np.array([])
             W_5stars = np.array([])
             for j in range(5):
@@ -718,7 +718,7 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
         chi = FDM.drift(chi,r,dz,dtau)
 
         #PARTICLES
-        g = NB.accel_funct(a_grid,L,dz)
+        g = NB.accel_funct(a_grid,L,dz,type=type)
         for star in stars:
             #print(star.x)
             star.kick_star(g,dtau/2)
@@ -751,7 +751,7 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
 
         #PARTICLES
         a_grid = NB.acceleration(phi,L,type = type) 
-        g = NB.accel_funct(a_grid,L,dz)
+        g = NB.accel_funct(a_grid,L,dz,type=type)
         for star in stars:
             star.kick_star(g,dtau/2)
             

@@ -117,16 +117,19 @@ def g(star,acceleration,dz):
         value = a_grid[i] + rem*(a_grid[0]-a_grid[i])/dz
     return value
 
-def accel_funct(a_grid,L,dz):
+def accel_funct(a_grid,L,dz, type = 'Periodic'):
     def g(z):
         N = len(a_grid)
         j = int((z+L/2)//dz)
+        
         rem = (z+L/2) % dz 
-        value = 0
+        value = a_grid[j]
         if j < N-1:
-            value = a_grid[j] + rem*(a_grid[j+1]-a_grid[j])/dz
-        elif j == N-1:
-            value = a_grid[-1]+rem*(a_grid[0]-a_grid[-1])/dz
+            value += rem*(a_grid[j+1]-a_grid[j])/dz
+        elif j == N-1 and type=='Periodic':
+            value += rem*(a_grid[0]-a_grid[-1])/dz
+        elif j == N-1 and type == 'Isolated':
+            value += rem*(a_grid[N-1]-a_grid[N-2])/dz
         return value
     return g
 

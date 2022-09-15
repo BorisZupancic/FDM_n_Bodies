@@ -1,0 +1,59 @@
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingIsolated/Full
+/home/boris/Documents/Research/FDM_n_Bodies
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.500000 
+v_FDM dispersion = 0.688000
+Characteristic size: R_syst = 0.149000
+de Broglie Wavelength = 1.000000
+Num_particles = 100000
+Fixed Phi: n
+BC choice: 1
+sim choice : 2
+Boson std = 0.100000
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingIsolated/Full
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 0.5
+
+Choose a FDM fuzziness.
+Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
+lambda_deB = 0.149
+Fuzziness: r = 0.008157645763118187
+Mass mu = 61.29219317913598, m = mu*M = 61.29219317913598
+
+How many particles?
+Num_stars = 100000
+sigma = 5e-06
+Num_Bosons = 0.008157645763118187
+mu = 61.29219317913598
+lambda_deB = 1.0
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+
+Isolated [1] or Periodic [2] boundary conditions?
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+Calculating and Plotting...
+Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
+Choose the standard deviation of the Particle system (as fraction of the box width):
+integral of |chi|^2 : 0.4999997207273871
+Numerically calculated integral of |psi|^2 : 0.0010197051508380114
+v_min = -25.602372000000575, v_max = 25.55116725600057
+v_min = -25.602372000000575, v_max = 25.602372000000575
+0.49949986050334116
+(Non-dim) Collapse time: 1.414921397501092
+Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
+Sim will stop at tau = 90.55496944006988
+a_max = 6.283185307181384

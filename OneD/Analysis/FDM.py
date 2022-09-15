@@ -8,7 +8,7 @@ import cv2
 from PIL import Image 
 import scipy.optimize as opt
 
-import OneD.Wave as Wave
+import OneD.FDM as FDM
 import OneD.NBody as NB
 import OneD.Global as GF
 

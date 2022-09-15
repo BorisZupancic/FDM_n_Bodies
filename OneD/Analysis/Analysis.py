@@ -8,7 +8,7 @@ import cv2
 from PIL import Image 
 import scipy.optimize as opt
 
-import OneD.Wave as Wave
+import OneD.FDM as FDM_OG
 import OneD.NBody as NB
 import OneD.Global as GF
 
@@ -24,7 +24,7 @@ print(Directory)
 ######################################################
 # MY ONE BIG FUNCTION FOR ALL ANALYSIS:
 ######################################################
-def analysis(folder: str):#,*args):
+def analysis(folder: str, type = 'Periodic'):#,*args):
     os.chdir(folder)
     print(os.getcwd())
 
@@ -41,13 +41,14 @@ def analysis(folder: str):#,*args):
     z = np.linspace(-L/2,L/2,N)
     dz = z[1]-z[0]
 
-    print("Periodic [1] or Isolated [2] BC's?")
-    bc = int(input())
-    if bc == 1:
-        type = 'Periodic'
+    # print("Periodic [1] or Isolated [2] BC's?")
+    # bc = int(input())
+    
+    if type == 'Periodic':
+        #type = 'Periodic'
         G_tilde = None
-    elif bc == 2:
-        type = 'Isolated'
+    elif type == 'Isolated':
+        #type = 'Isolated'
         G = z/2
         G = np.append(G[::-1],G)
         G_tilde = np.fft.rfft(G)
@@ -57,8 +58,9 @@ def analysis(folder: str):#,*args):
         stars_v = np.loadtxt("StarsOnly_Vel.csv", dtype = float, delimiter=",")
         K_Energies = np.loadtxt("K_star_Energies.csv", dtype = float,delimiter = ",")
         W_Energies = np.loadtxt("W_star_Energies.csv", dtype = float,delimiter = ",")
-        K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
-        W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
+        if Num_stars>=5:
+            K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
+            W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
         chi = np.loadtxt(f"Chi.csv", dtype = complex, delimiter=",")
         centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
         z_rms_storage = None#np.loadtxt("z_rms_storage.csv", dtype = float, delimiter=",")
@@ -91,6 +93,7 @@ def analysis(folder: str):#,*args):
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
         
     #Setup our data post-import:
+    print(stars_x)
     if stars_x is not None:
         stars = [NB.star(i,sigma,stars_x[i],stars_v[i]) for i in range(len(stars_x))]
     else: 
@@ -316,7 +319,7 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type = 'Periodic', G_tilde = None
     v = k*(hbar/mu)
     x_min, x_max = np.min(z), np.max(z)
     v_min, v_max = np.min(v), np.max(v)
-    F = Wave.Husimi_phase(chi,z,dz,L,eta)
+    F = FDM_OG.Husimi_phase(chi,z,dz,L,eta)
     max_F = np.max(F)/2
     y_max = 2
     ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.coolwarm, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y_max))

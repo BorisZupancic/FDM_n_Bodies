@@ -147,8 +147,9 @@ if Num_bosons == 0:
     np.savetxt(f"v_rms_storage.csv", v_rms_storage, delimiter = ",")
     np.savetxt(f"K_star_Energies.csv", K_star_storage, delimiter = ",")
     np.savetxt(f"W_star_Energies.csv", W_star_storage, delimiter = ",")
-    np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
-    np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")
+    if Num_stars>=5:
+        np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
+        np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")
     np.savetxt(f"Chi.csv", chi,delimiter = ",")
     np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
 elif Num_stars == 0:
@@ -165,8 +166,9 @@ elif Num_bosons!=0 and Num_stars!=0:
     np.savetxt(f"K_FDM_storage.csv", K_FDM_storage, delimiter =",")
     np.savetxt(f"K_star_Energies.csv", K_star_storage, delimiter = ",")
     np.savetxt(f"W_star_Energies.csv", W_star_storage, delimiter = ",")
-    np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
-    np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")
+    if Num_stars>=5:
+        np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
+        np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")
     np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
 
 print("Data Saved.")
