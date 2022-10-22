@@ -8,11 +8,12 @@ pwd
 
 parent="Analysis/TestingIsolated/NBody"
 #Possible choices for number of Particles:
-num_particles=('5000' '10000' '50000' '100000' '500000')
+#num_particles=('5000' '10000' '50000' '100000' '500000')
+num_particles=('50000') #('5' '1000' '10000')
 #Choices of either full simulation video or snapshots:
 simulation_choice2=('2') #want it to run a long time
 
-#Percentage of FDM by mass:
+#Percentage of FDM by mass:``
 percent='0'
 
 bc_choice='1' #for isolated boundary conditions

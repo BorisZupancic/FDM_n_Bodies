@@ -82,12 +82,12 @@ def rms_plots(indices, z_rms_s,v_rms_s):
     fig,ax = plt.subplots(1,2,figsize = (12,5))
     plt.suptitle("RMS values over time")
     
-    ax[0].plot(z_rms_s)
+    ax[0].plot(indices, z_rms_s[:len(indices)], "o-")
     ax[0].set_xlabel("Time [index]")
     ax[0].set_title("$z_{rms}$")
     ax[0].set_ylim(0,1)
 
-    ax[1].plot(v_rms_s)
+    ax[1].plot(indices, v_rms_s[:len(indices)], "o-")
     ax[1].set_xlabel("Time [index]")
     ax[1].set_title("$v_{rms}$")
     ax[1].set_ylim(0,1)
@@ -163,27 +163,46 @@ def select_stars_plots(z,K_5stars_Energies,W_5stars_Energies):
     ax[3].plot(Virial_ratios, "b--",marker = ".")
     plt.show()
 
-def all_stars_plots(K_Energies,W_Energies):
+def scatter_Potential(W_Energies, stars):
+    plt.figure()
+    plt.scatter([star.x for star in stars],W_Energies[-1,:])
+    plt.show()
+
+def all_stars_plots(indices,K_Energies,W_Energies):
     W_totals = 0.5 * np.array([np.sum(W_Energies[i,:]) for i in range(np.shape(W_Energies)[0])])
     K_totals = np.array([np.sum(K_Energies[i,:]) for i in range(np.shape(K_Energies)[0])])
+    
+    # C = K_totals+W_totals
+    # W_totals -= C
     Virial_ratios = np.abs(K_totals/W_totals)
     #print(Virial_ratios)
-    indices = 99*np.array([0,1,2,4,8,16,32,64])
     
-    fig,ax = plt.subplots(1,4,figsize = (20,5))
+    #set the scale:
+    Dy_1 = np.max(K_totals)-np.min(K_totals)
+    Dy_2 = np.max(W_totals)-np.min(W_totals)
+    Dy = np.max([Dy_1,Dy_2])
+    
+    fig,ax = plt.subplots(1,4,figsize = (15,5))
     plt.suptitle("Energy Plots for Every Star, at Snapshot times/indices")
+    
+    y_avg = np.mean(W_totals)
+    y_min = y_avg - Dy/2
+    y_max = y_avg + Dy/2
     ax[0].set_title("Potential Energy over time")
     ax[0].plot(indices,W_totals,"--", marker = "o",label = "$\\Sigma W$")
+    ax[0].set_ylim(y_min,y_max)
     
+    y_avg = np.mean(K_totals)
+    y_min = y_avg - Dy/2
+    y_max = y_avg + Dy/2
     ax[1].set_title("Kinetic Energy over time")
     ax[1].plot(indices,K_totals,"--", marker = "o",label = "$\\Sigma K$")
+    ax[1].set_ylim(y_min,y_max)
     ax[1].legend()
-
-    #set the scale:
-    Dy = np.max(K_totals)-np.min(K_totals)
-    y_min = np.min(K_totals+W_totals)
-    y_min = y_min - Dy/2
-    y_max = Dy + y_min
+    
+    y_avg = np.mean(K_totals+W_totals)
+    y_min = y_avg - Dy/2
+    y_max = y_avg + Dy/2
     ax[2].set_title("Total Energy K+W over time")
     ax[2].plot(indices,K_totals+W_totals,"--", marker = "o",label = "$\\Sigma E$")
     ax[2].set_ylim(y_min,y_max)

@@ -53,10 +53,10 @@ v_min = -45.77418000000103, v_max = 45.77418000000103
 (Non-dim) Collapse time: 1.4149215950755862
 Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
 Sim will stop at tau = 90.55498208483752
-a_max = 12.566363600267323
+a_max = 3.140019273294911
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 161.0298364162445 seconds = 2.6838306069374083 minutes.
+Executed in 239.19497656822205 seconds = 3.9865829428037007 minutes.
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
@@ -110,10 +110,10 @@ v_min = -22.887090000000516, v_max = 22.887090000000516
 (Non-dim) Collapse time: 1.4149215950755862
 Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
 Sim will stop at tau = 90.55498208483752
-a_max = 12.566363600267323
+a_max = 3.1400192732935466
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 178.0191147327423 seconds = 2.9669852455457053 minutes.
+Executed in 207.59014582633972 seconds = 3.4598357637723285 minutes.
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
@@ -167,10 +167,10 @@ v_min = -11.443545000000258, v_max = 11.443545000000258
 (Non-dim) Collapse time: 1.4149215950755862
 Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
 Sim will stop at tau = 90.55498208483752
-a_max = 12.566363600267323
+a_max = 3.140019273294911
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 154.11361575126648 seconds = 2.568560262521108 minutes.
+Executed in 205.41787815093994 seconds = 3.4236313025156657 minutes.
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
@@ -224,10 +224,10 @@ v_min = -2.288709000000052, v_max = 2.288709000000052
 (Non-dim) Collapse time: 1.4149215950755862
 Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
 Sim will stop at tau = 90.55498208483752
-a_max = 12.566363600267323
+a_max = 3.140019273293319
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 160.3593554496765 seconds = 2.6726559241612753 minutes.
+Executed in 206.35735177993774 seconds = 3.439289196332296 minutes.
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
@@ -281,10 +281,10 @@ v_min = -1.144354500000026, v_max = 1.144354500000026
 (Non-dim) Collapse time: 1.4149215950755862
 Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
 Sim will stop at tau = 90.55498208483752
-a_max = 12.566363600267323
+a_max = 3.140019273293774
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 158.2408947944641 seconds = 2.637348246574402 minutes.
+Executed in 222.04707980155945 seconds = 3.700784663359324 minutes.
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
@@ -338,4 +338,4 @@ v_min = -3.483007300000861, v_max = 3.483007300000861
 (Non-dim) Collapse time: 1.4142604773203715
 Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
 Sim will stop at tau = 90.51267054850378
-a_max = 12.566363422301947
+a_max = 3.1414875345071778

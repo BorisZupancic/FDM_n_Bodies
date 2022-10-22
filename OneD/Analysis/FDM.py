@@ -13,21 +13,37 @@ import OneD.NBody as NB
 import OneD.Global as GF
 
 
-def plot_Energies(Ks,Ws):
+def plot_Energies(indices,Ks,Ws):
+    #set the scale:
+    Dy_1 = np.max(Ks)-np.min(Ks)
+    Dy_2 = np.max(Ws)-np.min(Ws)
+    Dy = np.max([Dy_1,Dy_2])
+    
     fig, ax = plt.subplots(1,4, figsize = (15,5))
-    ax[0].plot(Ks,"o--")
-    ax[0].set_title("FDM Kinetic")
-    ax[1].plot(Ws,"o--")
-    ax[1].set_title("FDM Potential")
+    
+    y_midW = np.min(Ws)+Dy_2/2
+    y_minW = y_midW - Dy/2
+    y_maxW = y_midW + Dy/2
+    ax[0].plot(indices, Ws,"o--")
+    ax[0].set_title("FDM Potential")
+    ax[0].set_ylim(y_minW,y_maxW)
+    
+    y_midK = np.min(Ks)+Dy_1/2
+    y_minK = y_midK - Dy/2
+    y_maxK = y_midK + Dy/2
+    ax[1].plot(indices,Ks,"o--")
+    ax[1].set_title("FDM Kinetic")
+    ax[1].set_ylim(0,np.max(Ks))
 
-    Dy = np.max(Ks)-np.min(Ks)
-    y_min = np.min(Ks+Ws)
-    y_min = y_min - Dy/2
-    y_max = Dy + y_min
-    ax[2].plot(Ks+Ws,"o--")
+    
+    y_avg = np.mean(Ks+Ws)
+    y_min = y_avg - Dy/2
+    y_max = y_avg + Dy/2
+    ax[2].plot(indices, Ks+Ws,"o--")
     ax[2].set_title("FDM Total Energy")
     ax[2].set_ylim(y_min,y_max)
-    ax[3].plot(np.abs(Ks/Ws),"o--")
+
+    ax[3].plot(indices, np.abs(Ks/Ws),"o--")
     ax[3].set_title("$\\frac{K}{|W|}$")
     plt.show()
 

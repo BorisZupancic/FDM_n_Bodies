@@ -1,6 +1,7 @@
 from matplotlib.image import AxesImage
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.special import erf as erf
 import os
 import cv2 
 from PIL import Image
@@ -25,7 +26,7 @@ def checkMemory(mem_limit):
     return overflow
 
 
-def StartupV2(hbar,L_scale,v_scale):
+def Startup(hbar,L_scale,v_scale):
 
     M_scale = L_scale*v_scale**2
     
@@ -97,7 +98,7 @@ def fourier_gradient(phi,length):
     L = length 
 
     #1. FFT the density (perturbation)
-    phi_n = np.fft.rfft(phi,n) #fft for real input
+    phi_n = np.fft.fft(phi,n) #fft for real input
     
     #2. Compute the fourier coefficients of phi
     grad_n = np.array([]) #empty for storage. Will hold the fourier coefficients
@@ -107,9 +108,9 @@ def fourier_gradient(phi,length):
         grad_n = np.append(grad_n,val)
     
     #3. IFFT back to get Potential
-    grad = np.fft.irfft(grad_n,n) #use Phi_n as Fourier Coefficients
+    grad = np.fft.ifft(grad_n,n) #use Phi_n as Fourier Coefficients
     
-    grad = -grad #for some reason there's a negative sign error
+    grad = np.real(grad)
     return grad
 
 def gradient(f,length,type = 'Periodic'):
@@ -119,7 +120,12 @@ def gradient(f,length,type = 'Periodic'):
         grad = np.gradient(f,dx,edge_order = 2)
         return grad
     elif type == 'Periodic':
-        grad = fourier_gradient(f,length)
+        #grad = fourier_gradient(f,length)
+        #Have decided to do the same thing:
+        N = len(f)
+        dx = length/(N-1)
+        grad = np.gradient(f,dx,edge_order = 2)
+        
         return grad
 
 def Periodic_Poisson(rho,length):
@@ -135,7 +141,7 @@ def Periodic_Poisson(rho,length):
     #1. FFT the norm-squared of the FDM-function (minus it's mean background)
     rho_avg = np.mean(rho)
     p = 4*np.pi*(rho-rho_avg)
-    p_n = np.fft.rfft(p,n) #fft for real input
+    p_n = np.fft.fft(p,n) #fft for real input
     
     #2. Compute the fourier coefficients of phi
     phi_n = np.array([]) #empty for storage. Will hold the fourier coefficients
@@ -148,8 +154,10 @@ def Periodic_Poisson(rho,length):
         phi_n = np.append(phi_n,val)
     
     #3. IFFT back to get Potential
-    phi = np.fft.irfft(phi_n,n) #use Phi_n as Fourier Coefficients
-    phi = phi - np.min(phi)
+    phi = np.fft.ifft(phi_n,n) #use Phi_n as Fourier Coefficients
+    phi = np.real(phi)
+    #phi = phi - np.min(phi)
+
     return phi
 
 def Isolated_Poisson(rho,L,G_tilde):
@@ -165,22 +173,24 @@ def Isolated_Poisson(rho,L,G_tilde):
     #print(f"num = {num}")
 
     #1. Extend the density / FDM-function
-    rho = np.append(rho,np.zeros_like(rho))
+    rho = np.append(rho,np.zeros(len(rho)-1))
 
     #2. FFT the norm-squared of the FDM-function (minus it's mean background)
     p = 4*np.pi*rho
-    p_n = np.fft.rfft(p) #fft for real input
+    p_n = np.fft.fft(p) #fft for real input
     
     #3. Compute the fourier coefficients of phi
     phi_n  = np.multiply(G_tilde,p_n)
 
     #4. IFFT back to get Potential
-    phi = np.fft.irfft(phi_n) #use Phi_n as Fourier Coefficients
-    
+    phi = np.fft.ifft(phi_n) #use Phi_n as Fourier Coefficients
+    phi = np.real(phi)
+
     #5. Truncate the potential back to original size of grid:
+    phi = phi/len(phi)
     phi = phi[len(phi)//2:]
-    phi = phi*dz #normalize?
-    phi = phi - np.min(phi)
+    #phi =  #normalize?
+    #phi = phi - np.min(phi)
     return phi
 
 def fourier_potential(rho,length = None, type = 'Periodic', G_tilde = None):
@@ -377,6 +387,185 @@ def gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s):
 
     return stars, chi
 
+def sine2_ICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s):
+    dist = np.cos(2*np.pi*z/L)**2
+    dist[:len(dist)//4] = 0
+    dist[3*len(dist)//4:] = 0
+    
+    plt.plot(dist)
+    plt.show()
+    # FOR THE FDM
+    #Set an initial wavefunction
+    chi = L_s*dist*np.sqrt(Num_bosons)
+    
+    ####################################################
+    # FOR THE PARTICLES
+    #Define CDF:
+    dz = z[1]-z[0]
+    cdf = np.zeros_like(z)
+    for i in range(len(cdf)):
+        val = np.sum(dist[:i])*dz
+        cdf[i] = val
+    plt.plot(z,cdf,label="CDF")
+
+    #sample uniformly between 0 and 1
+    y_0 = np.random.uniform(0,1,Num_stars)
+    #invert:
+    z_0 = []
+    for i in range(len(z)-1):
+        for y in y_0:
+            if cdf[i] < y and y < cdf[i+1]:
+                z_0.append(z[i])
+                break
+            
+
+    stars = [NB.star(i,sigma,z_0[i],0) for i in range(len(z_0))] #create list of normally distributed stars, zero initial speed
+    
+    #reposition stars if they were generated outside the box
+    for star in stars:
+        if np.absolute(star.x) > L/2:
+                star.reposition(L)
+
+    # Reposition the center of mass
+    grid_counts = NB.grid_count(stars,L,z)
+    if Num_stars != 0: 
+        centroid_z = 0
+        for j in range(len(grid_counts)):
+            centroid_z += z[j]*grid_counts[j]
+        centroid_z = centroid_z / Num_stars
+
+        for star in stars:
+            star.x = star.x - centroid_z #shift
+            star.reposition(L) #reposition
+
+    return stars, chi
+##########################################
+#Spitzer ICs from Larry's code
+
+def SpitzerICs(Num_stars):
+    N=Num_stars
+    # E0 is the energy cut-off
+    # sigma, the velocity dispersion
+    # f0 is distribution function for Ez = 0
+
+    E0 = .18
+    sigma = .33
+    f0 = .05
+
+    def DF(Ez):
+        df = np.zeros_like(Ez)
+        df[Ez<E0] =  f0*(np.exp(-Ez[Ez<E0]/sigma**2) - np.exp(-E0/sigma**2))
+        return df
+
+    # density as a function of potential found by integrating DF over vz
+
+    def density(psi):
+        rho = np.zeros_like(psi)
+        tm2 = (E0 - psi)/sigma**2
+        coef = 2**1.5*f0*sigma
+        rho[tm2>0] = coef*(np.sqrt(np.pi)/2.*np.exp(tm2[tm2>0])*erf(np.sqrt(tm2[tm2>0]))-np.sqrt(tm2[tm2>0]))
+        return rho
+
+    def derivs(y):
+        dy = np.zeros(2)
+        dy[0] = y[1]
+        dy[1] = 4.*np.pi*density(y[0])
+        return dy
+
+    y = np.zeros(2)
+
+    # get the vertical structure of the system by integrating the Poisson equation
+    # using Rk4
+
+    y[0] = 0.
+    y[1] = 0.
+    nz = 10000
+    dz = 0.01
+    rho = np.zeros(nz)
+    pot = np.zeros(nz)
+    force = np.zeros(nz)
+    z = np.zeros(nz)
+    rho[0] = density(y[0])
+    i = 0
+    while rho[i] > 0:
+        k1 = derivs(y)
+        k2 = derivs(y + dz*k1/2.)
+        k3 = derivs(y + dz*k2/2.)
+        k4 = derivs(y + dz*k3)
+        y = y + (k1 + 2.*k2 + 2.*k3 + k4)*dz/6.
+        i = i + 1
+        z[i] = z[i-1] + dz
+        rho[i] = density(y[0])
+        pot[i] = y[0]
+        force[i] = -y[1]
+
+    imax = i    
+    rho = rho[:imax]
+    pot = pot[:imax]
+    force = force[:imax]
+    z = z[:imax]
+
+    L = z[-1]-z[0]
+    z_new = np.append(-z[::-1],z)
+    dz = z[1]-z[0]
+    rho_new = np.append(rho[::-1],rho)
+    z_long = np.linspace(-L,L,2*len(z_new)-1)
+    G = 0.5*np.abs(z_long)
+    G_tilde = np.fft.fft(G)
+    my_phi = fourier_potential(rho_new,L,type='Isolated', G_tilde = G_tilde)
+    my_phi = my_phi - np.min(my_phi)
+    plt.plot(z_new,my_phi, c='green', label = "my potential")
+    plt.text(z_new[int(len(z_new)/4)],np.max(pot),s=f"pot/my_potential={np.mean(np.max(pot)/np.max(my_phi))}")
+    plt.plot(z_new, (4*np.pi)**(-1)*np.gradient(np.gradient(my_phi,dz),dz))
+    
+    # check normalization:
+    print(f"Normalization Check: {np.sum(rho)*dz}")
+    plt.plot(z,pot,c='blue')
+    plt.plot(z,-force,c='red')
+    plt.plot(z,rho,c='black')
+    checkdens = np.zeros(imax)
+    for i in range(imax):
+        checkdens[i] = density(pot[i])
+    plt.plot(z,checkdens,c='yellow',ls=':')
+    plt.legend()
+    plt.show()
+    pmax = pot[imax-1]
+    rhomax = rho[0]
+    zmax = z[imax-1]
+    from scipy.interpolate import interp1d
+    rhointerp = interp1d(z,rho)
+    potinterp = interp1d(z,pot)
+    print ('cut-off in z',zmax)
+
+    # generate initial conditions by sampling the density to get
+    # distribution in z and then sampling the DF at fixed z to get w
+
+    xIC = np.zeros(N)
+    vIC = np.zeros(N)
+    for i in range(N):
+        rho = 0.
+        rtmp = 1.
+        while rho < rtmp:
+            xtmp = np.random.uniform(-zmax,zmax)
+            rho = rhointerp(np.abs(xtmp))
+            rtmp = np.random.uniform(0,rhomax) 
+        xIC[i] = xtmp
+        p = potinterp(np.abs(xIC[i]))
+        vmax = np.sqrt(2.*(E0-p))
+        f = 0
+        ftmp = 1.
+        while f < ftmp:
+            fmax = np.exp((E0-p)/sigma**2) - 1.
+            vtmp = np.random.uniform(-vmax,vmax)
+            etmp = vtmp**2/2. + p
+            f = np.exp((E0-etmp)/sigma**2) - 1.
+            ftmp = np.random.uniform(0,fmax)
+        vIC[i] = vtmp
+
+    plt.scatter(xIC,vIC, s = 0.1)
+    plt.show()
+    return xIC,vIC
+    
 
 def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz, 
                     mu, Num_bosons, r, chi, 
@@ -397,11 +586,11 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
     #Chooce Poisson-Solving Routine:
     if bc_choice == 1:
         type = 'Isolated'
-        G = z/2
-        G = np.append(G[::-1],G)
-        G_tilde = np.fft.rfft(G)
-        #plt.plot(G)
-        #plt.show()
+    
+        N = len(z)
+        z_long = np.linspace(-L,L,2*N-1)
+        G = 0.5*np.abs(z_long)
+        G_tilde = np.fft.fft(G)
         
     elif bc_choice == 2:
         type = 'Periodic'
@@ -547,7 +736,6 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
         #3. Calculate Acceleration Field on Mesh:
         a_grid = NB.acceleration(phi,L,type = type) 
         
-        
         ##########################################
         # Tracking Some stars
         # This is independant of plotting
@@ -569,8 +757,8 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                 K_5stars_storage = np.append(K_5stars_storage,[K_5stars],axis = 0)
                 W_5stars_storage = np.append(W_5stars_storage,[W_5stars],axis = 0)
         else:
-            K_5stars_storage = None
-            W_5stars_storage = None
+            K_5stars_storage = [] #None
+            W_5stars_storage = [] #None
 
         #Tracking energies of ALL stars
         # Happens only at snapshot indices
@@ -592,9 +780,33 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                 else:
                     K_star_storage = np.append(K_star_storage,[K_array],axis = 0)
                     W_star_storage = np.append(W_star_storage,[W_array],axis = 0)
+            
+            K_star_fine_storage = [] #None
+            W_star_fine_storage = [] #None
+            # elif i<=2500:
+            #     K_array = np.array([])
+            #     W_array = np.array([])
+            #     for j in range(len(stars)):
+            #         star = stars[j]
+            #         W = star.get_W(z,phi,L)#- sigma*star.x*g
+        
+            #         K = 0.5*sigma*stars[j].v**2
+
+            #         K_array = np.append(K_array,K)
+            #         W_array = np.append(W_array,W)
+            #     if i == 1:
+            #         K_star_fine_storage = np.array([K_array])
+            #         W_star_fine_storage = np.array([W_array])
+            #     else:
+            #         K_star_fine_storage = np.append(K_star_fine_storage,[K_array],axis = 0)
+            #         W_star_fine_storage = np.append(W_star_fine_storage,[W_array],axis = 0)
+
         else:
-            K_star_storage = None
-            W_star_storage = None
+            K_star_storage = [] #None
+            W_star_storage = [] #None
+
+            K_star_fine_storage = [] #None
+            W_star_fine_storage = [] #None
             #E_storage = None #to go in the main_plot loop
 
         if track_stars_rms == True:
@@ -609,8 +821,8 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                     z_rms_storage = np.append(z_rms_storage,z_rms)
                     v_rms_storage = np.append(v_rms_storage,v_rms)
         else:
-            z_rms_storage = None
-            v_rms_storage = None
+            z_rms_storage = [] #None
+            v_rms_storage = [] #None
 
         #########################################
         #FDM DIAGNOSTICS
@@ -630,8 +842,8 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                         W_FDM_storage = np.append(W_FDM_storage,[[W]],axis=0) 
                         K_FDM_storage = np.append(K_FDM_storage,[[K]],axis=0)
         else:
-            W_FDM_storage = None
-            K_FDM_storage = None
+            W_FDM_storage = [] #None
+            K_FDM_storage = [] #None
         #################################################
         # PLOTTING
         # Plot everytime if sim_choice2 == 1
@@ -650,6 +862,10 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                     
             if PLOT == True:
                 if i == 0: #want to set a limit on the acceleration graph
+                    z_long = np.linspace(-L,L,2*N-1)
+                    G = 0.5*np.abs(z_long)
+                    G_tilde = np.fft.fft(G)
+
                     Part_force = -gradient(fourier_potential(rho_part,L, type = type, G_tilde = G_tilde),L,type = type)
                     FDM_force = -gradient(fourier_potential(rho_FDM,L, type = type, G_tilde = G_tilde),L,type = type)
 
@@ -660,7 +876,7 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                     ax[0].plot(z,-gradient(fourier_potential(rho_FDM,L,type = 'Periodic'),L,type = 'Periodic'),label = 'Periodic')
                     ax[0].plot(z,fourier_potential(rho_FDM,L,type = 'Periodic'),label = 'Periodic')
                     ax[0].plot(z,fourier_potential(rho_FDM,L, type = 'Isolated', G_tilde = G_tilde),label = 'Isolated')
-                    ax[0].plot(z,-gradient(fourier_potential(rho_FDM,L, type = type, G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
+                    ax[0].plot(z,-gradient(fourier_potential(rho_FDM, L, type = 'Isolated', G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
                     ax[0].set_xlabel("$z$")
                     ax[0].legend()
                     
@@ -668,7 +884,7 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                     ax[1].plot(z,-gradient(fourier_potential(rho_part,L,type = 'Periodic'),L,type = 'Periodic'),label = 'Periodic')
                     ax[1].plot(z,fourier_potential(rho_part,L,type = 'Periodic'),label = 'Periodic')
                     ax[1].plot(z,fourier_potential(rho_part,L, type = 'Isolated', G_tilde = G_tilde),label = 'Isolated')
-                    ax[1].plot(z,-gradient(fourier_potential(rho_part,L, type = type, G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
+                    ax[1].plot(z,-gradient(fourier_potential(rho_part,L, type = 'Isolated', G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
                     ax[1].set_xlabel("$z$")
                     ax[1].legend()
                     plt.savefig("Initial Periodic vs Isolated")
@@ -761,9 +977,9 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
         i += 1
     
     if track_centroid == False:
-        centroids = None
+        centroids = [] #None
     
-    return stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage  
+    return stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage  
 
 ###########################################################
 # FOR ANIMATION IN POSITION SPACE

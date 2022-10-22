@@ -46,7 +46,7 @@ M_s = L_s*v_s**2
 print(f"Mass scale M = {M_s}")
 
 #L, choice = GF.Startup_Choice()
-L, mu, Num_bosons, r, lambda_deB, R, sigma, Num_stars = GF.StartupV2(hbar, L_s, v_s)
+L, mu, Num_bosons, r, lambda_deB, R, sigma, Num_stars = GF.Startup(hbar, L_s, v_s)
 m = mu*M_s
 percent_FDM = Num_bosons * mu / (Num_bosons * mu + Num_stars * sigma)
 
@@ -125,10 +125,19 @@ if Num_stars != 0:
     track_stars_rms = True
 
 #Create Initial Conditions:
-stars,chi = GF.gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
+print("Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:")
+ICs = float(input())
+if ICs == 1:
+    stars,chi = GF.gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
+elif ICs == 2:
+    stars,chi = GF.sine2_ICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
+elif ICs == 3:
+    xIC,vIC = GF.SpitzerICs(Num_stars)
+    stars = [NB.star(i,sigma,xIC[i],vIC[i]) for i in range(Num_stars)]
+    chi = np.zeros_like(z)
 
 #Run simulation on Initial Conditions:
-stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, bc_choice, z,L,dz,
+stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, bc_choice, z,L,dz,
                                                                                                       mu, Num_bosons, r, chi, 
                                                                                                       sigma,stars,
                                                                                                       v_s,L_s,
@@ -147,6 +156,9 @@ if Num_bosons == 0:
     np.savetxt(f"v_rms_storage.csv", v_rms_storage, delimiter = ",")
     np.savetxt(f"K_star_Energies.csv", K_star_storage, delimiter = ",")
     np.savetxt(f"W_star_Energies.csv", W_star_storage, delimiter = ",")
+    np.savetxt(f"K_star_fine_Energies.csv", K_star_fine_storage, delimiter = ",")
+    np.savetxt(f"W_star_fine_Energies.csv", W_star_fine_storage, delimiter = ",")
+    
     if Num_stars>=5:
         np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
         np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")
@@ -166,6 +178,9 @@ elif Num_bosons!=0 and Num_stars!=0:
     np.savetxt(f"K_FDM_storage.csv", K_FDM_storage, delimiter =",")
     np.savetxt(f"K_star_Energies.csv", K_star_storage, delimiter = ",")
     np.savetxt(f"W_star_Energies.csv", W_star_storage, delimiter = ",")
+    np.savetxt(f"K_star_fine_Energies.csv", K_star_fine_storage, delimiter = ",")
+    np.savetxt(f"W_star_fine_Energies.csv", W_star_fine_storage, delimiter = ",")
+    
     if Num_stars>=5:
         np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
         np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")

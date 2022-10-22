@@ -53,8 +53,8 @@ class star:
         if n < N-1:
             Potential = phi[n] + rem*(phi[n+1]-phi[n])/dz
         elif n == N-1:
-            Potential = phi[-1]+rem*(phi[0]-phi[-1])/dz
-        Potential -= np.max(phi)
+            Potential = phi[-1] + rem*(phi[0]-phi[-1])/dz
+        
         W = sigma*Potential
         return W
 
@@ -104,6 +104,10 @@ def acceleration(phi,L,type):
     
     acceleration = Force#/m #acceleration per particle, at each point of the grid
     return acceleration#/L #divide by L to keep it non-dimensional    
+
+def g_interp(z,zp,fp):
+    return 
+
 
 def g(star,acceleration,dz):
     a_grid = acceleration
