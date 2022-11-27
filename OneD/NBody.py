@@ -67,6 +67,10 @@ class star:
         a = g(self.x)
         self.v += 0.5*dt*a #KICK to get full new velocity(this will change for self-gravitating system)
 
+
+def collectEnergies(K1,W1,K2=None,W2=None):
+    
+    return
 # class star_collection:
 #     def __init__(self, stars: star):
 #         self.stars = stars
@@ -97,6 +101,28 @@ def grid_count(stars,L,x):
     grid_counts = interp_bins(x,bin_counts)
     return grid_counts
 
+def particle_density(stars, L, z, variable_mass):
+    if variable_mass[0] == True:
+        fraction = variable_mass[1]
+        sigma1 = variable_mass[2]
+        sigma2 = variable_mass[3]
+    
+        num_to_change = int(np.floor(fraction*len(stars)))
+    
+        grid_counts1 = grid_count(stars[0:num_to_change],L,z)
+        grid_counts2 = grid_count(stars[num_to_change:],L,z)
+
+        dz = z[1]-z[0]
+        rho_part = (grid_counts1*sigma1 + grid_counts2*sigma2)/dz
+    
+    else:
+        sigma = stars[0].mass 
+        grid_counts = grid_count(stars,L,z)
+        dz = z[1]-z[0]
+        rho_part = (grid_counts/dz)*sigma #this is actually like chi x chi*
+    
+    return rho_part
+    
 def acceleration(phi,L,type):
     grad = GF.gradient(phi,L,type = type)#GF.fourier_gradient(phi,L)
     #grad = np.gradient(phi,dz)

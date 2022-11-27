@@ -1,3 +1,4 @@
+from re import M
 from matplotlib.image import AxesImage
 import numpy as np
 import matplotlib.pyplot as plt
@@ -68,6 +69,8 @@ def Startup(hbar,L_scale,v_scale):
     if percent_FDM != 1:
         print("How many particles?")
         Num_stars = int(input())
+
+            
         sigma = Total_mass*(1-percent_FDM) / Num_stars
         
         FDM_mass = Total_mass*percent_FDM #int(input())
@@ -174,23 +177,43 @@ def Isolated_Poisson(rho,L,G_tilde):
 
     #1. Extend the density / FDM-function
     rho = np.append(rho,np.zeros(len(rho)-1))
-
+    
     #2. FFT the norm-squared of the FDM-function (minus it's mean background)
     p = 4*np.pi*rho
     p_n = np.fft.fft(p) #fft for real input
     
     #3. Compute the fourier coefficients of phi
     phi_n  = np.multiply(G_tilde,p_n)
-
+    
     #4. IFFT back to get Potential
     phi = np.fft.ifft(phi_n) #use Phi_n as Fourier Coefficients
     phi = np.real(phi)
+    phi = phi * (2*L/len(phi))
 
     #5. Truncate the potential back to original size of grid:
-    phi = phi/len(phi)
     phi = phi[len(phi)//2:]
-    #phi =  #normalize?
-    #phi = phi - np.min(phi)
+    
+    #phi = phi/len(phi)
+    #phi = phi*L
+
+    # rho_new = np.gradient(np.gradient(phi,dz),dz)/(4*np.pi)
+    # M1 = dz*np.sum(rho)
+    # M2 = dz*np.sum(rho_new)
+
+    # print(f"M1 = {M1}")
+    # print(f"M2 = {M2}")
+    # print(f"M2/M1 = {M2/M1}")
+    
+    # fig, ax = plt.subplots(1,5, figsize=(30,5))
+    # ax[0].plot(rho, label = "$\\rho$")
+    # ax[1].plot(p_n, label = "$\\hat{\\rho}$")
+    # ax[2].plot(phi_n, label = "$\\hat{\\phi}$")
+    # ax[3].plot(phi, label = "$\\phi$")
+    # ax[4].plot(np.gradient(np.gradient(phi,dz),dz)/(4*np.pi), label = "$\\rho$ from Poisson")
+    # for i in range(5):
+    #     ax[i].legend()
+    # plt.show()
+
     return phi
 
 def fourier_potential(rho,length = None, type = 'Periodic', G_tilde = None):
@@ -218,12 +241,11 @@ def fourier_potential(rho,length = None, type = 'Periodic', G_tilde = None):
 
 def main_plot(sim_choice1,type,G_tilde,L,eta,
                 z,dz,chi,rho_FDM,rho_part,
-                stars,Num_bosons,Num_stars,
-                grid_counts,dtau,i,
+                stars,Num_bosons,Num_stars,dtau,i,
                 x_min,x_max,v_min,v_max,
                 y00_max,y10_max,y01_max,y11_max,
                 a_max,max_F,
-                Directory,folder_name,track_stars, track_centroid = False):
+                Directory,folder_name,track_stars, track_centroid = False, variable_mass=[False]):
     
     # #PLOT AXIS LIMITS:
     # #y0_max = np.max(phi)*1.5
@@ -254,16 +276,18 @@ def main_plot(sim_choice1,type,G_tilde,L,eta,
     ax['far right'].plot(z, FDM_force, label = "FDM Contribution")
     ax['far right'].set_ylim(-a_max,a_max)
     ax['far right'].set_title("Force contributions",fontsize = 15)
+    ax['far right'].set_xlabel("$z = x/L_s$")
+    ax['far right'].set_ylabel("Acceleration Field (code units)")
     ax['far right'].legend(fontsize = 20)
     
     # THE FDM
     #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
     #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
     phi_FDM = fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde)
-    ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$ [Fourier perturbation]")
+    ax['upper left'].plot(z,phi_FDM,label = "$\\varphi_{FDM}$")
     ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = \\chi \\chi^*$")
     ax['upper left'].set_ylim([-y00_max, y00_max] )
-    ax['upper left'].set_xlabel("$z = x/L$")
+    ax['upper left'].set_xlabel("$z = x/L_s$")
     ax['upper left'].legend(fontsize = 15)
     ax['upper left'].set_title("Non-Dimensional Densities and Potentials",fontsize = 15)
     
@@ -278,7 +302,8 @@ def main_plot(sim_choice1,type,G_tilde,L,eta,
         im = ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.coolwarm, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y01_max)) #LogNorm(0,max_F)
         ax['upper right'].set_xlim(x_min,x_max)
         ax['upper right'].set_ylim(-y01_max,y01_max) #[v_min,v_max])
-        ax['upper right'].set_xlabel("$z = x/L$")
+        ax['upper right'].set_xlabel("$z = x/L_s$")
+        ax['upper right'].set_ylabel("Velocity (code units)")
         #ax['upper right'].colorbar()
         #divider = make_axes_locatable(ax["upper right"])
         #cax = divider.new_horizontal(size = '5%',pad = 0.05, pack_start = True)
@@ -288,19 +313,36 @@ def main_plot(sim_choice1,type,G_tilde,L,eta,
     # THE PARTICLES
     #rho_part = (grid_counts/dz)*sigma #already calculated this
     phi_part = fourier_potential(rho_part,L,type = type, G_tilde = G_tilde)
-    ax['lower left'].plot(z,phi_part,label = "$\\Phi_{Particles}$ [Fourier perturbation]")
+    ax['lower left'].plot(z,phi_part,label = "$\\varphi_{Particles}$")
     ax['lower left'].plot(z,rho_part,label = "$\\rho_{Particles}$")
     #ax['lower left'].set_xlim(-L/2,L/2)
     ax['lower left'].set_ylim(-y10_max,y10_max)
     ax['lower left'].legend(fontsize = 15)
 
     #Plot the Phase Space distribution
-    x_s = np.array([star.x for star in stars])
-    v_s = np.array([star.v for star in stars])
-    ax['lower right'].scatter(x_s,v_s,s = 1,label = "Particles")
-    ax['lower right'].set_ylim(-y11_max,y11_max)
-    ax['lower right'].set_xlim(-L/2,L/2)
-    ax['lower right'].legend(fontsize = 15)
+    if variable_mass[0] == True:
+        fraction = variable_mass[1]
+        num_to_change = int(np.floor(fraction*len(stars)))
+    
+        x1_s = np.array([star.x for star in stars[num_to_change:]])
+        v1_s = np.array([star.v for star in stars[num_to_change:]]) 
+        ax['lower right'].scatter(x1_s,v1_s,s = 1,c = 'blue', label = "Lighter Particles")
+
+        x2_s = np.array([star.x for star in stars[0:num_to_change]])
+        v2_s = np.array([star.v for star in stars[0:num_to_change]]) 
+        ax['lower right'].scatter(x2_s,v2_s,s = 8,c = 'red', label = "Heavier Particles")
+        
+        ax['lower right'].set_ylim(-y11_max,y11_max)
+        ax['lower right'].set_xlim(-L/2,L/2)
+        ax['lower right'].legend(fontsize = 15)
+        ax['lower right'].set_ylabel("Velocity (code units)")
+    else:
+        x_s = np.array([star.x for star in stars])
+        v_s = np.array([star.v for star in stars])
+        ax['lower right'].scatter(x_s,v_s,s = 1,label = "Particles")
+        ax['lower right'].set_ylim(-y11_max,y11_max)
+        ax['lower right'].set_xlim(-L/2,L/2)
+        ax['lower right'].legend(fontsize = 15)
 
     #ADDITIONAL:
     # Plotting the paths of those select stars
@@ -440,25 +482,8 @@ def sine2_ICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s):
 
     return stars, chi
 ##########################################
-#Spitzer ICs from Larry's code
-
-def SpitzerICs(Num_stars):
-    N=Num_stars
-    # E0 is the energy cut-off
-    # sigma, the velocity dispersion
-    # f0 is distribution function for Ez = 0
-
-    E0 = .18
-    sigma = .33
-    f0 = .05
-
-    def DF(Ez):
-        df = np.zeros_like(Ez)
-        df[Ez<E0] =  f0*(np.exp(-Ez[Ez<E0]/sigma**2) - np.exp(-E0/sigma**2))
-        return df
-
-    # density as a function of potential found by integrating DF over vz
-
+#my own Spitzer ICs, based off Larry's:
+def BZ_SpitzerICs(Num_stars, z, E0, sigma,f0, fdm = False, mu = None, Num_bosons = None):
     def density(psi):
         rho = np.zeros_like(psi)
         tm2 = (E0 - psi)/sigma**2
@@ -468,112 +493,360 @@ def SpitzerICs(Num_stars):
 
     def derivs(y):
         dy = np.zeros(2)
-        dy[0] = y[1]
-        dy[1] = 4.*np.pi*density(y[0])
+        dy[0] = y[1] #first derivative
+        dy[1] = 4.*np.pi*density(y[0]) #second derivative
         return dy
 
-    y = np.zeros(2)
+    #initial conditions:
+    y = np.zeros(2) #phi = 0, dphi/dt = 0 
 
-    # get the vertical structure of the system by integrating the Poisson equation
-    # using Rk4
-
-    y[0] = 0.
-    y[1] = 0.
-    nz = 10000
-    dz = 0.01
-    rho = np.zeros(nz)
-    pot = np.zeros(nz)
-    force = np.zeros(nz)
-    z = np.zeros(nz)
-    rho[0] = density(y[0])
+    z_original = z
+    dz = z[1]-z[0]
+    N = len(z)
+    z = np.zeros(len(z)//2)
+    phi = np.zeros(len(z))
+    rho = np.zeros(len(z))
+    rho[0] = density(phi[0])
     i = 0
-    while rho[i] > 0:
+    while rho[i] > 0 and i<len(z)-1:
+    #for i in range(len(z)-1):
         k1 = derivs(y)
         k2 = derivs(y + dz*k1/2.)
         k3 = derivs(y + dz*k2/2.)
         k4 = derivs(y + dz*k3)
         y = y + (k1 + 2.*k2 + 2.*k3 + k4)*dz/6.
-        i = i + 1
-        z[i] = z[i-1] + dz
+        
+        i+=1
+        z[i] = z[i-1]+dz
+        phi[i] = y[0]
         rho[i] = density(y[0])
-        pot[i] = y[0]
-        force[i] = -y[1]
 
     imax = i    
     rho = rho[:imax]
-    pot = pot[:imax]
-    force = force[:imax]
+    phi = phi[:imax]
     z = z[:imax]
+    
+    print(f"z_max = {np.max(z)}")
 
-    L = z[-1]-z[0]
+    # check normalization:
+    M = 2*np.sum(rho)*dz
+    print(f"Mass of stars: M={M}")
+    #print(f"Density Normalization Check: {2*np.sum(rho)*dz}")
+    
+    force = -np.gradient(phi,dz)#*(M/Num_stars)
+    
+    #normalize:
+    #rho = rho / (2*np.sum(rho)*dz)
+    # check normalization again:
+    #print(f"Density Normalization Check: {2*np.sum(rho)*dz}")
+    
+    L = 2*(z[-1]-z[0])
+    print(f"Length of Box ={L}")
+
     z_new = np.append(-z[::-1],z)
     dz = z[1]-z[0]
     rho_new = np.append(rho[::-1],rho)
+    phi_new = np.append(phi[::-1],phi)
+    
     z_long = np.linspace(-L,L,2*len(z_new)-1)
     G = 0.5*np.abs(z_long)
     G_tilde = np.fft.fft(G)
+
+    #rho_new = rho_new/M
+
     my_phi = fourier_potential(rho_new,L,type='Isolated', G_tilde = G_tilde)
     my_phi = my_phi - np.min(my_phi)
-    plt.plot(z_new,my_phi, c='green', label = "my potential")
-    plt.text(z_new[int(len(z_new)/4)],np.max(pot),s=f"pot/my_potential={np.mean(np.max(pot)/np.max(my_phi))}")
-    plt.plot(z_new, (4*np.pi)**(-1)*np.gradient(np.gradient(my_phi,dz),dz))
+
+    my_rho = (4*np.pi)**(-1)*np.gradient(np.gradient(my_phi,dz),dz)
     
-    # check normalization:
-    print(f"Normalization Check: {np.sum(rho)*dz}")
-    plt.plot(z,pot,c='blue')
-    plt.plot(z,-force,c='red')
-    plt.plot(z,rho,c='black')
+    my_force = -np.gradient(my_phi,dz)#*1/Num_stars
+    
+    
+    print(f"my_force_max = {np.max(my_force)}")
+    print(f"force_max = {np.max(np.abs(force))}")
+    print(f"Check: 2*pi*M = {2*np.pi*M}")
+
+    print("")
+    print("Checking Normalization")
+    print(f"Mine: {np.sum(my_rho)*dz}")
+    print(f"Larry's: {np.sum(rho_new)*dz}")
+    
+    print("")
+    print(f"Mine/Larry's = {np.sum(my_rho)*dz / (2*np.sum(rho)*dz)}")
+    print(f"force_max * Mine/Larry's = {np.max(np.abs(force))*np.sum(my_rho)*dz / (2*np.sum(rho)*dz)}")
+    
+    fig, ax = plt.subplots(1,3,figsize = (25,5))
+
+    ax[0].plot(z_new,my_phi, c="blue", label = "my potential")
+    ax[0].text(z_new[int(len(z_new)/4)],np.max(phi),s=f"pot/my_potential={np.mean(np.max(phi)/np.max(my_phi))}")
+    ax[0].plot(z_new, my_rho, c = "green", label = "my density")
+    
+    ax[0].plot(z_new,phi_new, c = "red", label = "Larry's potential")
+    ax[0].plot(z_new,rho_new, c = "orange", label = "Larry's density")
+    
+    ax[0].plot(z_new, (4*np.pi)**(-1)*np.gradient(np.gradient(phi_new,dz),dz), label = "$\\rho = \\frac{1}{4\\pi} \\frac{\\partial^2 \\phi_L}{\\partial z^2}$")
+
     checkdens = np.zeros(imax)
     for i in range(imax):
-        checkdens[i] = density(pot[i])
-    plt.plot(z,checkdens,c='yellow',ls=':')
-    plt.legend()
-    plt.show()
-    pmax = pot[imax-1]
+        checkdens[i] = density(phi[i])
+    ax[0].plot(z,checkdens, c="yellow", ls=':')
+    ax[0].legend()
+    # plt.legend()
+    # plt.show()
+
+    ax[2].plot(z_new, my_force, c="black",label = "My Force")
+    ax[2].plot(z,force,c='pink', label = "Larry's Force")
+    ax[2].legend
+    # plt.show()
+
+    phi_max = phi[imax-1]
     rhomax = rho[0]
     zmax = z[imax-1]
     from scipy.interpolate import interp1d
     rhointerp = interp1d(z,rho)
-    potinterp = interp1d(z,pot)
-    print ('cut-off in z',zmax)
+    phiinterp = interp1d(z,phi)
+    print ('cut-off in z', zmax)
 
-    # generate initial conditions by sampling the density to get
-    # distribution in z and then sampling the DF at fixed z to get w
+    if Num_stars !=0:
+        # generate initial conditions by sampling the density to get
+        # distribution in z and then sampling the DF at fixed z to get w
 
-    xIC = np.zeros(N)
-    vIC = np.zeros(N)
-    for i in range(N):
-        rho = 0.
-        rtmp = 1.
-        while rho < rtmp:
-            xtmp = np.random.uniform(-zmax,zmax)
-            rho = rhointerp(np.abs(xtmp))
-            rtmp = np.random.uniform(0,rhomax) 
-        xIC[i] = xtmp
-        p = potinterp(np.abs(xIC[i]))
-        vmax = np.sqrt(2.*(E0-p))
-        f = 0
-        ftmp = 1.
-        while f < ftmp:
-            fmax = np.exp((E0-p)/sigma**2) - 1.
-            vtmp = np.random.uniform(-vmax,vmax)
-            etmp = vtmp**2/2. + p
-            f = np.exp((E0-etmp)/sigma**2) - 1.
-            ftmp = np.random.uniform(0,fmax)
-        vIC[i] = vtmp
+        xIC = np.zeros(Num_stars)
+        vIC = np.zeros(Num_stars)
+        for i in range(Num_stars):
+            rho = 0.
+            rtmp = 1.
+            while rho < rtmp:
+                xtmp = np.random.uniform(-zmax,zmax)
+                rho = rhointerp(np.abs(xtmp))
+                rtmp = np.random.uniform(0,rhomax) 
+            xIC[i] = xtmp
+            p = phiinterp(np.abs(xIC[i]))
+            vmax = np.sqrt(2.*(E0-p))
+            f = 0
+            ftmp = 1.
+            while f < ftmp:
+                fmax = np.exp((E0-p)/sigma**2) - 1.
+                vtmp = np.random.uniform(-vmax,vmax)
+                etmp = vtmp**2/2. + p
+                f = np.exp((E0-etmp)/sigma**2) - 1.
+                ftmp = np.random.uniform(0,fmax)
+            vIC[i] = vtmp
 
-    plt.scatter(xIC,vIC, s = 0.1)
-    plt.show()
-    return xIC,vIC
+        # plt.scatter(xIC,vIC, s = 0.1)
+        # plt.show()
+
+
+        m = M/Num_stars
+        stars = [NB.star(0,m,x,v) for x,v in zip(xIC,vIC)]
+
+        rho_part = NB.particle_density(stars, L, z_new, variable_mass=[False])
+        ax[1].plot(z_new,rho_part, label = "rho From Histogram")
+        ax[1].plot(z_new,rho_new, c = "orange", label = "rho From Larry's RK4")
+        ax[1].plot(z_new,my_rho, c = "green", label = "rho From Me/Poisson's Equation")
+        # plt.legend()
+        # plt.show()
+
+        my_phi_new = fourier_potential(my_rho,L,type='Isolated', G_tilde = G_tilde)-np.min(fourier_potential(my_rho,L,type='Isolated', G_tilde = G_tilde))
+        ax[1].plot(z_new,fourier_potential(rho_part,L,type='Isolated', G_tilde = G_tilde)-np.min(fourier_potential(rho_part,L,type='Isolated', G_tilde = G_tilde)), label = "From Histogram rho")
+        ax[1].plot(z_new,fourier_potential(rho_new,L,type='Isolated', G_tilde = G_tilde)-np.min(fourier_potential(rho_new,L,type='Isolated', G_tilde = G_tilde)), c = "red", ls = "--", label = "From Larry's rho")
+        ax[1].plot(z_new,my_phi_new, c = "blue", label = "From Me/Poisson rho")
+        
+        my_rho_new = (4*np.pi)**(-1)*np.gradient(np.gradient(my_phi_new,dz),dz)
+        ax[1].plot(z_new,my_rho_new,label = "rho from another application of poisson")
+
+        ax[1].plot(z_new,my_phi, label = "my_phi")
+        ax[1].legend()
+        plt.show()
+
+        phi = fourier_potential(rho_new,L,type='Isolated', G_tilde = G_tilde)-np.min(fourier_potential(rho_new,L,type='Isolated', G_tilde = G_tilde))
+        i=0
+        M_s = [np.sum(rho_new)*dz]
+        while i <= 20:
+        
+            rho = (4*np.pi)**(-1) *np.gradient(np.gradient(phi,dz),dz)
+            print(f"M = {np.sum(rho)*dz}")
+            M_s.append(np.sum(rho)*dz)
+            
+            phi = fourier_potential(rho,L,type='Isolated', G_tilde = G_tilde)-np.min(fourier_potential(rho,L,type='Isolated', G_tilde = G_tilde))
+        
+            plt.plot(z_new, rho, label = "$\\rho ["+str(i)+"] \\leftarrow \\phi["+str(i)+"]$")
+            plt.plot(z_new, phi, label = "$\\phi["+str(i+1)+"] \\leftarrow \\rho["+str(i)+"]$")
+
+            i+=1 
+
+            print(f"Ratio M[i]/M[i-1] = {M_s[i]/M_s[i-1]}")
+
+        plt.legend()
+        plt.show()
+
+        K = 0.5*m*np.sum(vIC**2)
+        W = 0.5*np.sum([star.get_W(z,phi,L) for star in stars])
+        print("Check Virial Theorem:")
+        print(f"2K = {2*K}")
+        print(f"W = {W}")
+        
+        # R = np.sqrt(np.mean(xIC**2))
+        # v = np.sqrt(np.mean(vIC**2))
+        # m = M/Num_stars
+        # # M2 = 0
+        # for x_,v_ in zip(xIC,vIC):
+        #     if x_<=R and v_<=v:
+        #         M2 += m
+        # M2=m
+        # print("")
+        # print(f"R,v,M2 = {[R,v,M2]}")
+        # print(f"M/(R * v**2) = {M2/(R * v**2)}")
+        
+        #want to re-scale everything so that m = 1/Num_stars
+        #while M/(R*v**2) remains the same
+        #????:
+        # xIC = xIC#/(M**(1/2))
+        # vIC = vIC#/(M**(1/4))
+        # m = 1/Num_stars
+        # stars = [NB.star(0,m,x,v) for x,v in zip(xIC,vIC)]
+
+        # K = 0.5*m*np.sum(vIC**2)
+        # W = 0.5*np.sum([star.get_W(z,phi,L) for star in stars])
+        # print("Check Virial Theorem:")
+        # print(f"2K = {2*K}")
+        # print(f"W = {W}")
+        
+        # R = np.max(xIC) #np.sqrt(np.mean(xIC**2))
+        # v = np.max(vIC) #np.sqrt(np.mean(vIC**2))
+        # m = 1/Num_stars #mass per particle
+        # # M3 = 0
+        # for x_,v_ in zip(xIC,vIC):
+        #     if x_<=R and v_<=v:
+        #         M3 += m
+        # M3=m
+
+        # print("")
+        # print(f"R,v,M := {[R,v,M3]}")
+        # print(M3/(R * v**2))
+        
+        plt.scatter(xIC,vIC, s = 0.1)
+        plt.show()
+
+        velocity = np.histogram(vIC,bins = z_new)
+        plt.show()
+    else:
+        stars = []
+
+    #Function that will return N by N array for DF:
+    def DF(phi, E0,sigma,f0):
+        N = len(phi)
+
+        #1. Calculate v_m's:
+        v_m_s = np.array([np.sqrt(2*(E0-phi[i])) for i in range(N)])
+        plt.figure()
+        plt.plot(z_original,v_m_s, label = "$v_{max} (z)$")
+        plt.legend()
+        plt.show()
+        #2. Calculate v_max of v_m(z):
+        v_max = np.max(v_m_s)
+
+        #3. Create v-space array:
+        v = np.linspace(-v_max, v_max, N)
+
+        #4. 
+        A = np.exp(E0/sigma**2)
+        f = np.ndarray((N,N))
+        # i indexes z,
+        # j indexes v
+        for i in range(N):
+            v_m = v_m_s[i] #associated to a particular z
+            pot = phi[i]
+            for j in range(N):
+                vv = v[j]
+                E = 0.5*vv**2 + pot
+                    
+                if E <= E0:
+                    B = np.exp(-E/sigma**2)
+                    f[j,i] = f0*(A*B-1)
+                else: 
+                    f[j,i] = 0
+
+                # position z is associated to a column of the DF
+                # velocity v is associated to a row
+        return f, v
+
+    z = z_original
+    #z = z_new
+    N = len(z)
     
+    if fdm == True:
+        #create fdm wavefunction
+        #1. Extend rho to all of z:
+        #N_phi = len(phi)
+        rho = rho_new
+        N_add = int((len(z)-len(rho))//2)
+        rho = np.append(np.zeros(N_add),rho)
+        rho = np.append(rho,np.zeros(N_add))
+        print(f"len(rho)={len(rho)}")
+        
+        #2. Retrieve phi:
+        z_long = np.linspace(-L,L,2*len(z)-1)
+        G = 0.5*np.abs(z_long)
+        G_tilde = np.fft.fft(G)
+        phi = fourier_potential(rho, L, type = 'Isolated', G_tilde=G_tilde)
+        phi = phi - np.min(phi)
+        print(f"len(phi)={len(phi)}")
+        
+        dz = z[1]-z[0]
+        fig,ax = plt.subplots(1,4,figsize=(15,5))
+        ax[0].plot(z,rho, label = "density")
+        ax[0].plot(z,phi, label = "potential (solved)")
+        ax[0].plot(z_new,phi_new, label = "phi from RK4")
+        #ax[0].plot(z, (4*np.pi)**(-1) *np.gradient(np.gradient(phi,dz),dz))
+        ax[0].plot(z,density(phi), label = "$\\rho (\\Phi)$")
+        ax[3].plot(z,density(np.zeros_like(z)), label = "$\\rho ( \\phi = 0 )$")
 
-def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz, 
+        #2. Create phase space distribution:
+        f, v = DF(phi, E0,sigma,f0)
+
+        print(len(f))
+        ax[1].imshow(f)
+        
+        dv = v[1]-v[0]
+        rho_fake = dv*np.array([np.sum(f[:,i]) for i in range(N)])
+        v_fake = dz*np.array([np.sum(f[i,:]) for i in range(N)])
+        ax[2].plot(z,rho)
+        ax[2].plot(z,rho_fake, label = "$\\rho(z) = \\int f(z,v) dv$")
+        ax[2].plot(z,v_fake, label = "$\\int f(z,v) dz$")
+        
+        ax[0].legend()
+        ax[1].legend()
+        ax[2].legend()
+        ax[3].legend()
+        
+        plt.show()
+
+        #3. Make wavefunction:
+        chi = np.zeros(N, dtype = complex)
+        for i in range(N):
+            chi[i] = np.sum(np.sqrt(f[:,i])*np.exp(1j*v*z[i])) #(np.cos(v*z[i])+1j*np.sin(v*z[i])))
+        
+        chi = chi/np.sqrt(N)/np.sqrt(mu)
+        print(f"np.sum(np.abs(chi)**2)*dz = {np.sum(np.abs(chi)**2)*dz}")
+        print(f"Num_bosons = {Num_bosons}")
+        plt.plot(z,mu*np.abs(chi)**2, label = "$m|\\chi|^2$")
+        plt.legend()
+        plt.show()
+
+    else:
+        chi = np.zeros_like(z)
+
+    
+    return stars, chi
+
+def run_FDM_n_Bodies(sim_choice2, collapse_times, bc_choice, z, L, dz, 
                     mu, Num_bosons, r, chi, 
                     sigma, stars, 
                     v_s, L_s, 
                     Directory, folder_name, 
-                    absolute_PLOT = True, track_stars = False, track_stars_rms = False, track_centroid = False, Long_time = False, fixed_phi = False,
-                    track_FDM = False):
+                    absolute_PLOT = True, track_stars = False, track_stars_rms = False, track_centroid = False, fixed_phi = False,
+                    track_FDM = False, variable_mass = False):
     
     #########################################
     #RETRIEVE INFO FROM INITIAL STARTUP/CONDITIONS
@@ -608,7 +881,7 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
     # INITIAL SETUP
     #Calculate initial Density perturbation (non-dimensionalized and reduced)
     rho_FDM = mu*np.absolute(chi)**2 #just norm-squared of wavefunction
-    psi = chi* L**(-3/2)
+    psi = chi* L_s**(-3/2)
 
     #Check how it's normalized:
     print(f"integral of |chi|^2 : {np.sum(dz*rho_FDM)}")
@@ -617,12 +890,15 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
     m = mu*M_s
     
     #Calculate distribution on Mesh
-    grid_counts = NB.grid_count(stars,L,z)
-    rho_part = (grid_counts/dz)*sigma #this is actually like chi x chi*
-    
+    if Num_stars !=0:
+        rho_part = NB.particle_density(stars, L, z, variable_mass)
+    else:
+        rho_part = np.zeros_like(z)
+
     #Calculate total density
     rho = rho_FDM + rho_part
-
+    #check normalization
+    print(f"Density Normalization Check: {np.sum(rho)*dz}")
     #Now option to freeze the potential:
     if fixed_phi == True:
         phi = 0.5*sigma*((z**2) / (L/2)**2 - 1)  #equal to 0 at boundaries 
@@ -676,27 +952,16 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
     print(f"(Non-dim) Collapse time: {tau_collapse}")
 
     dtau = 0.01*tau_collapse
+    tau_stop = tau_collapse*collapse_times
     if sim_choice2 == 1:
-        if Long_time == True:
-            tau_stop = tau_collapse*100 #overide previous statement
-        else:
-            tau_stop = tau_collapse*2 #t_stop/T
+        tau_stop = tau_collapse*2 #over-ride previous tau_stop
     elif sim_choice2 == 2:
-        if Long_time == True:
-            tau_stop = tau_collapse*20 #overide previous statement
-        else:
-            tau_stop = tau_collapse*64
         collapse_index = int(np.floor(tau_collapse/dtau))
         snapshot_indices = np.multiply(collapse_index-1,[0,1,2,4,8,16,32,64])
         print(f"Snapshots at i = {snapshot_indices}")
     
     if track_stars == True or track_FDM == True:
-        if Long_time:
-            collapse_index = int(np.floor(tau_collapse/dtau))
-            snapshot_indices = np.multiply(collapse_index-1,[0,1,2,4,8,16,32,64,100])
-            print(f"Snapshots at i = {snapshot_indices}")
-            track_snapshot_indices = snapshot_indices
-        elif sim_choice2 == 1:
+        if sim_choice2 == 1:
             collapse_index = int(np.floor(tau_collapse/dtau))
             snapshot_indices = np.multiply(collapse_index-1,[0,1,2,4,8,16,32,64])        
             track_snapshot_indices = snapshot_indices
@@ -721,10 +986,12 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
         #################################################
         #POSITION SPACE CALCULATIONS:
         #1. Calculate Total Density
-        #Calculate Particle distribution on Mesh
-        grid_counts = NB.grid_count(stars,L,z)
-        rho_part = (grid_counts/dz)*sigma 
-
+        #Calculate distribution on Mesh
+        if Num_stars !=0:
+            rho_part = NB.particle_density(stars, L, z, variable_mass)
+        else:
+            rho_part = np.zeros_like(z)
+        
         #Then add the density from the FDM
         rho_FDM = mu*np.absolute(chi)**2
         rho = rho_FDM + rho_part 
@@ -746,7 +1013,7 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                 star = stars[j]
                 W = star.get_W(z,phi,L) #Find the potential energy:
                 
-                K = 0.5*sigma*stars[j].v**2 #Find kinetic energy
+                K = 0.5*star.mass*star.v**2 #Find kinetic energy
 
                 K_5stars = np.append(K_5stars,K)
                 W_5stars = np.append(W_5stars,W)
@@ -768,9 +1035,9 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                 W_array = np.array([])
                 for j in range(len(stars)):
                     star = stars[j]
-                    W = star.get_W(z,phi,L)#- sigma*star.x*g
+                    W = star.get_W(z,phi,L)
         
-                    K = 0.5*sigma*stars[j].v**2
+                    K = 0.5*star.mass*star.v**2
 
                     K_array = np.append(K_array,K)
                     W_array = np.append(W_array,W)
@@ -910,11 +1177,11 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
                 centroid = main_plot(sim_choice1,type,G_tilde,L,eta,
                 z,dz,chi,rho_FDM,rho_part,
                 stars,Num_bosons,Num_stars,
-                grid_counts,dtau,i,
+                dtau,i,
                 x_min,x_max,v_min,v_max,
                 y00_max,y10_max,y01_max,y11_max,
                 a_max,max_F,
-                Directory,folder_name,track_stars,track_centroid)
+                Directory,folder_name,track_stars,track_centroid, variable_mass)
 
                 if track_centroid == True:
                     if i == 0:
@@ -949,8 +1216,11 @@ def run_FDM_n_Bodies(sim_choice2, bc_choice, z, L, dz,
         #3 Re-update potential and acceleration fields
         
         #Calculate Particle distribution on Mesh
-        grid_counts = NB.grid_count(stars,L,z)
-        rho_part = (grid_counts/dz)*sigma 
+        if Num_stars !=0:
+            rho_part = NB.particle_density(stars, L, z, variable_mass)
+        else:
+            rho_part = np.zeros_like(z)
+        
         #Add the density from the FDM
         rho_FDM = mu*np.absolute(chi)**2 
         rho = rho_FDM + rho_part

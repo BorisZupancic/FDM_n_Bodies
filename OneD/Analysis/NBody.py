@@ -168,9 +168,12 @@ def scatter_Potential(W_Energies, stars):
     plt.scatter([star.x for star in stars],W_Energies[-1,:])
     plt.show()
 
-def all_stars_plots(indices,K_Energies,W_Energies):
+def all_stars_plots(indices,K_Energies,W_Energies, variable_mass = [False]):
+    
+    
     W_totals = 0.5 * np.array([np.sum(W_Energies[i,:]) for i in range(np.shape(W_Energies)[0])])
     K_totals = np.array([np.sum(K_Energies[i,:]) for i in range(np.shape(K_Energies)[0])])
+    
     
     # C = K_totals+W_totals
     # W_totals -= C
@@ -185,31 +188,61 @@ def all_stars_plots(indices,K_Energies,W_Energies):
     fig,ax = plt.subplots(1,4,figsize = (15,5))
     plt.suptitle("Energy Plots for Every Star, at Snapshot times/indices")
     
-    y_avg = np.mean(W_totals)
+    print(variable_mass)
+    #check whether there is variable mass:
+    if variable_mass[0] == 'True':
+        print(variable_mass[0])
+        fraction = variable_mass[1]
+        Num_stars = len(K_Energies[0,:])
+        print(Num_stars)
+        num_to_change = int(np.floor(fraction*Num_stars))
+        print(num_to_change)
+        W_totals = 0.5 * np.array([np.sum(W_Energies[i,:num_to_change]) for i in range(np.shape(W_Energies)[0])])
+        K_totals = np.array([np.sum(K_Energies[i,:num_to_change]) for i in range(np.shape(K_Energies)[0])])
+        W_totals2 = 0.5 * np.array([np.sum(W_Energies[i,num_to_change:]) for i in range(np.shape(W_Energies)[0])])
+        K_totals2 = np.array([np.sum(K_Energies[i,num_to_change:]) for i in range(np.shape(K_Energies)[0])])
+        
+        ax[0].plot(indices,W_totals2,"b--", marker = "o",label = "Light")
+        ax[1].plot(indices,K_totals2,"b--", marker = "o",label = "Light")
+        ax[2].plot(indices,K_totals2+W_totals2,"b--", marker = "o",label = "$\\Sigma E$")
+        
+        ax[2].plot(indices,(K_totals+K_totals2+W_totals+ W_totals2)/2,"k--", marker = "o",label = "Heavy + Light")
+        
+    if variable_mass[0] == 'True':
+        y_avg = np.mean([np.mean(W_totals),np.mean(W_totals2)])
+    else: 
+        y_avg = np.mean([np.mean(W_totals)])
     y_min = y_avg - Dy/2
     y_max = y_avg + Dy/2
     ax[0].set_title("Potential Energy over time")
-    ax[0].plot(indices,W_totals,"--", marker = "o",label = "$\\Sigma W$")
+    ax[0].plot(indices,W_totals,"r--", marker = "o")#,label = "Heavy")
     ax[0].set_ylim(y_min,y_max)
+    ax[0].legend()
     
-    y_avg = np.mean(K_totals)
+    if variable_mass[0] == 'True':
+        y_avg = np.mean([np.mean(K_totals),np.mean(K_totals2)])
+    else: 
+        y_avg = np.mean([np.mean(K_totals)])
     y_min = y_avg - Dy/2
     y_max = y_avg + Dy/2
     ax[1].set_title("Kinetic Energy over time")
-    ax[1].plot(indices,K_totals,"--", marker = "o",label = "$\\Sigma K$")
+    ax[1].plot(indices,K_totals,"r--", marker = "o")#,label = "Heavy")
     ax[1].set_ylim(y_min,y_max)
     ax[1].legend()
     
-    y_avg = np.mean(K_totals+W_totals)
-    y_min = y_avg - Dy/2
+    if variable_mass[0] == 'True':
+        y_avg = np.mean([np.mean(W_totals+K_totals),np.mean(W_totals2+K_totals2)])
+    else: 
+        y_avg = np.mean([np.mean(W_totals+K_totals)])
+        y_min = y_avg - Dy/2
     y_max = y_avg + Dy/2
     ax[2].set_title("Total Energy K+W over time")
-    ax[2].plot(indices,K_totals+W_totals,"--", marker = "o",label = "$\\Sigma E$")
+    ax[2].plot(indices,K_totals+W_totals,"r--", marker = "o")#,label = "Heavy")
     ax[2].set_ylim(y_min,y_max)
     ax[2].legend()
 
     ax[3].set_title("Virial Ratio $|K/W|$ over time")
-    ax[3].plot(indices, Virial_ratios, "b--", marker = "o")
+    ax[3].plot(indices, Virial_ratios, "r-", marker = "o")
     plt.show()
 
 def plot_DeltaE(K_Energies,W_Energies):

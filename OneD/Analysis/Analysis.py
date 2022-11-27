@@ -32,7 +32,13 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
 
     #Load in the necessary quantities:
     Properties = np.loadtxt("Properties.csv", dtype = str, delimiter = ",")
-    L,mu,Num_bosons,sigma,Num_stars,r,N = [np.float(Properties[1::,1][i]) for i in range(7)]
+    print(Properties)
+    Properties = [Properties[1::,1][i] for i in range(len(Properties)-1)]
+    L,mu,Num_bosons,sigma = [np.float(Properties[i]) for i in range(4)]
+    fraction, sigma1, sigma2, Num_stars,r,N = [np.float(Properties[i]) for i in range(5,len(Properties))]
+    variable_mass = Properties[4]
+    variable_mass = [variable_mass, fraction, sigma1, sigma2]
+    
     print(f"r={r},Num_stars = {Num_stars}")
 
     percent_FDM = Num_bosons*mu / (Num_bosons*mu + Num_stars*sigma)
@@ -114,8 +120,12 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     phi_FDM = GF.fourier_potential(rho_FDM,L,type = type, G_tilde=G_tilde)
     phi = phi_part + phi_FDM
     
-    indices = 99*np.array([0,1,2,4,8,16,32,64])
-        
+    #length = len(K_Energies[0,:])
+    indices = np.array([i**2 for i in range(len(K_Energies[:,0]))])
+    print(len(indices))
+    indices = 99*indices
+    #indices = 99*np.array([0,1,2,4,8,16,32,64])
+    
     #######################################################
     ### FDM ANALAYSIS #######################################
     if Num_bosons != 0:
@@ -152,18 +162,51 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
 
         #NBody.select_stars_plots(z,K_5stars_Energies,W_5stars_Energies)
 
-        NBody.all_stars_plots(indices,K_Energies,W_Energies)
+        NBody.all_stars_plots(indices,K_Energies,W_Energies, variable_mass=variable_mass)
 
         plt.figure()
         Energies = W_Energies + K_Energies
-        plt.scatter(Energies[0,:],Energies[len(indices)-1,:], marker = ".", s = 1)
-        plt.plot([np.min(Energies[0,:]),np.max(Energies[0,:])],[np.min(Energies[len(indices)-1,:]),np.max(Energies[len(indices)-1,:])], "r-", label = "$y=x$")
+        if variable_mass[0]=='True':
+            fraction = variable_mass[1]
+            Num_stars = len(K_Energies[0,:])
+            num_to_change = int(np.floor(fraction*Num_stars))
+            plt.scatter(Energies[0,:num_to_change],Energies[len(indices)-1,:num_to_change], c = "red", marker = ".", s = 1,label = "Heavy")
+            plt.scatter(Energies[0,num_to_change:],Energies[len(indices)-1,num_to_change:], c = "blue", marker = ".", s = 1, label = "Light")
+        else:
+            plt.scatter(Energies[0,:],Energies[len(indices)-1,:], marker = ".", s = 1)   
+        
+        x_0 = np.min(Energies[0,:])
+        x_1 = np.max(Energies[0,:])
+        plt.plot([0,x_1],[0,x_1], "r-", label = "$y=x$")
         plt.title("$E_{final}$ vs $E_{initial}$")
         plt.xlabel("$E_{initial}$")
         plt.ylabel("$E_{final}$")
         plt.legend()
         plt.show()
 
+        if variable_mass[0]=='True':
+            fig, ax = plt.subplots(1,2, figsize =(10,5))
+        
+            fraction = variable_mass[1]
+            Num_stars = len(K_Energies[0,:])
+            num_to_change = int(np.floor(fraction*Num_stars))
+            Energies = W_Energies + K_Energies
+            ax[0].scatter(Energies[0,:num_to_change],Energies[len(indices)-1,:num_to_change], c = "red", marker = ".", s = 1,label = "Heavy")
+            x_0 = np.min(Energies[0,:num_to_change])
+            x_1 = np.max(Energies[0,:num_to_change])
+            ax[0].plot([x_0,x_1],[x_0,x_1], "k-", label = "$y=x$")
+            
+            ax[1].scatter(Energies[0,num_to_change:],Energies[len(indices)-1,num_to_change:], c = "blue", marker = ".", s = 1, label = "Light")
+            x_0 = np.min(Energies[0,num_to_change:])
+            x_1 = np.max(Energies[0,num_to_change:])
+            ax[1].plot([x_0,x_1],[x_0,x_1], "k-", label = "$y=x$")
+            
+            plt.suptitle("$E_{final}$ vs $E_{initial}$")
+            plt.xlabel("$E_{initial}$")
+            plt.ylabel("$E_{final}$")
+            plt.legend()
+            plt.show()
+        
         # fig, ax = plt.subplots(1,3)
         # ax[0].plot([np.sum(K_fine_Energies[i,:]) for i in range(1000)],label ="Kinetic")
         # ax[1].plot([np.sum(W_fine_Energies[i,:]) for i in range(1000)],label ="Potential")

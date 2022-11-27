@@ -72,6 +72,7 @@ dz = z[1]-z[0]
 print("")
 print("Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]")
 fixed_phi = input()
+print(fixed_phi)
 if fixed_phi == 'Y' or fixed_phi == 'y' or fixed_phi == None:
     fixed_phi = True
 if fixed_phi == 'n':
@@ -88,6 +89,69 @@ print("Do you want the full simulation [1] or snapshots [2]? Choose [1/2]")
 sim_choice2 = int(input())
 print("")
 
+print("How long to run for? Enter Integer for number of collapse times:")
+collapse_times = int(input())
+print(f"Will run for {collapse_times} collapse times")
+print("")
+
+#Create Initial Conditions:
+print("Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:")
+ICs = float(input())
+print("---Creating Initial Conditions---")
+if ICs == 1:
+    stars,chi = GF.gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
+elif ICs == 2:
+    stars,chi = GF.sine2_ICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
+elif ICs == 3:
+    fdm = False
+    if Num_bosons != 0:
+        fdm = True
+    
+    E0,v_sigma,f0 = .15, .3, .05
+    stars, chi = GF.BZ_SpitzerICs(Num_stars,z,E0,v_sigma,f0, fdm = fdm, mu = mu, Num_bosons=Num_bosons)
+    plt.figure()
+    plt.imshow(FDM.Husimi_phase(chi,z,dz,L,eta=10*r))
+    plt.show()
+
+    if Num_stars !=0:
+        sigma = stars[0].mass
+
+print("")
+
+print("Variable Star Masses [y/n]? (Split in two)")
+variable_mass = input()
+Total_mass = sigma*Num_stars + mu*Num_bosons
+
+if variable_mass == 'y':
+    print("[Y]. Splitting Stars in Two..")
+    fraction = 1/100
+    print(f"len(stars)={len(stars)}")
+    num_to_change = int(np.floor(fraction*len(stars)))
+    sigma1 = (Total_mass/2)/num_to_change #sigma*2
+    sigma2 = (Total_mass/2)/(len(stars)-num_to_change) #sigma*fraction
+
+    i_s = np.random.random_integers(0,len(stars),size=num_to_change)
+    part1 = []
+    part2 = []
+    for i in range(len(stars)):
+        if i in i_s:
+            part1.append(stars[i])
+        else:
+            part2.append(stars[i])
+    # excess = [stars[i] for i in i_s]#stars[0:num_to_change]
+    # right = stars[num_to_change:] 
+
+    stars1 = [NB.star(i, sigma1,part1[i].x, part1[i].v) for i in range(len(part1))]
+    stars2 = [NB.star(i, sigma2,part2[i].x, part2[i].v) for i in range(len(part2))]
+    
+    stars = [*stars1, *stars2]
+    print(f"len(stars1) = {len(stars1)}")
+    print(f"len(stars2) = {len(stars2)}")
+    print(f"len(stars) = {len(stars)}")
+
+    variable_mass = [True,fraction,sigma1,sigma2]
+else:
+    variable_mass = [False]
 
 ####################################################################
 #SET UP FOLDERS:
@@ -104,11 +168,13 @@ elif sim_choice2 == 2:
     elif Num_stars == 0:
         folder_name = f"OnlyFDM_r{r}_Snapshots"
 
-#print(os.path.exists(Directory+"/"+folder_name))
+print(os.getcwd())
+print(os.path.exists(Directory+"/"+folder_name))
 if os.path.exists(Directory+"/"+folder_name) == True:
     for file in os.listdir(Directory+"/"+folder_name):
         os.remove(Directory+"/"+folder_name+"/"+file)
     os.rmdir(Directory+"/"+folder_name)    
+print(Directory+"/"+folder_name)
 os.mkdir(Directory+"/"+folder_name)
 
 #####################################################################
@@ -124,25 +190,15 @@ if Num_stars != 0:
     track_stars = True
     track_stars_rms = True
 
-#Create Initial Conditions:
-print("Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:")
-ICs = float(input())
-if ICs == 1:
-    stars,chi = GF.gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
-elif ICs == 2:
-    stars,chi = GF.sine2_ICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
-elif ICs == 3:
-    xIC,vIC = GF.SpitzerICs(Num_stars)
-    stars = [NB.star(i,sigma,xIC[i],vIC[i]) for i in range(Num_stars)]
-    chi = np.zeros_like(z)
+
 
 #Run simulation on Initial Conditions:
-stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, bc_choice, z,L,dz,
+stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, collapse_times, bc_choice, z,L,dz,
                                                                                                       mu, Num_bosons, r, chi, 
                                                                                                       sigma,stars,
                                                                                                       v_s,L_s,
                                                                                                       Directory,folder_name, 
-                                                                                                      absolute_PLOT = True, track_stars = track_stars, track_stars_rms = track_stars_rms, track_centroid=True, fixed_phi = fixed_phi, track_FDM=True)
+                                                                                                      absolute_PLOT = True, track_stars = track_stars, track_stars_rms = track_stars_rms, track_centroid=True, fixed_phi = fixed_phi, track_FDM=True, variable_mass = variable_mass)
 print("Calculation and Plotting Done. Now Saving Data...")
 
 ############################
@@ -190,12 +246,30 @@ print("Data Saved.")
 
 et = time.time()
 elapsed_time = et-st
-print(f"Executed in {elapsed_time} seconds = {elapsed_time/60} minutes.")
-properties = [["Time Elapsed:", elapsed_time],
+print(f"Executed in {elapsed_time} seconds = {elapsed_time/60} minutes = {elapsed_time/3600} hours.")
+if variable_mass[0] == True:
+    properties = [["Time Elapsed:", elapsed_time],
               ["Box Length:", L],
               ["Boson Mass:",mu],
               ["Number of bosons:",Num_bosons],
-              ["Particle mass:",sigma],
+              ["Particle mass(es):",sigma],
+              ["Variable mass:", variable_mass[0]],
+              ["Variable mass fraction", variable_mass[1]],
+              ["sigma1", variable_mass[2]],
+              ["sigma2", variable_mass[3]],
+              ["Number of Particles:",Num_stars],
+              ["FDM Fuzziness:",r],
+              ["Grid Points:", N]]
+else:
+    properties = [["Time Elapsed:", elapsed_time],
+              ["Box Length:", L],
+              ["Boson Mass:",mu],
+              ["Number of bosons:",Num_bosons],
+              ["Particle mass(es):",sigma],
+              ["Variable mass:", variable_mass[0]],
+              ["Variable mass fraction", 0],
+              ["sigma1", sigma],
+              ["sigma2", 0],
               ["Number of Particles:",Num_stars],
               ["FDM Fuzziness:",r],
               ["Grid Points:", N]]

@@ -1,0 +1,91 @@
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/FDM
+/home/boris/Documents/Research/FDM_n_Bodies
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 1.000000 
+v_FDM dispersion = 0.580000
+Characteristic Radius: R_syst = 0.158000
+de Broglie Wavelength = 0.050000
+Fixed Potential: n
+BC choice : 1
+sim choice : 2
+Number collapse times: 50 
+ICs choice : 3
+Variable Mass : n 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/FDM
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 0.0
+
+Choose a FDM fuzziness.
+Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
+lambda_deB = 0.0079
+Fuzziness: r = 0.0003646239746235322
+Mass mu = 1371.275710864161, m = mu*M = 1371.275710864161
+
+Num_stars = 0
+sigma = 0
+Num_Bosons = 0.0007292479492470644
+mu = 1371.275710864161
+lambda_deB = 0.05
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+n
+
+Isolated [1] or Periodic [2] boundary conditions?
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+How long to run for? Enter Integer for number of collapse times:
+Will run for 50 collapse times
+
+Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+---Creating Initial Conditions---
+z_max = 0.5265265265265147
+Mass of stars: M=0.06355791285933851
+Length of Box =1.0530530530530293
+my_force_max = 0.3974549317700741
+force_max = 0.3977009628578353
+Check: 2*pi*M = 0.39934614423279624
+
+Checking Normalization
+Mine: 0.06325694345056837
+Larry's: 0.06355791285933851
+
+Mine/Larry's = 0.9952646429810207
+force_max * Mine/Larry's = 0.3958177068119117
+cut-off in z 0.5265265265265147
+len(rho)=1000
+len(phi)=1000
+1000
+No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+np.sum(np.abs(chi)**2)*dz = 0.07591285280562306
+Num_bosons = 0.0007292479492470644
+
+Variable Star Masses [y/n]? (Split in two)
+/home/boris/Documents/Research/FDM_n_Bodies
+True
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/FDM/OnlyFDM_r0.0003646239746235322_Snapshots
+Calculating and Plotting...
+integral of |chi|^2 : 104.09745119475717
+Numerically calculated integral of |psi|^2 : 0.07591285280562304
+Density Normalization Check: 104.09745119475718
+v_min = -1.144354500000026, v_max = 1.1420657910000256
+v_min = -1.144354500000026, v_max = 1.144354500000026
+51.996676871782384
+(Non-dim) Collapse time: 0.13867948037416758
+Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
+Sim will stop at tau = 6.933974018708379
+a_max = 1307.2517298694002
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 369.39370918273926 seconds = 6.156561819712321 minutes = 0.10260936366187201 hours.
