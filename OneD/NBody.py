@@ -6,7 +6,7 @@ from matplotlib.colors import LogNorm, Normalize
 import os
 import cv2 
 from PIL import Image 
-import OneD.Wave as Wave
+import OneD.FDM as FDM
 import OneD.Global as GF
 
 class star:
@@ -53,8 +53,8 @@ class star:
         if n < N-1:
             Potential = phi[n] + rem*(phi[n+1]-phi[n])/dz
         elif n == N-1:
-            Potential = phi[-1]+rem*(phi[0]-phi[-1])/dz
-        Potential -= np.max(phi)
+            Potential = phi[-1] + rem*(phi[0]-phi[-1])/dz
+        
         W = sigma*Potential
         return W
 
@@ -67,6 +67,10 @@ class star:
         a = g(self.x)
         self.v += 0.5*dt*a #KICK to get full new velocity(this will change for self-gravitating system)
 
+
+def collectEnergies(K1,W1,K2=None,W2=None):
+    
+    return
 # class star_collection:
 #     def __init__(self, stars: star):
 #         self.stars = stars
@@ -97,13 +101,39 @@ def grid_count(stars,L,x):
     grid_counts = interp_bins(x,bin_counts)
     return grid_counts
 
-def acceleration(phi,L):
-    grad = GF.fourier_gradient(phi,L)
+def particle_density(stars, L, z, variable_mass):
+    if variable_mass[0] == True:
+        fraction = variable_mass[1]
+        sigma1 = variable_mass[2]
+        sigma2 = variable_mass[3]
+    
+        num_to_change = int(np.floor(fraction*len(stars)))
+    
+        grid_counts1 = grid_count(stars[0:num_to_change],L,z)
+        grid_counts2 = grid_count(stars[num_to_change:],L,z)
+
+        dz = z[1]-z[0]
+        rho_part = (grid_counts1*sigma1 + grid_counts2*sigma2)/dz
+    
+    else:
+        sigma = stars[0].mass 
+        grid_counts = grid_count(stars,L,z)
+        dz = z[1]-z[0]
+        rho_part = (grid_counts/dz)*sigma #this is actually like chi x chi*
+    
+    return rho_part
+    
+def acceleration(phi,L,type):
+    grad = GF.gradient(phi,L,type = type)#GF.fourier_gradient(phi,L)
     #grad = np.gradient(phi,dz)
     Force = -grad
     
     acceleration = Force#/m #acceleration per particle, at each point of the grid
     return acceleration#/L #divide by L to keep it non-dimensional    
+
+def g_interp(z,zp,fp):
+    return 
+
 
 def g(star,acceleration,dz):
     a_grid = acceleration
@@ -117,16 +147,19 @@ def g(star,acceleration,dz):
         value = a_grid[i] + rem*(a_grid[0]-a_grid[i])/dz
     return value
 
-def accel_funct(a_grid,L,dz):
+def accel_funct(a_grid,L,dz, type = 'Periodic'):
     def g(z):
         N = len(a_grid)
         j = int((z+L/2)//dz)
+        
         rem = (z+L/2) % dz 
-        value = 0
+        value = a_grid[j]
         if j < N-1:
-            value = a_grid[j] + rem*(a_grid[j+1]-a_grid[j])/dz
-        elif j == N-1:
-            value = a_grid[-1]+rem*(a_grid[0]-a_grid[-1])/dz
+            value += rem*(a_grid[j+1]-a_grid[j])/dz
+        elif j == N-1 and type=='Periodic':
+            value += rem*(a_grid[0]-a_grid[-1])/dz
+        elif j == N-1 and type == 'Isolated':
+            value += rem*(a_grid[N-1]-a_grid[N-2])/dz
         return value
     return g
 

@@ -8,18 +8,24 @@ import cv2
 from PIL import Image 
 import scipy.optimize as opt
 
-import OneD.Wave as Wave
+import OneD.FDM as FDM
 import OneD.NBody as NB
 import OneD.Global as GF
 
 def plot_centroids(indices,centroids):
     plt.figure()
-    plt.title("Centroid over time")
-    plt.plot(indices,centroids,'bo-')
+    plt.title("Position Centroid over time")
+    plt.plot(indices,centroids[:,0],'bo-')
+    #plt.scatter(centroids[:,0],centroids[:,1])
+    plt.ylim(-1,1)
+    plt.show()
+    
+    plt.figure()
+    plt.title("Velocity Centroid over time")
+    plt.plot(indices,centroids[:,1],'ro-')
     plt.show()
 
-
-def rms_stuff(sigma,stars,phi_part,L,z,dz):
+def rms_stuff(sigma,stars,phi_part,L,z,dz,type = 'Periodic'):
     Num_stars = len(stars)
 
     grid_counts = NB.grid_count(stars,L,z)
@@ -57,7 +63,7 @@ def rms_stuff(sigma,stars,phi_part,L,z,dz):
     print(f"K_avg = {K/Num_stars}")
 
     # Compute Total Potential of stars:
-    a_part = NB.acceleration(phi_part,L)
+    a_part = NB.acceleration(phi_part,L,type = type)
     W = 0
     for star in stars:
         g = NB.g(star,a_part,dz)
@@ -68,6 +74,25 @@ def rms_stuff(sigma,stars,phi_part,L,z,dz):
     print(f"W_avg = {W/Num_stars}")
 
     return z_rms, v_rms 
+
+
+def rms_plots(indices, z_rms_s,v_rms_s):
+    #i = 99*np.array([0,1,2,4,8,16,32,64])
+    
+    fig,ax = plt.subplots(1,2,figsize = (12,5))
+    plt.suptitle("RMS values over time")
+    
+    ax[0].plot(indices, z_rms_s[:len(indices)], "o-")
+    ax[0].set_xlabel("Time [index]")
+    ax[0].set_title("$z_{rms}$")
+    ax[0].set_ylim(0,1)
+
+    ax[1].plot(indices, v_rms_s[:len(indices)], "o-")
+    ax[1].set_xlabel("Time [index]")
+    ax[1].set_title("$v_{rms}$")
+    ax[1].set_ylim(0,1)
+    
+    plt.show()
     
 def v_distribution(stars,L):
     Num_stars= len(stars)
@@ -138,34 +163,86 @@ def select_stars_plots(z,K_5stars_Energies,W_5stars_Energies):
     ax[3].plot(Virial_ratios, "b--",marker = ".")
     plt.show()
 
-def all_stars_plots(K_Energies,W_Energies):
+def scatter_Potential(W_Energies, stars):
+    plt.figure()
+    plt.scatter([star.x for star in stars],W_Energies[-1,:])
+    plt.show()
+
+def all_stars_plots(indices,K_Energies,W_Energies, variable_mass = [False]):
+    
+    
     W_totals = 0.5 * np.array([np.sum(W_Energies[i,:]) for i in range(np.shape(W_Energies)[0])])
     K_totals = np.array([np.sum(K_Energies[i,:]) for i in range(np.shape(K_Energies)[0])])
+    
+    
+    # C = K_totals+W_totals
+    # W_totals -= C
     Virial_ratios = np.abs(K_totals/W_totals)
     #print(Virial_ratios)
-    indices = 99*np.array([0,1,2,4,8,16,32,64])
     
-    fig,ax = plt.subplots(1,4,figsize = (20,5))
-    plt.suptitle("Energy Plots for Every Star, at Snapshot times/indices")
-    ax[0].set_title("Potential Energy over time")
-    ax[0].plot(indices,W_totals,"--", marker = "o",label = "$\\Sigma W$")
-    
-    ax[1].set_title("Kinetic Energy over time")
-    ax[1].plot(indices,K_totals,"--", marker = "o",label = "$\\Sigma K$")
-    ax[1].legend()
-
     #set the scale:
-    Dy = np.max(K_totals)-np.min(K_totals)
-    y_min = np.min(K_totals+W_totals)
-    y_min = y_min - Dy/2
-    y_max = Dy + y_min
+    Dy_1 = np.max(K_totals)-np.min(K_totals)
+    Dy_2 = np.max(W_totals)-np.min(W_totals)
+    Dy = np.max([Dy_1,Dy_2])
+    
+    fig,ax = plt.subplots(1,4,figsize = (15,5))
+    plt.suptitle("Energy Plots for Every Star, at Snapshot times/indices")
+    
+    print(variable_mass)
+    #check whether there is variable mass:
+    if variable_mass[0] == 'True':
+        print(variable_mass[0])
+        fraction = variable_mass[1]
+        Num_stars = len(K_Energies[0,:])
+        print(Num_stars)
+        num_to_change = int(np.floor(fraction*Num_stars))
+        print(num_to_change)
+        W_totals = 0.5 * np.array([np.sum(W_Energies[i,:num_to_change]) for i in range(np.shape(W_Energies)[0])])
+        K_totals = np.array([np.sum(K_Energies[i,:num_to_change]) for i in range(np.shape(K_Energies)[0])])
+        W_totals2 = 0.5 * np.array([np.sum(W_Energies[i,num_to_change:]) for i in range(np.shape(W_Energies)[0])])
+        K_totals2 = np.array([np.sum(K_Energies[i,num_to_change:]) for i in range(np.shape(K_Energies)[0])])
+        
+        ax[0].plot(indices,W_totals2,"b--", marker = "o",label = "Light")
+        ax[1].plot(indices,K_totals2,"b--", marker = "o",label = "Light")
+        ax[2].plot(indices,K_totals2+W_totals2,"b--", marker = "o",label = "$\\Sigma E$")
+        
+        ax[2].plot(indices,(K_totals+K_totals2+W_totals+ W_totals2)/2,"k--", marker = "o",label = "Heavy + Light")
+        
+    if variable_mass[0] == 'True':
+        y_avg = np.mean([np.mean(W_totals),np.mean(W_totals2)])
+    else: 
+        y_avg = np.mean([np.mean(W_totals)])
+    y_min = y_avg - Dy/2
+    y_max = y_avg + Dy/2
+    ax[0].set_title("Potential Energy over time")
+    ax[0].plot(indices,W_totals,"r--", marker = "o")#,label = "Heavy")
+    ax[0].set_ylim(y_min,y_max)
+    ax[0].legend()
+    
+    if variable_mass[0] == 'True':
+        y_avg = np.mean([np.mean(K_totals),np.mean(K_totals2)])
+    else: 
+        y_avg = np.mean([np.mean(K_totals)])
+    y_min = y_avg - Dy/2
+    y_max = y_avg + Dy/2
+    ax[1].set_title("Kinetic Energy over time")
+    ax[1].plot(indices,K_totals,"r--", marker = "o")#,label = "Heavy")
+    ax[1].set_ylim(y_min,y_max)
+    ax[1].legend()
+    
+    if variable_mass[0] == 'True':
+        y_avg = np.mean([np.mean(W_totals+K_totals),np.mean(W_totals2+K_totals2)])
+    else: 
+        y_avg = np.mean([np.mean(W_totals+K_totals)])
+        y_min = y_avg - Dy/2
+    y_max = y_avg + Dy/2
     ax[2].set_title("Total Energy K+W over time")
-    ax[2].plot(indices,K_totals+W_totals,"--", marker = "o",label = "$\\Sigma E$")
+    ax[2].plot(indices,K_totals+W_totals,"r--", marker = "o")#,label = "Heavy")
     ax[2].set_ylim(y_min,y_max)
     ax[2].legend()
 
     ax[3].set_title("Virial Ratio $|K/W|$ over time")
-    ax[3].plot(indices, Virial_ratios, "b--", marker = "o")
+    ax[3].plot(indices, Virial_ratios, "r-", marker = "o")
     plt.show()
 
 def plot_DeltaE(K_Energies,W_Energies):
@@ -200,94 +277,55 @@ def rho_distribution(z,rho_part):
     rho = rho_part
     N = len(z)
 
+    #METHOD 1: Split across peak of distribution
+    #Find center of distribution / max value and index:
+    i = 0
+    max_bool = False
+    while max_bool == False:
+        for j in range(len(rho)):
+            if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
+                #then set i equal to j
+                i = j 
+                #break
+            else:
+                max_index = i
+                max_bool = True
 
-    # #METHOD 1: Split across peak of distribution
-    # #Find center of distribution / max value and index:
-    # i = 0
-    # max_bool = False
-    # while max_bool == False:
-    #     for j in range(len(rho)):
-    #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
-    #             #then set i equal to j
-    #             i = j 
-    #             #break
-    #         else:
-    #             max_index = i
-    #             max_bool = True
+    i = max_index
+    #z = z-z[i]
 
-    # # max_rho = rho[max_index]
-    # # print(max_rho,max_index,z[i])
-
-
-    # i = max_index
-    # z = z-z[i]
-    # z_left = z[0:i]
-    # z_right = z[i:]
-    # rho_left = rho[0:i]
-    # rho_right = rho[i:]
-
-    # #rho_avgd = (rho_left[len(rho_left)-len(rho_right):][::-1]+rho_right)/2
-    # #rho_avgd = np.append(rho_avgd, rho_left[0:len(rho_left)-len(rho_right)][::-1])
-    # fig = plt.figure()
-    # plt.title("Density of Particles Split in Half")
-    # plt.plot(z_right,rho_right)
-    # plt.plot(z_left,rho_left)
-    # plt.plot(z[i],rho[i], "ro", label = "Peak of Distribution")
-    # plt.legend()
-    # plt.show()
+    z_left = z[0:i]
+    z_right = z[i:]
+    rho_left = rho[0:i]
+    rho_right = rho[i:]
 
     fig = plt.figure()
     plt.title("Density of Particles Split in Half")
-    plt.plot(z[N//2:],rho[N//2:])
-    plt.plot(z[0:N//2],rho[0:N//2])
-    plt.plot(z[N//2],rho[N//2],"bo", label = "Centroid of Distribution")
+    plt.plot(z_right,rho_right)
+    plt.plot(z_left,rho_left)
+    plt.plot(z[i],rho[i], "ro", label = "Peak of Distribution")
     plt.legend()
     plt.show()
 
-
-    #Other method to accumulate left and right sides:
-    # for star in stars:
-    #     star.x = star.x - z[i] #shift
-    #     star.reposition(L) #reposition
-
-    # grid_counts = NB.grid_count(stars,L,z)
-    # rho_part = (grid_counts/dz)*sigma 
-    # #Add the density from the FDM
-    # rho_FDM = np.absolute(chi)**2 
-    # rho = rho_FDM + rho_part
-
-    #Find center of distribution / max value and index:
-    # i = 0
-    # max_bool = False
-    # while max_bool == False:
-    #     for j in range(len(rho)):
-    #         if rho[j] > rho[i]: #if you come across an index j that points to a larger value..
-    #             #then set i equal to j
-    #             i = j 
-    #             #break
-    #         else:
-    #             max_index = i
-    #             max_bool = True
-
-    # max_rho = rho[max_index]
-
-    #METHOD 2: Split across z = 0 (i.e: z[N//2])
-    rho_left = rho[0:N//2]
-    rho_right = rho[N//2:]
-    rho_whole = rho_left[::-1] + rho_right
-
-    z_left = z[0:N//2]
-    z_right = z[N//2:]
-
-    fig,ax = plt.subplots(1,2,figsize = (10,4))
-    plt.suptitle("Combined Left and Right halves of Distribution")
-    ax[0].plot(z_right,rho_whole,'--')
+    rho_left = rho_left[::-1]
+    if len(rho_left) >= len(rho_right):
+        rho_whole = 0.5*(rho_left[0:len(rho_right)]+rho_right) #np.append(0.5*(rho_left[0:len(rho_right)]+rho_right) , rho_left[len(rho_right):])
+    elif len(rho_right)>len(rho_left):
+        rho_whole = 0.5*(rho_left+rho_right[0:len(rho_left)]) #np.append(0.5*(rho_left+rho_right[0:len(rho_left)]) , rho_left[len(rho_left):])
+    z_whole = np.linspace(0.001,1,len(rho_whole))
+    
+    fig,ax = plt.subplots(1,2,figsize = (10,5))
+    
+    ax[0].plot(z_whole,rho_whole)
+    ax[0].set_title("Particles Density Profile")
     ax[0].set_xlabel("$|z|$")
-    ax[0].set_ylabel("$|rho|$")
-
-    ax[1].plot(np.log(z_right),np.log(rho_whole))
-    ax[1].set_xlabel("$log|z|$")
-    ax[1].set_ylabel("$log|rho|$")
+    ax[0].set_ylabel("$|\\rho|$")
+    
+    ax[1].plot(np.log(z_whole),np.log(rho_whole))
+    ax[1].set_title("Particles Density Profile")
+    ax[1].set_xlabel("$ln|z|$")
+    ax[1].set_ylabel("$ln|\\rho|$")
+    
     plt.show()
-
-    return z_left,z_right,rho_left,rho_right
+    
+    return z_whole, rho_whole #z_left,z_right,rho_left,rho_right
