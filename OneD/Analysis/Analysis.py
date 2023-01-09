@@ -77,17 +77,24 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         z_rms_storage = np.loadtxt("z_rms_storage.csv", dtype = float, delimiter=",")
         v_rms_storage = np.loadtxt("v_rms_storage.csv", dtype = float, delimiter=",")
         
+        indices = np.array([i**2 for i in range(len(centroids))])
+        indices = 99*indices
+        
     elif Num_stars == 0:
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
-        centroids = None
+        centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
         stars_x = None
         star_v = None
         K_5stars_Energies = None
         W_5stars_Energies = None 
         K_Energies = None 
         W_Energies = None
+
+        indices = np.array([i**2 for i in range(len(Ks_FDM))])
+        print(len(indices))
+        indices = 99*indices
 
     elif Num_bosons!=0 and Num_stars !=0:
         stars_x = np.loadtxt("Stars_Pos.csv", dtype = float, delimiter=",")
@@ -108,6 +115,9 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
         
+        indices = np.array([i**2 for i in range(len(K_Energies[:,0]))])
+        print(len(indices))
+        indices = 99*indices
     #Setup our data post-import:
     #print(stars_x)
     if stars_x is not None:
@@ -121,9 +131,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     phi = phi_part + phi_FDM
     
     #length = len(K_Energies[0,:])
-    indices = np.array([i**2 for i in range(len(K_Energies[:,0]))])
-    print(len(indices))
-    indices = 99*indices
+    
     #indices = 99*np.array([0,1,2,4,8,16,32,64])
     
     #######################################################
@@ -133,6 +141,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         chi_tilde = np.fft.fft(chi,len(chi))
         sum = np.sum(np.sum(np.absolute(chi_tilde)**2))
         print(f"sum chi^2 = {sum}")
+
+        NBody.plot_centroids(indices,centroids)
 
         print((len(chi)**2)/2)
         print(np.sum(dz*np.absolute(chi)**2))
@@ -169,15 +179,17 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         if variable_mass[0]=='True':
             fraction = variable_mass[1]
             Num_stars = len(K_Energies[0,:])
+
             num_to_change = int(np.floor(fraction*Num_stars))
             plt.scatter(Energies[0,:num_to_change],Energies[len(indices)-1,:num_to_change], c = "red", marker = ".", s = 1,label = "Heavy")
             plt.scatter(Energies[0,num_to_change:],Energies[len(indices)-1,num_to_change:], c = "blue", marker = ".", s = 1, label = "Light")
+
         else:
             plt.scatter(Energies[0,:],Energies[len(indices)-1,:], marker = ".", s = 1)   
         
         x_0 = np.min(Energies[0,:])
         x_1 = np.max(Energies[0,:])
-        plt.plot([0,x_1],[0,x_1], "r-", label = "$y=x$")
+        plt.plot([x_0,x_1],[x_0,x_1], "r-", label = "$y=x$")
         plt.title("$E_{final}$ vs $E_{initial}$")
         plt.xlabel("$E_{initial}$")
         plt.ylabel("$E_{final}$")
@@ -185,7 +197,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         plt.show()
 
         if variable_mass[0]=='True':
-            fig, ax = plt.subplots(1,2, figsize =(10,5))
+            fig, ax = plt.subplots(1,2, figsize =(12,5))
         
             fraction = variable_mass[1]
             Num_stars = len(K_Energies[0,:])
@@ -195,15 +207,19 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
             x_0 = np.min(Energies[0,:num_to_change])
             x_1 = np.max(Energies[0,:num_to_change])
             ax[0].plot([x_0,x_1],[x_0,x_1], "k-", label = "$y=x$")
+            ax[0].set_title("Heavier Particles")
             
             ax[1].scatter(Energies[0,num_to_change:],Energies[len(indices)-1,num_to_change:], c = "blue", marker = ".", s = 1, label = "Light")
             x_0 = np.min(Energies[0,num_to_change:])
             x_1 = np.max(Energies[0,num_to_change:])
-            ax[1].plot([x_0,x_1],[x_0,x_1], "k-", label = "$y=x$")
-            
-            plt.suptitle("$E_{final}$ vs $E_{initial}$")
-            plt.xlabel("$E_{initial}$")
-            plt.ylabel("$E_{final}$")
+            ax[1].plot([0,x_1],[0,x_1], "k-", label = "$y=x$")
+            ax[1].set_ylim(-0.00001,0.00035)
+            ax[1].set_xlim(-0.00001,0.00035)
+            ax[1].set_title("Lighter Particles")
+            plt.suptitle("$E_{final}$ vs $E_{initial}$", fontsize = 20)
+            ax[1].set_xlabel("$E_{initial}$")
+            ax[0].set_xlabel("$E_{initial}$")
+            ax[0].set_ylabel("$E_{final}$")
             plt.legend()
             plt.show()
         
@@ -235,8 +251,9 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
 
         NBz_whole,NBrho_whole = NBody.rho_distribution(z,rho_part)
 
-        popt = curve_fitting(L,NBz_whole,NBrho_whole,type = type, G_tilde  = G_tilde)
-        print(f"fit params = {popt}")
+        if type == 'Periodic':
+            popt = curve_fitting(L,NBz_whole,NBrho_whole,type = type, G_tilde  = G_tilde)
+            print(f"fit params = {popt}")
 
     if Num_bosons != 0 and Num_stars != 0:
         W_totals = 0.5 * np.array([np.sum(W_Energies[i,:]) for i in range(np.shape(W_Energies)[0])])
@@ -405,7 +422,7 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type = 'Periodic', G_tilde = None
 
     #PHASE SPACE CALCULATION:
     #Don't calculate if sim_choice1 == '2'
-    eta = 10*r #resolution for Husimi
+    eta=(z[-1]-z[0])/np.sqrt(np.pi*len(chi)/2) #resolution for Husimi
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     #rescale wavenumber k to velocity v:
     hbar = 1

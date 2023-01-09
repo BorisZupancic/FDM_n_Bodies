@@ -207,37 +207,25 @@ def all_stars_plots(indices,K_Energies,W_Energies, variable_mass = [False]):
         ax[2].plot(indices,K_totals2+W_totals2,"b--", marker = "o",label = "$\\Sigma E$")
         
         ax[2].plot(indices,(K_totals+K_totals2+W_totals+ W_totals2)/2,"k--", marker = "o",label = "Heavy + Light")
-        
-    if variable_mass[0] == 'True':
-        y_avg = np.mean([np.mean(W_totals),np.mean(W_totals2)])
-    else: 
-        y_avg = np.mean([np.mean(W_totals)])
-    y_min = y_avg - Dy/2
-    y_max = y_avg + Dy/2
+        y_tot_avg = np.mean((K_totals+K_totals2+W_totals+ W_totals2)/2)
+    else:
+        y_tot_avg = np.mean((K_totals+W_totals))
     ax[0].set_title("Potential Energy over time")
-    ax[0].plot(indices,W_totals,"r--", marker = "o")#,label = "Heavy")
-    ax[0].set_ylim(y_min,y_max)
+    ax[0].plot(indices,W_totals,"r--", marker = "o", label = "Heavy")
     ax[0].legend()
     
-    if variable_mass[0] == 'True':
-        y_avg = np.mean([np.mean(K_totals),np.mean(K_totals2)])
-    else: 
-        y_avg = np.mean([np.mean(K_totals)])
-    y_min = y_avg - Dy/2
-    y_max = y_avg + Dy/2
     ax[1].set_title("Kinetic Energy over time")
-    ax[1].plot(indices,K_totals,"r--", marker = "o")#,label = "Heavy")
-    ax[1].set_ylim(y_min,y_max)
+    ax[1].plot(indices,K_totals,"r--", marker = "o",label = "Heavy")
     ax[1].legend()
     
     if variable_mass[0] == 'True':
         y_avg = np.mean([np.mean(W_totals+K_totals),np.mean(W_totals2+K_totals2)])
     else: 
-        y_avg = np.mean([np.mean(W_totals+K_totals)])
-        y_min = y_avg - Dy/2
+        y_avg = y_tot_avg
+    y_min = y_avg - Dy/2
     y_max = y_avg + Dy/2
     ax[2].set_title("Total Energy K+W over time")
-    ax[2].plot(indices,K_totals+W_totals,"r--", marker = "o")#,label = "Heavy")
+    ax[2].plot(indices,K_totals+W_totals,"r--", marker = "o",label = "Heavy")
     ax[2].set_ylim(y_min,y_max)
     ax[2].legend()
 

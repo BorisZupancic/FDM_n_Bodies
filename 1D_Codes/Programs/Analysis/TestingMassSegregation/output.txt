@@ -3,11 +3,11 @@
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 0.000000 
-Num_particles 50000
+Num_particles 10000
 Fixed Potential: n
 BC choice : 1
 sim choice : 2
-Number collapse times: 50 
+Number collapse times: 100 
 ICs choice : 1
 Boson std : 0.100000
 Variable Mass : y 
@@ -26,8 +26,8 @@ Fraction of Particles (by mass) = 1.0
 
 
 How many particles?
-Num_stars = 50000
-sigma = 2e-05
+Num_stars = 10000
+sigma = 0.0001
 Num_Bosons = 0.0
 mu = 1
 lambda_deB = None
@@ -41,7 +41,7 @@ Isolated [1] or Periodic [2] boundary conditions?
 Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
 
 How long to run for? Enter Integer for number of collapse times:
-Will run for 50 collapse times
+Will run for 100 collapse times
 
 Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
 ---Creating Initial Conditions---
@@ -49,15 +49,15 @@ Choose the standard deviation of the Particle system (as fraction of the box wid
 
 Variable Star Masses [y/n]? (Split in two)
 [Y]. Splitting Stars in Two..
-len(stars)=50000
-/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/ProgramV2.py:133: DeprecationWarning: This function is deprecated. Please call randint(0, 50000 + 1) instead
+len(stars)=10000
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/ProgramV2.py:133: DeprecationWarning: This function is deprecated. Please call randint(0, 10000 + 1) instead
   i_s = np.random.random_integers(0,len(stars),size=num_to_change)
-len(stars1) = 499
-len(stars2) = 49501
-len(stars) = 50000
+len(stars1) = 486
+len(stars2) = 9514
+len(stars) = 10000
 /home/boris/Documents/Research/FDM_n_Bodies
 True
-/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingMassSegregation/50000ParticlesOnly_Snapshots
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingMassSegregation/10000ParticlesOnly_Snapshots
 Calculating and Plotting...
 integral of |chi|^2 : 0.0
 Numerically calculated integral of |psi|^2 : 0.0
@@ -66,11 +66,11 @@ v_min = -1569.225530468137, v_max = 1566.0870794072007
 v_min = -1569.225530468137, v_max = 1569.225530468137
 0.49950000000001127
 (Non-dim) Collapse time: 1.4149211999266802
-Snapshots at i = [   0   98  196  392  784 1568 3136 6272]
-Sim will stop at tau = 70.74605999633401
-a_max = 12.560084285891547
+Snapshots at i = [    0    98   196   392   784  1568  3136  6272 12544 25088]
+Sim will stop at tau = 141.49211999266802
+a_max = 12.560084285893321
 /home/boris/Documents/Research/FDM_n_Bodies/OneD/FDM.py:125: RuntimeWarning: invalid value encountered in true_divide
   F_s = F_s/Norm_const
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 4361.921041965485 seconds = 72.69868403275808 minutes = 1.2116447338793013 hours.
+Executed in 6564.688482999802 seconds = 109.41147471666336 minutes = 1.823524578611056 hours.

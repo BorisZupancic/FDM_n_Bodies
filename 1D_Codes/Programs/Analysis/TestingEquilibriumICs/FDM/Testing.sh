@@ -8,7 +8,7 @@ pwd
 
 parent="Analysis/TestingEquilibriumICs/FDM"
 #Possible choices for deB wavelength:
-de_Broglie='0.05' #('2' '1' '0.5' '0.1' '0.05' '0.01')
+de_Broglie='0.1' #('2' '1' '0.5' '0.1' '0.05' '0.01')
 #Choice of Fixed potential:
 fixed_phi='n'
 
@@ -30,9 +30,8 @@ var_mass='n'
 #Percentage of FDM by mass:
 percent='1'
 
-#Mass ratios:
-v_rms=0.58
-z_rms=0.158
+v_rms=0.28
+z_rms=0.07
     
 #Run through just particles:
 for lambda in "${de_Broglie[@]}"; do

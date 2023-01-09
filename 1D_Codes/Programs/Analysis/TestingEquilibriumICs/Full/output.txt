@@ -1,0 +1,92 @@
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/Full
+/home/boris/Documents/Research/FDM_n_Bodies
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.500000 
+v_FDM dispersion = 0.280000
+Characteristic size: R_syst = 0.070000
+de Broglie Wavelength = 0.100000
+Num_particles = 10000
+Fixed Phi: n
+BC choice: 1
+sim choice : 2
+collapse times : 50
+IC choice : 3 
+Variable Mass : n 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/Full
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 0.5
+
+Choose a FDM fuzziness.
+Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
+lambda_deB = 0.007000000000000001
+Fuzziness: r = 0.00015597184423005747
+Mass mu = 3205.706789377339, m = mu*M = 3205.706789377339
+
+How many particles?
+Num_stars = 10000
+sigma = 5e-05
+Num_Bosons = 0.00015597184423005747
+mu = 3205.706789377339
+lambda_deB = 0.1
+Number of Grid points: 6888
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+n
+
+Isolated [1] or Periodic [2] boundary conditions?
+1
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+2
+
+How long to run for? Enter Integer for number of dynamical times:
+Will run for 50 dynamical times
+
+Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+3.0
+---Creating Initial Conditions---
+Mass from distribution function: M = 0.46329839234123465
+cut-off in z 0.3232176564542001
+-----Sampling Stars-----
+Re-centering position and velocity centroids.
+z_centroid = -0.00021848617122188392, v_centroid = 0.0005715573343829783
+z_centroid = 2.353672812205332e-18, v_centroid = 9.592326932761353e-18
+0.10352418354522253
+0.4154313944407079
+t_dynamical = 0.24919682270184787
+------Sampling FDM------
+z_rms = 0.07013025950852457
+v_rms = 0.2804960140734464
+t_dynamical = 0.2500223033121652
+Area under mu|chi|^2: 0.46329839234123465
+Area under rho (from DF): 0.46329839234123465
+Correcting center of momentum offset ...
+k_mean=(30.13381859812608-3.889351850933567e-06j)
+v_mean = (0.00940005452088746-1.213258762099392e-09j)
+-->
+k_mean=(0.0009766074476419938-3.877138551140097e-06j)
+v_mean = (3.046465293950621e-07-1.2094489003135478e-09j)
+Spitzer ICs instantiated.
+
+Variable Star Masses [y/n]? (Split in two)
+/home/boris/Documents/Research/FDM_n_Bodies
+False
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/Full/FDM0.5_r0.00015597184423005747_Snapshots
+Calculating and Plotting...
+integral of |chi|^2 : 0.46329834229666
+Numerically calculated integral of |psi|^2 : 0.000144522993753477
+Density Normalization Check: 0.9265967346378946
+v_min = -3.3746299999998857, v_max = 3.3746299999998857
+Snapshots at i = [    0    99   198   396   792  1584  3168  6336 12672 25344]
+Sim will stop at tau = 12.50111516560826
+a_max = 5.8215566549836

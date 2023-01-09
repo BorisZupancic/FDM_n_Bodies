@@ -1,0 +1,83 @@
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/NBody
+/home/boris/Documents/Research/FDM_n_Bodies
+---------------------New Sim---------------------
+L = 2.000000
+FDM percentage by mass : 0.000000 
+Num_particles 50000
+Fixed Potential: n
+BC choice : 1
+sim choice : 2
+Collapse Times : 50
+ICs choice : 3
+Variable Mass : y 
+Boson std: No Bosons
+Particle std = 0.100000 
+ 
+Specify Path to create folder for saving images.
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/NBody
+Length scale L = 1
+Velocity scale v = 1
+Time scale T = 1.0
+Mass scale M = 1
+
+Choose a (non-dimensional) box length:
+
+Choose percentage (as a decimal) of FDM (by mass)
+Fraction of Particles (by mass) = 1.0
+
+
+How many particles?
+Num_stars = 50000
+sigma = 2e-05
+Num_Bosons = 0.0
+mu = 1
+lambda_deB = None
+Number of Grid points: 1000
+
+Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+n
+
+Isolated [1] or Periodic [2] boundary conditions?
+
+Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+
+How long to run for? Enter Integer for number of dynamical times:
+Will run for 50 dynamical times
+
+Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+---Creating Initial Conditions---
+Mass from distribution function: M = 0.4663576831051987
+cut-off in z 0.32232232232231506
+-----Sampling Stars-----
+Re-centering position and velocity centroids.
+z_centroid = 0.0002051524588249287, v_centroid = -0.002204632171907683
+z_centroid = 1.4388490399142028e-18, v_centroid = 5.115907697472722e-18
+0.10370622906803835
+0.4112180296321375
+t_dynamical = 0.25219280672301897
+Spitzer ICs instantiated.
+
+Variable Star Masses [y/n]? (Split in two)
+[Y]. Splitting Stars in Two..
+len(stars)=50000
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/ProgramV2.py:130: DeprecationWarning: This function is deprecated. Please call randint(0, 50000 + 1) instead
+  i_s = np.random.random_integers(0,len(stars),size=num_to_change)
+len(stars1) = 2443
+len(stars2) = 47557
+len(stars) = 50000
+/home/boris/Documents/Research/FDM_n_Bodies
+False
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/NBody/50000ParticlesOnly_Snapshots
+Calculating and Plotting...
+integral of |chi|^2 : 0.0
+Numerically calculated integral of |psi|^2 : 0.0
+Density Normalization Check: 0.46635768310519865
+v_min = -1569.225530468137, v_max = 1569.225530468137
+Snapshots at i = [    0    99   198   396   792  1584  3168  6336 12672 25344]
+Sim will stop at tau = 12.609640336150948
+a_max = 5.85749180718085
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/FDM.py:125: RuntimeWarning: invalid value encountered in true_divide
+  F_s = F_s/Norm_const
+Calculation and Plotting Done. Now Saving Data...
+Data Saved.
+Executed in 1358.6344528198242 seconds = 22.64390754699707 minutes = 0.37739845911661785 hours.

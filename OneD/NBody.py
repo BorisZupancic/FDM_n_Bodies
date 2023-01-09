@@ -17,9 +17,26 @@ class star:
         self.v = v #it's "instantaneous" velocity
         #self.bin = bin #bin it resides in: index value between 0 and N-1
 
+    # def get_g(self,a_grid,L,dz, type = 'Periodic'):
+    #     N = len(a_grid)
+
+    #     z = self.x
+    #     j = int((z+L/2)//dz)
+        
+    #     rem = (z+L/2) % dz 
+    #     value = a_grid[j]
+    #     if j < N-1:
+    #         value += rem*(a_grid[j+1]-a_grid[j])/dz
+    #     elif j == N-1 and type=='Periodic':
+    #         value += rem*(a_grid[0]-a_grid[-1])/dz
+    #     elif j == N-1 and type == 'Isolated':
+    #         value += rem*(a_grid[N-1]-a_grid[N-2])/dz
+    #     return value
+        
     def kick_star(self,g,dt):
-        a = g(self.x)
-        self.v += dt*a #KICK velocity
+        #a = g(self.x)
+        a = g
+        self.v += dt*a#KICK velocity
 
     def drift_star(self,dt):
         self.x += self.v*dt #DRIFT the position
@@ -82,6 +99,7 @@ def collectEnergies(K1,W1,K2=None,W2=None):
 # Define an algorithm to calculate the acceleration at each point of the grid
 #... given a set of stars
 ########
+
 def interp_bins(x,bin_counts):
     grid_counts = np.zeros_like(x)
     for i in range(len(x)):

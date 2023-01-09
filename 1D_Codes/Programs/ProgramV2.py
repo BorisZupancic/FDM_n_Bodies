@@ -54,13 +54,12 @@ print(f"lambda_deB = {lambda_deB}")
 
 #Set up Grid
 L = L*L_s #new length. Length of the box
-N = 10**3 #number of grid points
+N = 1*10**3 #number of grid points
 if Num_bosons != 0: #want to determine the proper number of grid points to have
     lambda_deB = lambda_deB*R
     N_new = int(np.ceil(L/lambda_deB)+1)
-    if N_new >= N:
-        N = 12 *N_new #overwrite number of grid points
-    #     N = 8*N_new #overwrite number of grid points
+    # if N_new >= N:
+    N = 24 * N_new #overwrite number of grid points
 print(f"Number of Grid points: {N}")
 z = np.linspace(-L/2,L/2,N)
 dz = z[1]-z[0]
@@ -80,41 +79,36 @@ if fixed_phi == 'n':
 print("")
 print("Isolated [1] or Periodic [2] boundary conditions?")
 bc_choice = int(input())
-# if bc_choice == 1:
-#     pass
-# elif bc_choice == 2:
-#     G = None
+print(bc_choice)
 print("")
 print("Do you want the full simulation [1] or snapshots [2]? Choose [1/2]")
 sim_choice2 = int(input())
+print(sim_choice2)
 print("")
 
-print("How long to run for? Enter Integer for number of collapse times:")
-collapse_times = int(input())
-print(f"Will run for {collapse_times} collapse times")
+print("How long to run for? Enter Integer for number of dynamical times:")
+dynamical_times = int(input())
+print(f"Will run for {dynamical_times} dynamical times")
 print("")
 
 #Create Initial Conditions:
 print("Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:")
 ICs = float(input())
+print(ICs)
 print("---Creating Initial Conditions---")
 if ICs == 1:
-    stars,chi = GF.gaussianICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
+    stars, chi, T_Dynamical = GF.gaussianICs(z, L, mu, Num_bosons, sigma, Num_stars, v_s, L_s)
+    print("Gaussian ICs instantiated.")
 elif ICs == 2:
     stars,chi = GF.sine2_ICs(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
+    print("Sine^2 ICs instantiated.")
 elif ICs == 3:
-    fdm = False
-    if Num_bosons != 0:
-        fdm = True
+    E0,v_sigma,f0 = .7, .5, .1 #.15, .3, .05
+    stars, chi, T_Dynamical = GF.BZ_SpitzerICs(Num_stars,z,E0,v_sigma,f0, mu = mu, Num_bosons=Num_bosons, r=r)
     
-    E0,v_sigma,f0 = .15, .3, .05
-    stars, chi = GF.BZ_SpitzerICs(Num_stars,z,E0,v_sigma,f0, fdm = fdm, mu = mu, Num_bosons=Num_bosons)
-    plt.figure()
-    plt.imshow(FDM.Husimi_phase(chi,z,dz,L,eta=10*r))
-    plt.show()
-
     if Num_stars !=0:
         sigma = stars[0].mass
+    print("Spitzer ICs instantiated.")
 
 print("")
 
@@ -124,7 +118,7 @@ Total_mass = sigma*Num_stars + mu*Num_bosons
 
 if variable_mass == 'y':
     print("[Y]. Splitting Stars in Two..")
-    fraction = 1/100
+    fraction = 1/20
     print(f"len(stars)={len(stars)}")
     num_to_change = int(np.floor(fraction*len(stars)))
     sigma1 = (Total_mass/2)/num_to_change #sigma*2
@@ -143,6 +137,15 @@ if variable_mass == 'y':
 
     stars1 = [NB.star(i, sigma1,part1[i].x, part1[i].v) for i in range(len(part1))]
     stars2 = [NB.star(i, sigma2,part2[i].x, part2[i].v) for i in range(len(part2))]
+    #re-center position and velocity centroids:
+    z1_centroid, z2_centroid = [np.mean([star.x for star in stars1]),np.mean([star.x for star in stars2])]
+    v1_centroid, v2_centroid = [np.mean([star.v for star in stars1]),np.mean([star.v for star in stars2])]
+    for star in stars1:
+        star.x += -z1_centroid
+        star.v += -v1_centroid
+    for star in stars2:
+        star.x += -z2_centroid
+        star.v += -v2_centroid
     
     stars = [*stars1, *stars2]
     print(f"len(stars1) = {len(stars1)}")
@@ -193,7 +196,7 @@ if Num_stars != 0:
 
 
 #Run simulation on Initial Conditions:
-stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, collapse_times, bc_choice, z,L,dz,
+stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dynamical_times, T_Dynamical, bc_choice, z,L,dz,
                                                                                                       mu, Num_bosons, r, chi, 
                                                                                                       sigma,stars,
                                                                                                       v_s,L_s,
@@ -224,6 +227,7 @@ elif Num_stars == 0:
     np.savetxt(f"Chi.csv", chi, delimiter =",")
     np.savetxt(f"W_FDM_storage.csv", W_FDM_storage, delimiter =",")
     np.savetxt(f"K_FDM_storage.csv", K_FDM_storage, delimiter =",")
+    np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
 elif Num_bosons!=0 and Num_stars!=0:
     np.savetxt(f"Stars_Pos.csv",[star.x for star in stars], delimiter = ",")
     np.savetxt(f"Stars_Vel.csv",[star.v for star in stars], delimiter = ",")

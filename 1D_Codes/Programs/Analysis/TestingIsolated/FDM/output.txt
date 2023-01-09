@@ -9,6 +9,8 @@ de Broglie Wavelength = 2.000000
 Fixed Phi? n
 BC choice : 1
 sim choice : 2
+Number collapse times: 20 
+ICs choice : 1
 Boson std = 0.100000
 Particle std = 0.000000 
  
@@ -35,28 +37,41 @@ sigma = 0
 Num_Bosons = 0.029169917969882577
 mu = 34.28189277160403
 lambda_deB = 2.0
-Number of Grid points: 1000
+Number of Grid points: 192
 
 Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+n
 
 Isolated [1] or Periodic [2] boundary conditions?
 
 Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
 
-Calculating and Plotting...
+How long to run for? Enter Integer for number of collapse times:
+Will run for 20 collapse times
+
+Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+---Creating Initial Conditions---
 Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
-integral of |chi|^2 : 0.9999994414547742
-Numerically calculated integral of |psi|^2 : 0.0036462377096455204
-v_min = -45.77418000000103, v_max = 45.68263164000103
-v_min = -45.77418000000103, v_max = 45.77418000000103
-0.499499721006671
-(Non-dim) Collapse time: 1.4149215950755862
-Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
-Sim will stop at tau = 90.55498208483752
-a_max = 3.140019273294911
+Gaussian ICs instantiated.
+
+Variable Star Masses [y/n]? (Split in two)
+/home/boris/Documents/Research/FDM_n_Bodies
+True
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingIsolated/FDM/OnlyFDM_r0.014584958984941289_Snapshots
+Calculating and Plotting...
+integral of |chi|^2 : 0.9999995011428802
+Numerically calculated integral of |psi|^2 : 0.02916990341826132
+Density Normalization Check: 0.9999995011428802
+v_min = -8.75161999999999, v_max = 8.660457291666658
+v_min = -8.75161999999999, v_max = 8.75161999999999
+0.49739558520388
+(Non-dim) Collapse time: 1.4179112127093356
+Snapshots at i = [    0    98   196   392   784  1568  3136  6272 12544 25088]
+Sim will stop at tau = 28.358224254186712
+a_max = 12.533553309369836
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 239.19497656822205 seconds = 3.9865829428037007 minutes.
+Executed in 18.91080331802368 seconds = 0.31518005530039467 minutes = 0.0052530009216732445 hours.
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
@@ -66,6 +81,8 @@ de Broglie Wavelength = 1.000000
 Fixed Phi? n
 BC choice : 1
 sim choice : 2
+Number collapse times: 20 
+ICs choice : 1
 Boson std = 0.100000
 Particle std = 0.000000 
  
@@ -92,28 +109,41 @@ sigma = 0
 Num_Bosons = 0.014584958984941289
 mu = 68.56378554320806
 lambda_deB = 1.0
-Number of Grid points: 1000
+Number of Grid points: 336
 
 Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+n
 
 Isolated [1] or Periodic [2] boundary conditions?
 
 Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
 
-Calculating and Plotting...
+How long to run for? Enter Integer for number of collapse times:
+Will run for 20 collapse times
+
+Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+---Creating Initial Conditions---
 Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
-integral of |chi|^2 : 0.9999994414547742
-Numerically calculated integral of |psi|^2 : 0.0018231188548227602
-v_min = -22.887090000000516, v_max = 22.841315820000514
-v_min = -22.887090000000516, v_max = 22.887090000000516
-0.499499721006671
-(Non-dim) Collapse time: 1.4149215950755862
-Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
-Sim will stop at tau = 90.55498208483752
-a_max = 3.1400192732935466
+Gaussian ICs instantiated.
+
+Variable Star Masses [y/n]? (Split in two)
+/home/boris/Documents/Research/FDM_n_Bodies
+True
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingIsolated/FDM/OnlyFDM_r0.007292479492470644_Snapshots
+Calculating and Plotting...
+integral of |chi|^2 : 0.9999994699729233
+Numerically calculated integral of |psi|^2 : 0.014584951254518115
+Density Normalization Check: 0.9999994699729234
+v_min = -7.674850000000064, v_max = 7.629166369047682
+v_min = -7.674850000000064, v_max = 7.674850000000064
+0.4985116405371014
+(Non-dim) Collapse time: 1.416323131376725
+Snapshots at i = [    0    99   198   396   792  1584  3168  6336 12672 25344]
+Sim will stop at tau = 28.3264626275345
+a_max = 12.547635671196076
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 207.59014582633972 seconds = 3.4598357637723285 minutes.
+Executed in 18.932882070541382 seconds = 0.315548034509023 minutes = 0.005259133908483717 hours.
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
@@ -123,6 +153,8 @@ de Broglie Wavelength = 0.500000
 Fixed Phi? n
 BC choice : 1
 sim choice : 2
+Number collapse times: 20 
+ICs choice : 1
 Boson std = 0.100000
 Particle std = 0.000000 
  
@@ -149,28 +181,41 @@ sigma = 0
 Num_Bosons = 0.007292479492470644
 mu = 137.1275710864161
 lambda_deB = 0.5
-Number of Grid points: 1000
+Number of Grid points: 648
 
 Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+n
 
 Isolated [1] or Periodic [2] boundary conditions?
 
 Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
 
-Calculating and Plotting...
+How long to run for? Enter Integer for number of collapse times:
+Will run for 20 collapse times
+
+Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+---Creating Initial Conditions---
 Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
-integral of |chi|^2 : 0.9999994414547742
-Numerically calculated integral of |psi|^2 : 0.0009115594274113801
-v_min = -11.443545000000258, v_max = 11.420657910000257
-v_min = -11.443545000000258, v_max = 11.443545000000258
-0.499499721006671
-(Non-dim) Collapse time: 1.4149215950755862
-Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
-Sim will stop at tau = 90.55498208483752
-a_max = 3.140019273294911
+Gaussian ICs instantiated.
+
+Variable Star Masses [y/n]? (Split in two)
+/home/boris/Documents/Research/FDM_n_Bodies
+True
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingIsolated/FDM/OnlyFDM_r0.003646239746235322_Snapshots
+Calculating and Plotting...
+integral of |chi|^2 : 0.9999994493795961
+Numerically calculated integral of |psi|^2 : 0.00729247547708264
+Density Normalization Check: 0.9999994493795961
+v_min = -7.41138499999989, v_max = 7.3885103549381625
+v_min = -7.41138499999989, v_max = 7.41138499999989
+0.4992281201763805
+(Non-dim) Collapse time: 1.4153064307957157
+Snapshots at i = [    0    99   198   396   792  1584  3168  6336 12672 25344]
+Sim will stop at tau = 28.306128615914314
+a_max = 12.556659673920876
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 205.41787815093994 seconds = 3.4236313025156657 minutes.
+Executed in 19.45701289176941 seconds = 0.32428354819615685 minutes = 0.00540472580326928 hours.
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
@@ -180,6 +225,8 @@ de Broglie Wavelength = 0.100000
 Fixed Phi? n
 BC choice : 1
 sim choice : 2
+Number collapse times: 20 
+ICs choice : 1
 Boson std = 0.100000
 Particle std = 0.000000 
  
@@ -206,28 +253,41 @@ sigma = 0
 Num_Bosons = 0.001458495898494129
 mu = 685.6378554320805
 lambda_deB = 0.1
-Number of Grid points: 1000
+Number of Grid points: 3072
 
 Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+n
 
 Isolated [1] or Periodic [2] boundary conditions?
 
 Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
 
-Calculating and Plotting...
+How long to run for? Enter Integer for number of collapse times:
+Will run for 20 collapse times
+
+Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+---Creating Initial Conditions---
 Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
-integral of |chi|^2 : 0.9999994414547742
-Numerically calculated integral of |psi|^2 : 0.00018231188548227604
-v_min = -2.288709000000052, v_max = 2.284131582000051
-v_min = -2.288709000000052, v_max = 2.288709000000052
-0.499499721006671
-(Non-dim) Collapse time: 1.4149215950755862
-Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
-Sim will stop at tau = 90.55498208483752
-a_max = 3.140019273293319
+Gaussian ICs instantiated.
+
+Variable Star Masses [y/n]? (Split in two)
+/home/boris/Documents/Research/FDM_n_Bodies
+True
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingIsolated/FDM/OnlyFDM_r0.0007292479492470644_Snapshots
+Calculating and Plotting...
+integral of |chi|^2 : 0.9999994315249081
+Numerically calculated integral of |psi|^2 : 0.001458495069375539
+Density Normalization Check: 0.9999994315249082
+v_min = -7.035660999999783, v_max = 7.031080491536241
+v_min = -7.035660999999783, v_max = 7.035660999999783
+0.49983695543829726
+(Non-dim) Collapse time: 1.4144441986110357
+Snapshots at i = [    0    99   198   396   792  1584  3168  6336 12672 25344]
+Sim will stop at tau = 28.288883972220713
+a_max = 12.564317771364585
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 206.35735177993774 seconds = 3.439289196332296 minutes.
+Executed in 48.4415123462677 seconds = 0.8073585391044616 minutes = 0.013455975651741028 hours.
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
@@ -237,6 +297,8 @@ de Broglie Wavelength = 0.050000
 Fixed Phi? n
 BC choice : 1
 sim choice : 2
+Number collapse times: 20 
+ICs choice : 1
 Boson std = 0.100000
 Particle std = 0.000000 
  
@@ -263,79 +325,38 @@ sigma = 0
 Num_Bosons = 0.0007292479492470644
 mu = 1371.275710864161
 lambda_deB = 0.05
-Number of Grid points: 1000
+Number of Grid points: 6120
 
 Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
+n
 
 Isolated [1] or Periodic [2] boundary conditions?
 
 Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
 
-Calculating and Plotting...
+How long to run for? Enter Integer for number of collapse times:
+Will run for 20 collapse times
+
+Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+---Creating Initial Conditions---
 Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
-integral of |chi|^2 : 0.9999994414547742
-Numerically calculated integral of |psi|^2 : 9.115594274113801e-05
-v_min = -1.144354500000026, v_max = 1.1420657910000256
-v_min = -1.144354500000026, v_max = 1.144354500000026
-0.499499721006671
-(Non-dim) Collapse time: 1.4149215950755862
-Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
-Sim will stop at tau = 90.55498208483752
-a_max = 3.140019273293774
+Gaussian ICs instantiated.
+
+Variable Star Masses [y/n]? (Split in two)
+/home/boris/Documents/Research/FDM_n_Bodies
+True
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingIsolated/FDM/OnlyFDM_r0.0003646239746235322_Snapshots
+Calculating and Plotting...
+integral of |chi|^2 : 0.9999994291232701
+Numerically calculated integral of |psi|^2 : 0.00072924753293638
+Density Normalization Check: 0.9999994291232701
+v_min = -7.009314499999681, v_max = 7.007023874346087
+v_min = -7.009314499999681, v_max = 7.009314499999681
+0.4999180152618473
+(Non-dim) Collapse time: 1.4143295205620956
+Snapshots at i = [    0    99   198   396   792  1584  3168  6336 12672 25344]
+Sim will stop at tau = 28.28659041124191
+a_max = 12.565336662690243
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 222.04707980155945 seconds = 3.700784663359324 minutes.
----------------------New Sim---------------------
-L = 2.000000
-FDM percentage by mass : 1.000000 
-v_FDM dispersion = 0.580000
-Characteristic Radius: R_syst = 0.158000
-de Broglie Wavelength = 0.010000
-Fixed Phi? n
-BC choice : 1
-sim choice : 2
-Boson std = 0.100000
-Particle std = 0.000000 
- 
-Specify Path to create folder for saving images.
-/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingIsolated/FDM
-Length scale L = 1
-Velocity scale v = 1
-Time scale T = 1.0
-Mass scale M = 1
-
-Choose a (non-dimensional) box length:
-
-Choose percentage (as a decimal) of FDM (by mass)
-Fraction of Particles (by mass) = 0.0
-
-Choose a FDM fuzziness.
-Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
-lambda_deB = 0.00158
-Fuzziness: r = 7.292479492470644e-05
-Mass mu = 6856.378554320806, m = mu*M = 6856.378554320806
-
-Num_stars = 0
-sigma = 0
-Num_Bosons = 0.0001458495898494129
-mu = 6856.378554320806
-lambda_deB = 0.01
-Number of Grid points: 15204
-
-Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
-
-Isolated [1] or Periodic [2] boundary conditions?
-
-Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
-
-Calculating and Plotting...
-Choose the standard deviation of the initial FDM distribution (as a fraction of the box width):
-integral of |chi|^2 : 0.9999994276739852
-Numerically calculated integral of |psi|^2 : 1.82311882969873e-05
-v_min = -3.483007300000861, v_max = 3.4825491301376665
-v_min = -3.483007300000861, v_max = 3.483007300000861
-0.49996682777332796
-(Non-dim) Collapse time: 1.4142604773203715
-Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
-Sim will stop at tau = 90.51267054850378
-a_max = 3.1414875345071778
+Executed in 110.20709180831909 seconds = 1.8367848634719848 minutes = 0.030613081057866413 hours.

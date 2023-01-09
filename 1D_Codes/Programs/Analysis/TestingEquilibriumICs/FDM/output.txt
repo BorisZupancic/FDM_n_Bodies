@@ -3,9 +3,9 @@
 ---------------------New Sim---------------------
 L = 2.000000
 FDM percentage by mass : 1.000000 
-v_FDM dispersion = 0.580000
-Characteristic Radius: R_syst = 0.158000
-de Broglie Wavelength = 0.050000
+v_FDM dispersion = 0.280000
+Characteristic Radius: R_syst = 0.070000
+de Broglie Wavelength = 0.100000
 Fixed Potential: n
 BC choice : 1
 sim choice : 2
@@ -27,65 +27,64 @@ Fraction of Particles (by mass) = 0.0
 
 Choose a FDM fuzziness.
 Input a FDM velocity dispersion, Characteristic size, and de Broglie wavelength ratio to Characteristic size:
-lambda_deB = 0.0079
-Fuzziness: r = 0.0003646239746235322
-Mass mu = 1371.275710864161, m = mu*M = 1371.275710864161
+lambda_deB = 0.007000000000000001
+Fuzziness: r = 0.00015597184423005747
+Mass mu = 3205.706789377339, m = mu*M = 3205.706789377339
 
 Num_stars = 0
 sigma = 0
-Num_Bosons = 0.0007292479492470644
-mu = 1371.275710864161
-lambda_deB = 0.05
-Number of Grid points: 1000
+Num_Bosons = 0.00031194368846011494
+mu = 3205.706789377339
+lambda_deB = 0.1
+Number of Grid points: 6888
 
 Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
 n
 
 Isolated [1] or Periodic [2] boundary conditions?
+1
 
 Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+2
 
-How long to run for? Enter Integer for number of collapse times:
-Will run for 50 collapse times
+How long to run for? Enter Integer for number of dynamical times:
+Will run for 50 dynamical times
 
 Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+3.0
 ---Creating Initial Conditions---
-z_max = 0.5265265265265147
-Mass of stars: M=0.06355791285933851
-Length of Box =1.0530530530530293
-my_force_max = 0.3974549317700741
-force_max = 0.3977009628578353
-Check: 2*pi*M = 0.39934614423279624
-
-Checking Normalization
-Mine: 0.06325694345056837
-Larry's: 0.06355791285933851
-
-Mine/Larry's = 0.9952646429810207
-force_max * Mine/Larry's = 0.3958177068119117
-cut-off in z 0.5265265265265147
-len(rho)=1000
-len(phi)=1000
-1000
-No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
-np.sum(np.abs(chi)**2)*dz = 0.07591285280562306
-Num_bosons = 0.0007292479492470644
+Mass from distribution function: M = 0.46329839234123465
+cut-off in z 0.3232176564542001
+------Sampling FDM------
+z_rms = 0.07013025950852457
+v_rms = 0.2804960140734464
+t_dynamical = 0.2500223033121652
+Area under mu|chi|^2: 0.46329839234123465
+Area under rho (from DF): 0.46329839234123465
+Correcting center of momentum offset ...
+k_mean=(-31.251320528352622+1.501290306421252e-05j)
+v_mean = (-0.009748652194863625+4.683180356344615e-09j)
+-->
+k_mean=(-0.0011327891851207982+1.5160874244636312e-05j)
+v_mean = (-3.5336643665430975e-07+4.72933903215181e-09j)
+Spitzer ICs instantiated.
 
 Variable Star Masses [y/n]? (Split in two)
 /home/boris/Documents/Research/FDM_n_Bodies
-True
-/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/FDM/OnlyFDM_r0.0003646239746235322_Snapshots
+False
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/FDM/OnlyFDM_r0.00015597184423005747_Snapshots
 Calculating and Plotting...
-integral of |chi|^2 : 104.09745119475717
-Numerically calculated integral of |psi|^2 : 0.07591285280562304
-Density Normalization Check: 104.09745119475718
-v_min = -1.144354500000026, v_max = 1.1420657910000256
-v_min = -1.144354500000026, v_max = 1.144354500000026
-51.996676871782384
-(Non-dim) Collapse time: 0.13867948037416758
-Snapshots at i = [   0   99  198  396  792 1584 3168 6336]
-Sim will stop at tau = 6.933974018708379
-a_max = 1307.2517298694002
+integral of |chi|^2 : 0.4632986268260364
+Numerically calculated integral of |psi|^2 : 0.00014452308251062013
+Density Normalization Check: 0.46329862682603645
+v_min = -3.3746299999998857, v_max = 3.3746299999998857
+Snapshots at i = [    0    99   198   396   792  1584  3168  6336 12672 25344]
+Sim will stop at tau = 12.50111516560826
+a_max = 5.821559601401532
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Global.py:378: RuntimeWarning: invalid value encountered in true_divide
+  mu = np.mean(rho_FDM/(np.absolute(chi)**2))
+/home/boris/Documents/Research/FDM_n_Bodies/OneD/Global.py:379: RuntimeWarning: invalid value encountered in cdouble_scalars
+  centroid_v = k_mean/mu
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 369.39370918273926 seconds = 6.156561819712321 minutes = 0.10260936366187201 hours.
+Executed in 230.71374130249023 seconds = 3.8452290217081706 minutes = 0.06408715036180285 hours.
