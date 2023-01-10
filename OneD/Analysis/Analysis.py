@@ -7,6 +7,7 @@ import subprocess
 import cv2 
 from PIL import Image 
 import scipy.optimize as opt
+from scipy.stats import gaussian_kde
 
 import OneD.FDM as FDM_OG
 import OneD.NBody as NB
@@ -71,20 +72,20 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
             K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
             W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
         chi = np.loadtxt(f"Chi.csv", dtype = complex, delimiter=",")
-        centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
+        part_centroids = np.loadtxt("Particle_Centroids.csv",dtype = float, delimiter=',')
         #z_rms_storage = None#np.loadtxt("z_rms_storage.csv", dtype = float, delimiter=",")
         #v_rms_storage = None#np.loadtxt("v_rms_storage.csv", dtype = float, delimiter=",")
         z_rms_storage = np.loadtxt("z_rms_storage.csv", dtype = float, delimiter=",")
         v_rms_storage = np.loadtxt("v_rms_storage.csv", dtype = float, delimiter=",")
         
-        indices = np.array([i**2 for i in range(len(centroids))])
+        indices = np.array([i**2 for i in range(len(part_centroids))])
         indices = 99*indices
         
     elif Num_stars == 0:
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
-        centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
+        fdm_centroids = np.loadtxt("FDM_Centroids.csv",dtype = float, delimiter=',')
         stars_x = None
         star_v = None
         K_5stars_Energies = None
@@ -100,7 +101,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         stars_x = np.loadtxt("Stars_Pos.csv", dtype = float, delimiter=",")
         stars_v = np.loadtxt("Stars_Vel.csv", dtype = float, delimiter=",")
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
-        #centroids = np.loadtxt("Centroids.csv",dtype = float, delimiter=',')
+        part_centroids = np.loadtxt("Particle_Centroids.csv",dtype = float, delimiter=',')
+        fdm_centroids = np.loadtxt("FDM_Centroids.csv",dtype = float, delimiter=',')
         z_rms_storage = np.loadtxt("z_rms_storage.csv", dtype = float, delimiter=",")
         v_rms_storage = np.loadtxt("v_rms_storage.csv", dtype = float, delimiter=",")
         
@@ -109,8 +111,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         #K_fine_Energies = np.loadtxt("K_star_fine_Energies.csv", dtype = float,delimiter = ",")
         #W_fine_Energies = np.loadtxt("W_star_fine_Energies.csv", dtype = float,delimiter = ",")
         
-        #K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
-        #W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
+        K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
+        W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
         
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
@@ -142,7 +144,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         sum = np.sum(np.sum(np.absolute(chi_tilde)**2))
         print(f"sum chi^2 = {sum}")
 
-        NBody.plot_centroids(indices,centroids)
+        NBody.plot_centroids(indices,fdm_centroids)
 
         print((len(chi)**2)/2)
         print(np.sum(dz*np.absolute(chi)**2))
@@ -159,8 +161,9 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     ### NBODY ANALYSIS ######################################
     if Num_stars != 0:
         #indices = [0,100,200,400,800,1600,3200,6400]
-        #NBody.plot_centroids(indices,centroids)
+        NBody.plot_centroids(indices,part_centroids)
         
+
         #Calculate rms velocity and position
         z_rms,v_rms = NBody.rms_stuff(sigma,stars,phi_part,L,z,dz,type = type)
 
@@ -185,14 +188,17 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
             plt.scatter(Energies[0,num_to_change:],Energies[len(indices)-1,num_to_change:], c = "blue", marker = ".", s = 1, label = "Light")
 
         else:
-            plt.scatter(Energies[0,:],Energies[len(indices)-1,:], marker = ".", s = 1)   
-        
+            xy = np.vstack([Energies[0,:],Energies[len(indices)-1,:]])
+            z = gaussian_kde(xy)(xy)
+            plt.scatter(Energies[0,:],Energies[len(indices)-1,:], c=z,marker = ".", s = 1)   
+            
         x_0 = np.min(Energies[0,:])
         x_1 = np.max(Energies[0,:])
         plt.plot([x_0,x_1],[x_0,x_1], "r-", label = "$y=x$")
-        plt.title("$E_{final}$ vs $E_{initial}$")
+        plt.title("Scattered $E_{final}$ vs $E_{initial}$ (of Stars)")
         plt.xlabel("$E_{initial}$")
         plt.ylabel("$E_{final}$")
+        plt.colorbar()
         plt.legend()
         plt.show()
 
@@ -203,23 +209,27 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
             Num_stars = len(K_Energies[0,:])
             num_to_change = int(np.floor(fraction*Num_stars))
             Energies = W_Energies + K_Energies
-            ax[0].scatter(Energies[0,:num_to_change],Energies[len(indices)-1,:num_to_change], c = "red", marker = ".", s = 1,label = "Heavy")
+            xy0 = np.vstack([Energies[0,:num_to_change],Energies[len(indices)-1,:num_to_change]])
+            z0 = gaussian_kde(xy0)(xy0)
+            ax[0].scatter(Energies[0,:num_to_change],Energies[len(indices)-1,:num_to_change], c = z0, marker = ".", s = 1,label = "Heavy")
             x_0 = np.min(Energies[0,:num_to_change])
             x_1 = np.max(Energies[0,:num_to_change])
             ax[0].plot([x_0,x_1],[x_0,x_1], "k-", label = "$y=x$")
             ax[0].set_title("Heavier Particles")
             
-            ax[1].scatter(Energies[0,num_to_change:],Energies[len(indices)-1,num_to_change:], c = "blue", marker = ".", s = 1, label = "Light")
+
+            xy1 = np.vstack([Energies[0,num_to_change:],Energies[len(indices)-1,num_to_change:]])
+            z1 = gaussian_kde(xy1)(xy1)
+            ax[1].scatter(Energies[0,num_to_change:],Energies[len(indices)-1,num_to_change:], c = z1, marker = ".", s = 1, label = "Light")
             x_0 = np.min(Energies[0,num_to_change:])
             x_1 = np.max(Energies[0,num_to_change:])
-            ax[1].plot([0,x_1],[0,x_1], "k-", label = "$y=x$")
-            ax[1].set_ylim(-0.00001,0.00035)
-            ax[1].set_xlim(-0.00001,0.00035)
+            ax[1].plot([x_0,x_1],[x_0,x_1], "k-", label = "$y=x$")
             ax[1].set_title("Lighter Particles")
-            plt.suptitle("$E_{final}$ vs $E_{initial}$", fontsize = 20)
             ax[1].set_xlabel("$E_{initial}$")
             ax[0].set_xlabel("$E_{initial}$")
             ax[0].set_ylabel("$E_{final}$")
+            
+            plt.suptitle("Scattered $E_{final}$ vs $E_{initial}$ (of Stars)", fontsize = 20)
             plt.legend()
             plt.show()
         
@@ -231,27 +241,26 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         # plt.legend()
         # plt.show()
         #NBody.all_stars_plots(np.arange(1000,4999),K_fine_Energies,W_fine_Energies)
-        NBody.scatter_Potential(W_Energies,stars)
-
-        plt.figure()
-        plt.scatter([star.x for star in stars],[star.get_W(z,phi,L) for star in stars])
-        plt.show()
-        phi_part = GF.fourier_potential(rho_part,L,type = 'Isolated', G_tilde = G_tilde)
-        print(f"Total Potential: {np.sum(phi_part*rho_part)*dz}")
-        print(f"Total Potential: {np.sum(-1*z*np.gradient(phi_part,dz)*rho_part)*dz}")
         
-        # plot_DeltaE(K_Energies,W_Energies)
-
+        # plt.figure()
+        # plt.scatter([star.x for star in stars],[star.get_W(z,phi,L) for star in stars])
+        # plt.show()
+        # phi_part = GF.fourier_potential(rho_part,L,type = 'Isolated', G_tilde = G_tilde)
+        # print(f"Total Potential: {np.sum(phi_part*rho_part)*dz}")
+        # print(f"Total Potential: {np.sum(-1*z*np.gradient(phi_part,dz)*rho_part)*dz}")
+        
+        
         #Hist the final energies:
         Energies = K_Energies+W_Energies
         n_bins = int(np.floor(np.sqrt(Num_stars)))#int(np.floor(np.sqrt(len(Energies))))
-        print(n_bins)
         plt.hist(Energies[-1,:],bins = n_bins)#100)
+        plt.title("Histogram of Final Energies of Stars")
+        plt.xlabel("Energy (code units)")
         plt.show()
 
-        NBz_whole,NBrho_whole = NBody.rho_distribution(z,rho_part)
-
         if type == 'Periodic':
+            print("Curve Fitting Procedure ... ")
+            NBz_whole,NBrho_whole = NBody.rho_distribution(z,rho_part)
             popt = curve_fitting(L,NBz_whole,NBrho_whole,type = type, G_tilde  = G_tilde)
             print(f"fit params = {popt}")
 
@@ -265,11 +274,11 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         Virial_ratios = np.abs(K/W)
     
         fig,ax = plt.subplots(1,4,figsize = (20,5))
-        plt.suptitle("Energy of FDM+Stars, at Snapshot times/indices")
-        ax[0].set_title("Potential Energy over time")
+        plt.suptitle("Energy of FDM+Stars, at Snapshot times/indices", fontsize = 20)
+        ax[0].set_title("Potential Energy over time", fontsize = 15)
         ax[0].plot(indices,W,"--", marker = "o",label = "$\\Sigma W$")
         
-        ax[1].set_title("Kinetic Energy over time")
+        ax[1].set_title("Kinetic Energy over time", fontsize = 15)
         ax[1].plot(indices,K,"--", marker = "o",label = "$\\Sigma K$")
         ax[1].legend()
 
@@ -278,12 +287,12 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         y_min = np.min(K+W)
         y_min = y_min - Dy/2
         y_max = Dy + y_min
-        ax[2].set_title("Total Energy K+W over time")
+        ax[2].set_title("Total Energy K+W over time", fontsize = 15)
         ax[2].plot(indices,K+W,"--", marker = "o",label = "$\\Sigma E$")
         ax[2].set_ylim(y_min,y_max)
         ax[2].legend()
 
-        ax[3].set_title("Virial Ratio $|K/W|$ over time")
+        ax[3].set_title("Virial Ratio $|K/W|$ over time", fontsize = 15)
         ax[3].plot(indices, Virial_ratios, "b--", marker = "o")
         plt.show()
 

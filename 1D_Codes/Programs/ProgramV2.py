@@ -196,7 +196,7 @@ if Num_stars != 0:
 
 
 #Run simulation on Initial Conditions:
-stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dynamical_times, T_Dynamical, bc_choice, z,L,dz,
+stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dynamical_times, T_Dynamical, bc_choice, z,L,dz,
                                                                                                       mu, Num_bosons, r, chi, 
                                                                                                       sigma,stars,
                                                                                                       v_s,L_s,
@@ -222,18 +222,19 @@ if Num_bosons == 0:
         np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
         np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")
     np.savetxt(f"Chi.csv", chi,delimiter = ",")
-    np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
+    np.savetxt(f"Particle_Centroids.csv",part_centroids,delimiter = ',')
 elif Num_stars == 0:
     np.savetxt(f"Chi.csv", chi, delimiter =",")
     np.savetxt(f"W_FDM_storage.csv", W_FDM_storage, delimiter =",")
     np.savetxt(f"K_FDM_storage.csv", K_FDM_storage, delimiter =",")
-    np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
+    np.savetxt(f"FDM_Centroids.csv",fdm_centroids,delimiter = ',')
 elif Num_bosons!=0 and Num_stars!=0:
     np.savetxt(f"Stars_Pos.csv",[star.x for star in stars], delimiter = ",")
     np.savetxt(f"Stars_Vel.csv",[star.v for star in stars], delimiter = ",")
     np.savetxt(f"z_rms_storage.csv", z_rms_storage, delimiter = ",")
     np.savetxt(f"v_rms_storage.csv", v_rms_storage, delimiter = ",")
     np.savetxt(f"Chi.csv", chi)
+    np.savetxt(f"FDM_Centroids.csv",fdm_centroids,delimiter = ',')
     np.savetxt(f"W_FDM_storage.csv", W_FDM_storage, delimiter =",")
     np.savetxt(f"K_FDM_storage.csv", K_FDM_storage, delimiter =",")
     np.savetxt(f"K_star_Energies.csv", K_star_storage, delimiter = ",")
@@ -244,7 +245,7 @@ elif Num_bosons!=0 and Num_stars!=0:
     if Num_stars>=5:
         np.savetxt(f"K_5stars_Energies.csv", K_5stars_storage, delimiter = ",")
         np.savetxt(f"W_5stars_Energies.csv", W_5stars_storage, delimiter = ",")
-    np.savetxt(f"Centroids.csv",centroids,delimiter = ',')
+    np.savetxt(f"Particle_Centroids.csv",part_centroids,delimiter = ',')
 
 print("Data Saved.")
 

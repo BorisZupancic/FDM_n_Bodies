@@ -1,4 +1,4 @@
-/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/NBody
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/NBody_Mixed
 /home/boris/Documents/Research/FDM_n_Bodies
 ---------------------New Sim---------------------
 L = 2.000000
@@ -14,7 +14,7 @@ Boson std: No Bosons
 Particle std = 0.100000 
  
 Specify Path to create folder for saving images.
-/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/NBody
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/NBody_Mixed
 Length scale L = 1
 Velocity scale v = 1
 Time scale T = 1.0
@@ -38,46 +38,49 @@ Do you want a fixed potetial (phi = 0.5*sigma*(2z/L)**2 - 1)? Choose [y/n]
 n
 
 Isolated [1] or Periodic [2] boundary conditions?
+1
 
 Do you want the full simulation [1] or snapshots [2]? Choose [1/2]
+2
 
 How long to run for? Enter Integer for number of dynamical times:
 Will run for 50 dynamical times
 
 Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:
+3.0
 ---Creating Initial Conditions---
 Mass from distribution function: M = 0.4663576831051987
 cut-off in z 0.32232232232231506
 -----Sampling Stars-----
 Re-centering position and velocity centroids.
-z_centroid = 0.0002051524588249287, v_centroid = -0.002204632171907683
-z_centroid = 1.4388490399142028e-18, v_centroid = 5.115907697472722e-18
-0.10370622906803835
-0.4112180296321375
-t_dynamical = 0.25219280672301897
+z_centroid = 0.00011237430324962188, v_centroid = -0.00041941814126436513
+z_centroid = 1.829647544582258e-18, v_centroid = -1.4068746168049984e-17
+z_rms = 0.10291824054922526
+v_rms = 0.4125542979031395
+t_dynamical = 0.249465927448388
 Spitzer ICs instantiated.
 
 Variable Star Masses [y/n]? (Split in two)
 [Y]. Splitting Stars in Two..
 len(stars)=50000
-/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/ProgramV2.py:130: DeprecationWarning: This function is deprecated. Please call randint(0, 50000 + 1) instead
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/ProgramV2.py:127: DeprecationWarning: This function is deprecated. Please call randint(0, 50000 + 1) instead
   i_s = np.random.random_integers(0,len(stars),size=num_to_change)
-len(stars1) = 2443
-len(stars2) = 47557
+len(stars1) = 2441
+len(stars2) = 47559
 len(stars) = 50000
 /home/boris/Documents/Research/FDM_n_Bodies
-False
-/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/NBody/50000ParticlesOnly_Snapshots
+True
+/home/boris/Documents/Research/FDM_n_Bodies/1D_Codes/Programs/Analysis/TestingEquilibriumICs/NBody_Mixed/50000ParticlesOnly_Snapshots
 Calculating and Plotting...
 integral of |chi|^2 : 0.0
 Numerically calculated integral of |psi|^2 : 0.0
 Density Normalization Check: 0.46635768310519865
 v_min = -1569.225530468137, v_max = 1569.225530468137
 Snapshots at i = [    0    99   198   396   792  1584  3168  6336 12672 25344]
-Sim will stop at tau = 12.609640336150948
-a_max = 5.85749180718085
+Sim will stop at tau = 12.4732963724194
+a_max = 5.857491807174932
 /home/boris/Documents/Research/FDM_n_Bodies/OneD/FDM.py:125: RuntimeWarning: invalid value encountered in true_divide
   F_s = F_s/Norm_const
 Calculation and Plotting Done. Now Saving Data...
 Data Saved.
-Executed in 1358.6344528198242 seconds = 22.64390754699707 minutes = 0.37739845911661785 hours.
+Executed in 1624.5636343955994 seconds = 27.07606057325999 minutes = 0.45126767622099984 hours.

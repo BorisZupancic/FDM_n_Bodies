@@ -163,11 +163,6 @@ def select_stars_plots(z,K_5stars_Energies,W_5stars_Energies):
     ax[3].plot(Virial_ratios, "b--",marker = ".")
     plt.show()
 
-def scatter_Potential(W_Energies, stars):
-    plt.figure()
-    plt.scatter([star.x for star in stars],W_Energies[-1,:])
-    plt.show()
-
 def all_stars_plots(indices,K_Energies,W_Energies, variable_mass = [False]):
     
     

@@ -248,19 +248,6 @@ def main_plot(type,G_tilde,L,eta,
                 y00_max,y10_max,y01_max,y11_max,
                 a_max,max_F,
                 Directory,folder_name,track_stars, track_centroid = False, variable_mass=[False]):
-    
-    # #PLOT AXIS LIMITS:
-    # #y0_max = np.max(phi)*1.5
-    # y00_max = np.max(rho_FDM)*10
-    # y10_max = np.max(rho_part)*10
-
-    # if Num_stars == 0:
-    #     y10_max = y00_max
-    # elif Num_bosons == 0:
-    #     y00_max = y10_max
-    
-    # y01_max = v_s*200
-    # y11_max = y01_max #v_s*100
 
     layout = [['upper left', 'upper right', 'far right'],
                         ['lower left', 'lower right', 'far right']]
@@ -269,9 +256,8 @@ def main_plot(type,G_tilde,L,eta,
     fig.set_size_inches(20,10)
     plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
     
-    ##############################################3
+    ##############################################
     #ACCELERATIONS
-
     Part_force = -gradient(fourier_potential(rho_part,L,type = type, G_tilde = G_tilde),L,type = type)
     FDM_force = -gradient(fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde),L,type = type)
     ax['far right'].plot(z, Part_force, label = "Particle Contribution")
@@ -282,9 +268,7 @@ def main_plot(type,G_tilde,L,eta,
     ax['far right'].set_ylabel("Acceleration Field (code units)")
     ax['far right'].legend(fontsize = 20)
     
-    # THE FDM
-    #ax['upper left'].plot(z,chi.real, label = "Re[$\\chi$]")
-    #ax['upper left'].plot(z,chi.imag, label = "Im[$\\chi$]")
+    # FDM
     phi_FDM = fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde)
     ax['upper left'].plot(z,phi_FDM,label = "$\\varphi_{FDM}$")
     ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = \\mu|\\chi|^2$")
@@ -311,12 +295,10 @@ def main_plot(type,G_tilde,L,eta,
         #fig.add_axes(cax)
         #fig.colorbar(mappable = im, cax = cax, ax=ax["upper right"],shrink = 0.75)
     ##############################################3
-    # THE PARTICLES
-    #rho_part = (grid_counts/dz)*sigma #already calculated this
+    # PARTICLES
     phi_part = fourier_potential(rho_part,L,type = type, G_tilde = G_tilde)
     ax['lower left'].plot(z,phi_part,label = "$\\varphi_{Particles}$")
     ax['lower left'].plot(z,rho_part,label = "$\\rho_{Particles}$")
-    #ax['lower left'].set_xlim(-L/2,L/2)
     ax['lower left'].set_ylim(-y10_max,y10_max)
     ax['lower left'].legend(fontsize = 15)
 
@@ -357,29 +339,28 @@ def main_plot(type,G_tilde,L,eta,
     #PLOT CENTROID IN PHASE SPACE
     if Num_stars != 0:#only calculate if there are stars
         centroid_z = 0
-        #centroid_v = 0
-        # for j in range(len(grid_counts)):
-        #     centroid_z += z[j]*grid_counts[j]
-        # centroid_z = centroid_z / Num_stars
-        
         centroid_v = 0
         for star in stars:
             centroid_z += star.x
             centroid_v += star.v
-        centroid_z = centroid_z / Num_stars    
-        centroid_v = centroid_v / Num_stars
+        part_centroid_z = centroid_z / Num_stars    
+        part_centroid_v = centroid_v / Num_stars
         
         ax['lower right'].scatter(centroid_z,centroid_v,s = 100,c = "r",marker = "o")
-        centroid = np.array([centroid_z,centroid_v])
-    
-    if Num_stars == 0 and Num_bosons !=0:
-        centroid_z = np.sum(np.conj(chi)*z*chi) / np.sum(np.abs(chi)**2)
-        k_mean = np.sum(np.conj(chi)*(1j)*np.gradient(chi,dz))
+        part_centroid = np.array([centroid_z,centroid_v])
+    else:
+        part_centroid = None
+
+    if Num_bosons !=0:
+        fdm_centroid_z = np.sum(np.conj(chi)*z*chi) / np.sum(np.abs(chi)**2)
+        k_mean = np.sum(np.conj(chi)*(-1j)*np.gradient(chi,dz))
         mu = np.mean(rho_FDM/(np.absolute(chi)**2))
-        centroid_v = k_mean/mu
+        fdm_centroid_v = k_mean/mu
 
-        centroid = np.array([np.real(centroid_z),np.real(centroid_v)])
-
+        fdm_centroid = np.array([np.real(centroid_z),np.real(centroid_v)])
+    else:
+        fdm_centroid = None
+        
     #now save it as a .jpg file:
     folder = Directory + "/" + folder_name
     filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
@@ -388,8 +369,8 @@ def main_plot(type,G_tilde,L,eta,
     plt.cla()
     plt.close(fig) #close plot so it doesn't overlap with the next one
 
-    if track_centroid == True:# and Num_stars != 0:
-        return centroid
+    if track_centroid == True:
+        return part_centroid, fdm_centroid
 
 def gaussianICs(z, L, mu, Num_bosons, sigma, Num_stars, v_s, L_s):
     ########################################################
@@ -620,8 +601,8 @@ def BZ_SpitzerICs(Num_stars, z, E0, sigma, f0, mu = None, Num_bosons = None, r =
         
         v_rms = np.std([star.v for star in stars])
         z_rms = np.std([star.x for star in stars])
-        print(z_rms)
-        print(v_rms)
+        print(f"z_rms = {z_rms}")
+        print(f"v_rms = {v_rms}")
         t_dynamical = z_rms/v_rms
         print(f"t_dynamical = {t_dynamical}")
         
@@ -712,6 +693,11 @@ def BZ_SpitzerICs(Num_stars, z, E0, sigma, f0, mu = None, Num_bosons = None, r =
         rho = mu*np.abs(chi)**2
     else:
         chi = np.zeros(N)
+
+    if Num_bosons!=0 and Num_stars!=0:
+        chi = chi / np.sqrt(2)
+        for star in stars:
+            star.mass = star.mass / 2
 
     return stars, chi, t_dynamical
 
@@ -810,20 +796,13 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
     if Num_stars !=0:
         y01_max = 2*np.max([star.v for star in stars])
     else:
-        y01_max = v_max/3 #3*(L/2)/T_collapse
+        y01_max = v_max/3 
     y11_max = y01_max
     
     ####################################################
     #PRE-LOOP TIME-SCALE SETUP
-    #m = mu*M_scale
-    # Rho_avg = M_s*np.mean(rho)/L_s
-    # print(Rho_avg)
-    # T_collapse = 1/(Rho_avg)**0.5
-    # tau_collapse = T_collapse/T_s
-    # print(f"(Non-dim) Collapse time: {tau_collapse}")
-
-    dtau = 0.01*t_dynamical #tau_collapse
-    tau_stop = dynamical_times*t_dynamical #tau_collapse*dynamical_times
+    dtau = 0.01*t_dynamical 
+    tau_stop = dynamical_times*t_dynamical 
     if sim_choice2 == 1:
         tau_stop = t_dynamical*2 #over-ride previous tau_stop
     elif sim_choice2 == 2:
@@ -1033,19 +1012,7 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
                     F = FDM.Husimi_phase(chi,z,dz,L,eta)
                     max_F = np.max(F)/2
                 
-                # f1 = mp.Process(target=main_plot,args=[sim_choice1,L,eta,
-                # z,dz,chi,rho_FDM,rho_part,
-                # stars,Num_bosons,Num_stars,
-                # grid_counts,dtau,i,
-                # x_min,x_max,v_min,v_max,
-                # y00_max,y10_max,y01_max,y11_max,
-                # a_max,max_F,
-                # Directory,folder_name,track_stars,track_centroid])
-                
-                # f1.start()s
-                # centroid = f1.result()
-
-                centroid = main_plot(type,G_tilde,L,eta,
+                part_centroid, fdm_centroid = main_plot(type,G_tilde,L,eta,
                 z,dz,chi,rho_FDM,rho_part,
                 stars,Num_bosons,Num_stars,
                 dtau,i,
@@ -1056,9 +1023,11 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
 
                 if track_centroid == True:
                     if i == 0:
-                        centroids = [centroid]
+                        part_centroids = [part_centroid]
+                        fdm_centroids = [fdm_centroid]
                     else:
-                        centroids.append(centroid)
+                        part_centroids.append(part_centroid)
+                        fdm_centroids.append(fdm_centroid)
 
         ############################################################
         #EVOLVE SYSTEM (After calculations on the Mesh)
@@ -1073,11 +1042,6 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
         g_interp = interp1d(z,a_grid)
         g_s = g_interp([star.x for star in stars])
 
-        # pool = mp.Pool()
-        # args = [(star,g,L,bc_choice,dtau) for star,g in zip(stars,g_s)]
-        # chunksize = int(len(args)//4)
-        # #print(f"chunksize = {chunksize}")
-        # pool.starmap(kick_n_drift_1, args, chunksize = chunksize)
         for star, g in zip(stars,g_s):
             star.kick_star(g,dtau/2)
             star.drift_star(dtau)
@@ -1090,7 +1054,6 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
                 pass
 
         #3 Re-update potential and acceleration fields
-        
         #Calculate Particle distribution on Mesh
         if Num_stars !=0:
             rho_part = NB.particle_density(stars, L, z, variable_mass)
@@ -1107,7 +1070,6 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
         a_grid = NB.acceleration(phi,L,type = type) 
 
         #4. KICK in updated potential
-
         #FUZZY DM
         chi = FDM.kick(chi,phi/2,r,dtau/2)
 
@@ -1124,9 +1086,10 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
         i += 1
     
     if track_centroid == False:
-        centroids = [] #None
-    
-    return stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, centroids, K_FDM_storage, W_FDM_storage  
+        part_centroids = []
+        fdm_centroids = [] 
+     
+    return stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage  
 
 
 def kick_n_drift_1(star, g, L,bc_choice,dtau):
