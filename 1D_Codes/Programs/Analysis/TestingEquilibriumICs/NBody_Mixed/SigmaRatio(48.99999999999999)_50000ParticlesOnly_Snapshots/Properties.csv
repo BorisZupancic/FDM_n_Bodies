@@ -1,0 +1,13 @@
+Time Elapsed:,2597.50008893013
+Box Length:,2.0
+Boson Mass:,1
+Number of bosons:,0.0
+Particle mass(es):,9.327153662103973e-06
+Variable mass:,True
+Variable mass fraction,0.02
+sigma1,0.00023317884155259932
+sigma2,4.758751868420395e-06
+Number of Particles:,50000
+FDM Fuzziness:,0.5
+Grid Points:,1000
+Snapshot Indices:,[    0    10    20    40    80   160   320   640  1280  2560  5120 10240]

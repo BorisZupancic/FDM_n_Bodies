@@ -18,7 +18,7 @@ bc_choice='1'
 simulation_choice2=('2')
 
 #Number of Collapse times to run for:
-dynamical_times='50'
+dynamical_times='300'
 
 #Initial Conditions:
 IC_choice='3'
@@ -30,11 +30,11 @@ var_mass='n'
 percent='0.5'
 
 #Number of Particles:
-num_p='10000'
+num_p='50000'
 
 v_rms=0.28
 z_rms=0.07
-lambdas=0.1 # '1' '0.5' '0.1')
+lambdas=('0.05')  #('1' '0.5' '0.1' '0.05')
 
 for lambda in "${lambdas[@]}"; do
 

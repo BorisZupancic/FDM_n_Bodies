@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import erf as erf
 from scipy.interpolate import interp1d
+from scipy.stats import gaussian_kde
 import os
 import cv2 
 from PIL import Image
@@ -322,7 +323,9 @@ def main_plot(type,G_tilde,L,eta,
     else:
         x_s = np.array([star.x for star in stars])
         v_s = np.array([star.v for star in stars])
-        ax['lower right'].scatter(x_s,v_s,s = 1,label = "Particles")
+        xy = np.vstack([x_s,v_s])
+        z = gaussian_kde(xy)(xy)
+        ax['lower right'].scatter(x_s,v_s,s = 1,c=z,label = "Particles")
         ax['lower right'].set_ylim(-y11_max,y11_max)
         ax['lower right'].set_xlim(-L/2,L/2)
         ax['lower right'].legend(fontsize = 15)
@@ -346,7 +349,7 @@ def main_plot(type,G_tilde,L,eta,
         part_centroid_z = centroid_z / Num_stars    
         part_centroid_v = centroid_v / Num_stars
         
-        ax['lower right'].scatter(centroid_z,centroid_v,s = 100,c = "r",marker = "o")
+        ax['lower right'].scatter(part_centroid_z,part_centroid_v,s = 100,c = "r",marker = "o")
         part_centroid = np.array([centroid_z,centroid_v])
     else:
         part_centroid = None
@@ -357,13 +360,13 @@ def main_plot(type,G_tilde,L,eta,
         mu = np.mean(rho_FDM/(np.absolute(chi)**2))
         fdm_centroid_v = k_mean/mu
 
-        fdm_centroid = np.array([np.real(centroid_z),np.real(centroid_v)])
+        fdm_centroid = np.array([np.real(fdm_centroid_z),np.real(fdm_centroid_v)])
     else:
         fdm_centroid = None
         
     #now save it as a .jpg file:
     folder = Directory + "/" + folder_name
-    filename = 'ToyModelPlot' + str(i+1).zfill(4) + '.jpg';
+    filename = 'Plot' + str(i).zfill(4) + '.jpg';
     plt.savefig(folder + "/" + filename)  #save this figure (includes both subplots)
     plt.clf()
     plt.cla()
@@ -801,19 +804,29 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
     
     ####################################################
     #PRE-LOOP TIME-SCALE SETUP
-    dtau = 0.01*t_dynamical 
+    collapse_index= 10
+    dtau = (collapse_index**(-1))*t_dynamical 
     tau_stop = dynamical_times*t_dynamical 
+    i_stop = dynamical_times * 10
+    indices = [0]
+    x = 0 
+    while 2**x <= dynamical_times:
+        indices.append(2**x)
+        x+=1
     if sim_choice2 == 1:
         tau_stop = t_dynamical*2 #over-ride previous tau_stop
     elif sim_choice2 == 2:
-        collapse_index = int(np.floor(t_dynamical/dtau))
-        snapshot_indices = np.multiply(collapse_index-1,[0,1,2,4,8,16,32,64,128,256])
-        print(f"Snapshots at i = {snapshot_indices}")
+        snapshot_indices = np.multiply(collapse_index,indices)
+    
+    if dynamical_times*collapse_index not in snapshot_indices:
+        snapshot_indices = np.append(snapshot_indices, dynamical_times*collapse_index)
+
+    print(f"Snapshots at i = {snapshot_indices}")
     
     if track_stars == True or track_FDM == True:
         if sim_choice2 == 1:
-            collapse_index = int(np.floor(t_dynamical/dtau))
-            snapshot_indices = np.multiply(collapse_index-1,[0,1,2,4,8,16,32,64,128,256])        
+            # collapse_index = int(np.floor(t_dynamical/dtau))
+            snapshot_indices = np.multiply(collapse_index,indices)        
             track_snapshot_indices = snapshot_indices
         elif sim_choice2 == 2:
             track_snapshot_indices = snapshot_indices
@@ -825,7 +838,8 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
     if absolute_PLOT == True:
         os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     
-    while time <= tau_stop:
+    #while time <= tau_stop:
+    while i <= i_stop:
         overflow = checkMemory(mem_limit = 95)
         if overflow == True:
             break      
@@ -883,10 +897,10 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
             if i in track_snapshot_indices:
                 K_array = np.array([])
                 W_array = np.array([])
+                
                 for j in range(len(stars)):
                     star = stars[j]
                     W = star.get_W(z,phi,L)
-        
                     K = 0.5*star.mass*star.v**2
 
                     K_array = np.append(K_array,K)
@@ -900,18 +914,18 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
             
             K_star_fine_storage = [] #None
             W_star_fine_storage = [] #None
-            # elif i<=2500:
+            # if True: #i<=2500:
             #     K_array = np.array([])
             #     W_array = np.array([])
+                
             #     for j in range(len(stars)):
             #         star = stars[j]
-            #         W = star.get_W(z,phi,L)#- sigma*star.x*g
-        
-            #         K = 0.5*sigma*stars[j].v**2
+            #         W = star.get_W(z,phi,L)
+            #         K = 0.5*star.mass*star.v**2
 
             #         K_array = np.append(K_array,K)
             #         W_array = np.append(W_array,W)
-            #     if i == 1:
+            #     if i == 0:
             #         K_star_fine_storage = np.array([K_array])
             #         W_star_fine_storage = np.array([W_array])
             #     else:
@@ -1089,7 +1103,7 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, L,
         part_centroids = []
         fdm_centroids = [] 
      
-    return stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage  
+    return snapshot_indices, stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage  
 
 
 def kick_n_drift_1(star, g, L,bc_choice,dtau):

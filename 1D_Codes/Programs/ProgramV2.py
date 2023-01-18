@@ -117,24 +117,30 @@ variable_mass = input()
 Total_mass = sigma*Num_stars + mu*Num_bosons
 
 if variable_mass == 'y':
-    print("[Y]. Splitting Stars in Two..")
-    fraction = 1/20
-    print(f"len(stars)={len(stars)}")
-    num_to_change = int(np.floor(fraction*len(stars)))
+    print("[Y]")
+    print("Input fraction of stars to convert to heavy:")
+    fraction = input()
+    print(fraction)
+    print("Splitting Stars in Two...")
+    num, denom = fraction.split('/')
+    fraction = float(num)/float(denom)
+    num_to_change = int(np.floor(fraction*Num_stars))
+    print(f"Number of heavier particles: {num_to_change}")
     sigma1 = (Total_mass/2)/num_to_change #sigma*2
-    sigma2 = (Total_mass/2)/(len(stars)-num_to_change) #sigma*fraction
+    sigma2 = (Total_mass/2)/(Num_stars-num_to_change) #sigma*fraction
 
-    i_s = np.random.random_integers(0,len(stars),size=num_to_change)
+    from numpy.random import default_rng
+    rng = default_rng()
+    i_s = rng.choice(Num_stars, size=num_to_change, replace=False)
+    print(len(i_s))
     part1 = []
     part2 = []
-    for i in range(len(stars)):
+    for i in range(Num_stars):
         if i in i_s:
             part1.append(stars[i])
         else:
             part2.append(stars[i])
-    # excess = [stars[i] for i in i_s]#stars[0:num_to_change]
-    # right = stars[num_to_change:] 
-
+   
     stars1 = [NB.star(i, sigma1,part1[i].x, part1[i].v) for i in range(len(part1))]
     stars2 = [NB.star(i, sigma2,part2[i].x, part2[i].v) for i in range(len(part2))]
     #re-center position and velocity centroids:
@@ -155,6 +161,9 @@ if variable_mass == 'y':
     variable_mass = [True,fraction,sigma1,sigma2]
 else:
     variable_mass = [False]
+    print("[n]")
+
+print("")
 
 ####################################################################
 #SET UP FOLDERS:
@@ -167,7 +176,10 @@ if sim_choice2 == 1:
 elif sim_choice2 == 2:
     folder_name = f"FDM{percent_FDM}_r{r}_Snapshots"
     if Num_bosons == 0:
-        folder_name = f"{Num_stars}ParticlesOnly_Snapshots"
+        if variable_mass[0] == False:
+            folder_name = f"Sigma{sigma}_{Num_stars}ParticlesOnly_Snapshots"
+        else:
+            folder_name = f"SigmaRatio({sigma1/sigma2})_{Num_stars}ParticlesOnly_Snapshots"
     elif Num_stars == 0:
         folder_name = f"OnlyFDM_r{r}_Snapshots"
 
@@ -196,7 +208,7 @@ if Num_stars != 0:
 
 
 #Run simulation on Initial Conditions:
-stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dynamical_times, T_Dynamical, bc_choice, z,L,dz,
+snapshot_indices, stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, K_star_fine_storage, W_star_fine_storage, K_5stars_storage, W_5stars_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dynamical_times, T_Dynamical, bc_choice, z,L,dz,
                                                                                                       mu, Num_bosons, r, chi, 
                                                                                                       sigma,stars,
                                                                                                       v_s,L_s,
@@ -264,7 +276,8 @@ if variable_mass[0] == True:
               ["sigma2", variable_mass[3]],
               ["Number of Particles:",Num_stars],
               ["FDM Fuzziness:",r],
-              ["Grid Points:", N]]
+              ["Grid Points:", N],
+              ["Snapshot Indices:", snapshot_indices]]
 else:
     properties = [["Time Elapsed:", elapsed_time],
               ["Box Length:", L],
@@ -277,7 +290,8 @@ else:
               ["sigma2", 0],
               ["Number of Particles:",Num_stars],
               ["FDM Fuzziness:",r],
-              ["Grid Points:", N]]
+              ["Grid Points:", N],
+              ["Snapshot Indices:", snapshot_indices]]
 np.savetxt(f"Properties.csv", properties, delimiter = ",", fmt = "%s")
 
 if sim_choice2 == 1:
