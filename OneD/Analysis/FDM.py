@@ -21,20 +21,11 @@ def plot_Energies(indices,Ks,Ws):
     
     fig, ax = plt.subplots(1,4, figsize = (15,5))
     
-    y_midW = np.min(Ws)+Dy_2/2
-    y_minW = y_midW - Dy/2
-    y_maxW = y_midW + Dy/2
     ax[0].plot(indices, Ws,"o--")
     ax[0].set_title("FDM Potential")
-    ax[0].set_ylim(y_minW,y_maxW)
     
-    y_midK = np.min(Ks)+Dy_1/2
-    y_minK = y_midK - Dy/2
-    y_maxK = y_midK + Dy/2
     ax[1].plot(indices,Ks,"o--")
     ax[1].set_title("FDM Kinetic")
-    ax[1].set_ylim(0,np.max(Ks))
-
     
     y_avg = np.mean(Ks+Ws)
     y_min = y_avg - Dy/2

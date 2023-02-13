@@ -9,162 +9,105 @@ from PIL import Image
 import OneD.FDM as FDM
 import OneD.Global as GF
 
-class star:
-    def __init__(self,id,mass,x,v):
-        self.id = id #identification number
-        self.mass = mass #mass of star
-        self.x = x #it's "instantaneous" position
-        self.v = v #it's "instantaneous" velocity
-        #self.bin = bin #bin it resides in: index value between 0 and N-1
+from scipy.interpolate import interp1d
 
-    def kick_star(self,g,dt):
-        a = g(self.x)
-        self.v += dt*a #KICK velocity
+class stars:
+    '''Class to represent an array of stars. Attributes:
+    
+    mass: Each "star" has the same mass  
+    
+    x: (numpy) array of positions
 
-    def drift_star(self,dt):
+    v: (numpy) array of velocities
+    '''
+
+    def __init__(self,mass,x,v):
+        self.mass = mass #mass of star(s)
+        self.x = x # positions
+        self.v = v # velocities
+            
+    def kick(self,g,dt):
+        self.v += dt*g#KICK velocity
+        
+    def drift(self,dt):
         self.x += self.v*dt #DRIFT the position
     
     def reposition(self,L):
-        #print(f"z = {self.x}")
         div = (self.x // (L/2))
         remainder = self.x % (L/2)
-        # print(f"div = {div}, remainder = {remainder}")
         if div % 2 == 0: #check if modulo is even
             self.x = remainder 
         else: #if modulo is odd, further check:
             self.x = remainder-L/2
-            # if self.x > 0:
-            #     self.x = remainder-L/2
-            # elif self.x < 0:
-            #     self.x = remainder-L/2
-        # print(f"new z = {self.x}")
-        # print(" ")
     
-    def get_W(self,z,phi,L):
+    def get_W(self,z,phi):
         sigma = self.mass
         dz = z[1]-z[0]
         N = len(phi)
 
-        #Find the potential energy:
-        zz = self.x
-        n = int((zz+L/2)//dz)
-        rem = (zz+L/2) % dz 
-        Potential = 0
-        if n < N-1:
-            Potential = phi[n] + rem*(phi[n+1]-phi[n])/dz
-        elif n == N-1:
-            Potential = phi[-1] + rem*(phi[0]-phi[-1])/dz
+        #Find the potential energies of each "star" in stars
+        #zz = self.x
+        phi_interp = interp1d(z,phi)
+        Potentials = phi_interp(self.x)
+
+        # n = int((zz+L/2)//dz)
+        # rem = (zz+L/2) % dz 
+        # Potentials = np.zeros_like(self.x)
+        # if n < N-1:
+        #     Potential = phi[n] + rem*(phi[n+1]-phi[n])/dz
+        # elif n == N-1:
+        #     Potential = phi[-1] + rem*(phi[0]-phi[-1])/dz
         
-        W = sigma*Potential
+        W = sigma*Potentials
         return W
 
-    def evolve_star_dynamics(self,g,dt): #g: acceleration, dt: time-step
-        a = g(self.x)
-        self.v += 0.5*dt*a # KICK evolve velocity forward by half time-step
-        
-        self.x += self.v*dt #DRIFT the position
-
-        a = g(self.x)
-        self.v += 0.5*dt*a #KICK to get full new velocity(this will change for self-gravitating system)
-
+    def get_K(self):
+        K = 0.5* self.mass * self.v **2
+        return K
 
 def collectEnergies(K1,W1,K2=None,W2=None):
     
     return
-# class star_collection:
-#     def __init__(self, stars: star):
-#         self.stars = stars
-    
-#     def evolve_dynamics(self,g,dt):
         
 
 ##########
 # Define an algorithm to calculate the acceleration at each point of the grid
 #... given a set of stars
 ########
-def interp_bins(x,bin_counts):
-    grid_counts = np.zeros_like(x)
-    for i in range(len(x)):
-        if i == 0 or i == len(x)-1:
-            grid_counts[i] += 0.5*bin_counts[0] 
-            grid_counts[i] += 0.5*bin_counts[-1]
-        else: 
-            grid_counts[i] += 0.5*bin_counts[i-1] #half goes to the end right end of the grid
-            grid_counts[i] += 0.5*bin_counts[i]
-    return grid_counts
 
-def grid_count(stars,L,x):
-    #Count the particles on the Mesh
-    N = len(x)
-    bin_counts, bin_edges = np.histogram([star.x for star in stars], bins = N-1, range = (-L/2,L/2))
-    #interpolate bin_counts to counts on edges:
-    grid_counts = interp_bins(x,bin_counts)
-    return grid_counts
+def grid_count(stars,L,z):
+    '''Count the particles on the mesh-grid.'''
+    N = len(z)
+    dz = z[1]-z[0]
+    bin_counts, bin_edges = np.histogram(stars.x, bins = N, range = (-L/2-dz/2,L/2 + dz/2))
+    return bin_counts
 
 def particle_density(stars, L, z, variable_mass):
+    '''Get the density of the particle distribution on the mesh-grid.'''
     if variable_mass[0] == True:
-        fraction = variable_mass[1]
-        sigma1 = variable_mass[2]
-        sigma2 = variable_mass[3]
-    
-        num_to_change = int(np.floor(fraction*len(stars)))
-    
-        grid_counts1 = grid_count(stars[0:num_to_change],L,z)
-        grid_counts2 = grid_count(stars[num_to_change:],L,z)
+        stars1 = stars[0]
+        stars2 = stars[1]
+        sigma1 = stars1.mass
+        sigma2 = stars2.mass
+
+        grid_counts1 = grid_count(stars1,L,z)
+        grid_counts2 = grid_count(stars2,L,z)
 
         dz = z[1]-z[0]
         rho_part = (grid_counts1*sigma1 + grid_counts2*sigma2)/dz
-    
     else:
-        sigma = stars[0].mass 
+        sigma = stars.mass 
         grid_counts = grid_count(stars,L,z)
         dz = z[1]-z[0]
-        rho_part = (grid_counts/dz)*sigma #this is actually like chi x chi*
-    
+        rho_part = (grid_counts/dz)*sigma 
     return rho_part
     
 def acceleration(phi,L,type):
     grad = GF.gradient(phi,L,type = type)#GF.fourier_gradient(phi,L)
-    #grad = np.gradient(phi,dz)
-    Force = -grad
-    
-    acceleration = Force#/m #acceleration per particle, at each point of the grid
-    return acceleration#/L #divide by L to keep it non-dimensional    
-
-def g_interp(z,zp,fp):
-    return 
-
-
-def g(star,acceleration,dz):
-    a_grid = acceleration
-    
-    i = int(star.x//dz)
-    rem = star.x % dz 
-    if i != len(acceleration)-1:
-        value = a_grid[i] + rem*(a_grid[i+1]-a_grid[i])/dz
-    elif i == len(acceleration)-1:
-        # then i+1 <=> 0
-        value = a_grid[i] + rem*(a_grid[0]-a_grid[i])/dz
-    return value
-
-def accel_funct(a_grid,L,dz, type = 'Periodic'):
-    def g(z):
-        N = len(a_grid)
-        j = int((z+L/2)//dz)
-        
-        rem = (z+L/2) % dz 
-        value = a_grid[j]
-        if j < N-1:
-            value += rem*(a_grid[j+1]-a_grid[j])/dz
-        elif j == N-1 and type=='Periodic':
-            value += rem*(a_grid[0]-a_grid[-1])/dz
-        elif j == N-1 and type == 'Isolated':
-            value += rem*(a_grid[N-1]-a_grid[N-2])/dz
-        return value
-    return g
+    acceleration = -grad
+    return acceleration  
 
 def simulate_NBody_FixedPhi(stars,phi,g,z,L,dtau,tau_stop,Directory,folder_name):
-    
     dtau = 0.1
     tau_stop = 20
     time = 0

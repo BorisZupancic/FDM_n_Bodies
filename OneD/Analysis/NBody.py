@@ -7,22 +7,26 @@ import subprocess
 import cv2 
 from PIL import Image 
 import scipy.optimize as opt
+from scipy.stats import gaussian_kde
 
 import OneD.FDM as FDM
 import OneD.NBody as NB
 import OneD.Global as GF
 
 def plot_centroids(indices,centroids):
+    
+    indices_new = [float(x) for x in indices][:len(centroids)]
+        
     plt.figure()
     plt.title("Position Centroid over time")
-    plt.plot(indices,centroids[:,0],'bo-')
+    plt.plot(indices_new,centroids[:,0],'bo-')
     #plt.scatter(centroids[:,0],centroids[:,1])
     plt.ylim(-1,1)
     plt.show()
     
     plt.figure()
     plt.title("Velocity Centroid over time")
-    plt.plot(indices,centroids[:,1],'ro-')
+    plt.plot(indices_new,centroids[:,1],'ro-')
     plt.show()
 
 def rms_stuff(sigma,stars,phi_part,L,z,dz,type = 'Periodic'):
@@ -163,11 +167,6 @@ def select_stars_plots(z,K_5stars_Energies,W_5stars_Energies):
     ax[3].plot(Virial_ratios, "b--",marker = ".")
     plt.show()
 
-def scatter_Potential(W_Energies, stars):
-    plt.figure()
-    plt.scatter([star.x for star in stars],W_Energies[-1,:])
-    plt.show()
-
 def all_stars_plots(indices,K_Energies,W_Energies, variable_mass = [False]):
     
     
@@ -206,44 +205,178 @@ def all_stars_plots(indices,K_Energies,W_Energies, variable_mass = [False]):
         ax[1].plot(indices,K_totals2,"b--", marker = "o",label = "Light")
         ax[2].plot(indices,K_totals2+W_totals2,"b--", marker = "o",label = "$\\Sigma E$")
         
-        ax[2].plot(indices,(K_totals+K_totals2+W_totals+ W_totals2)/2,"k--", marker = "o",label = "Heavy + Light")
-        
-    if variable_mass[0] == 'True':
-        y_avg = np.mean([np.mean(W_totals),np.mean(W_totals2)])
-    else: 
-        y_avg = np.mean([np.mean(W_totals)])
-    y_min = y_avg - Dy/2
-    y_max = y_avg + Dy/2
+        ax[2].plot(indices,(K_totals+K_totals2+W_totals+ W_totals2)/2,"k--", marker = "o",label = "(Heavy + Light) /2")
+        y_tot_avg = np.mean((K_totals+K_totals2+W_totals+ W_totals2)/2)
+    
+        Virial1 = np.abs(K_totals/W_totals)
+        Virial2 = np.abs(K_totals2/W_totals2)
+        ax[3].plot(indices,Virial1, "r--", label = "Heavy")
+        ax[3].plot(indices,Virial2, "b--", label = "Light")
+    else:
+        y_tot_avg = np.mean((K_totals+W_totals))
     ax[0].set_title("Potential Energy over time")
-    ax[0].plot(indices,W_totals,"r--", marker = "o")#,label = "Heavy")
-    ax[0].set_ylim(y_min,y_max)
+    ax[0].plot(indices,W_totals,"r--", marker = "o", label = "Heavy")
     ax[0].legend()
     
-    if variable_mass[0] == 'True':
-        y_avg = np.mean([np.mean(K_totals),np.mean(K_totals2)])
-    else: 
-        y_avg = np.mean([np.mean(K_totals)])
-    y_min = y_avg - Dy/2
-    y_max = y_avg + Dy/2
     ax[1].set_title("Kinetic Energy over time")
-    ax[1].plot(indices,K_totals,"r--", marker = "o")#,label = "Heavy")
-    ax[1].set_ylim(y_min,y_max)
+    ax[1].plot(indices,K_totals,"r--", marker = "o",label = "Heavy")
     ax[1].legend()
     
     if variable_mass[0] == 'True':
         y_avg = np.mean([np.mean(W_totals+K_totals),np.mean(W_totals2+K_totals2)])
     else: 
-        y_avg = np.mean([np.mean(W_totals+K_totals)])
-        y_min = y_avg - Dy/2
-    y_max = y_avg + Dy/2
+        y_avg = y_tot_avg
+    y_min = y_avg - Dy
+    y_max = y_avg + Dy
     ax[2].set_title("Total Energy K+W over time")
-    ax[2].plot(indices,K_totals+W_totals,"r--", marker = "o")#,label = "Heavy")
-    ax[2].set_ylim(y_min,y_max)
+    ax[2].plot(indices,K_totals+W_totals,"r--", marker = "o",label = "Heavy")
+    #ax[2].set_ylim(y_min,y_max)
     ax[2].legend()
 
     ax[3].set_title("Virial Ratio $|K/W|$ over time")
-    ax[3].plot(indices, Virial_ratios, "r-", marker = "o")
+    ax[3].plot(indices, Virial_ratios, "b-", marker = "o")
+    ax[3].legend()
     plt.show()
+
+def scatter_deltaE(Energies_i, Energies_f, variable_mass, Num_bosons, r = None):
+    plt.figure()
+    if variable_mass[0]=='True':
+        fraction = variable_mass[1]
+        Num_stars = len(Energies_i)
+
+        num_to_change = int(np.floor(fraction*Num_stars))
+        # plt.scatter(Energies[0,:num_to_change],Energies[len(indices)-1,:num_to_change], c = "red", marker = ".", s = 1,label = "Heavy")
+        # plt.scatter(Energies[0,num_to_change:],Energies[len(indices)-1,num_to_change:], c = "blue", marker = ".", s = 1, label = "Light")
+        plt.scatter(Energies_i[:num_to_change],Energies_f[:num_to_change], c = "red", marker = ".", s = 1,label = "Heavy")
+        plt.scatter(Energies_i[num_to_change:],Energies_f[num_to_change:], c = "blue", marker = ".", s = 1, label = "Light")
+
+    else:
+        xy = np.vstack([Energies_i,Energies_f])
+        z = gaussian_kde(xy)(xy)
+        plt.scatter(Energies_i[:],Energies_f[:], c=z,marker = ".", s = 1)   
+        
+    x_0 = np.min(Energies_i)
+    x_1 = np.max(Energies_i)
+    plt.plot([x_0,x_1],[x_0,x_1], "r-", label = "$y=x$")
+    plt.title("Scattered $E_{final}$ vs $E_{initial}$ (of Stars)")
+    plt.xlabel("$E_{initial}$")
+    plt.ylabel("$E_{final}$")
+    if Num_bosons!=0:
+        plt.text((x_0+x_1)/2,((x_0+x_1)),f"r = {r}")
+    plt.colorbar()
+    plt.legend()
+    plt.show()
+
+    deltaE = np.sum(Energies_f - Energies_i)
+    print(f"Net change in Energy (of all stars)= {deltaE}")
+        
+
+    if variable_mass[0]=='True':
+        fig, ax = plt.subplots(1,2, figsize =(12,6))
+    
+        #fraction = variable_mass[1]
+        #num_to_change = int(np.floor(fraction*Num_stars))
+        #Energies = W_Energies + K_Energies
+        xy0 = np.vstack([Energies_i[:num_to_change],Energies_f[:num_to_change]])
+        z0 = gaussian_kde(xy0)(xy0)
+        ax[0].scatter(Energies_i[:num_to_change],Energies_f[:num_to_change], c = z0, marker = ".", s = 10,label = "Heavy")
+        x_0 = np.min(Energies_i[:num_to_change])
+        x_1 = np.max(Energies_i[:num_to_change])
+        ax[0].plot([x_0,x_1],[x_0,x_1], "k-", label = "$y=x$")
+        # ax[0].set_xlim(-1e-7, 5e-6)
+        # ax[0].set_ylim(-1e-7, 5e-6)
+        ax[0].set_title("Heavier Particles")
+        
+
+        xy1 = np.vstack([Energies_i[num_to_change:],Energies_f[num_to_change:]])
+        z1 = gaussian_kde(xy1)(xy1)
+        ax[1].scatter(Energies_i[num_to_change:],Energies_f[num_to_change:], c = z1, marker = ".", s = 1, label = "Light")
+        x_0 = np.min(Energies_i[num_to_change:])
+        x_1 = np.max(Energies_i[num_to_change:])
+        ax[1].plot([x_0,x_1],[x_0,x_1], "k-", label = "$y=x$")
+        ax[1].set_title("Lighter Particles")
+        ax[1].set_xlabel("$E_{initial}$")
+        ax[0].set_xlabel("$E_{initial}$")
+        ax[0].set_ylabel("$E_{final}$")
+        
+        sigma1 = variable_mass[2]
+        sigma2 = variable_mass[3]
+        plt.suptitle("Scattered $E_{final}$ vs $E_{initial}$ (of Stars)", fontsize = 20)
+        plt.title("$M_{heavy}/m_{light}=$"+f"{sigma1/sigma2}")
+        plt.legend()
+        plt.show()
+
+        deltaE = np.sum(Energies_f[num_to_change:] - Energies_i[num_to_change:])
+        print(f"Net change in Energy = {deltaE}")
+
+    return deltaE
+
+def scatter_deltaE_frac(Energies_i, Energies_f, variable_mass, Num_bosons, r = None):
+    
+    x = Energies_i
+    y = (Energies_f-Energies_i)/Energies_i
+
+    if variable_mass[0]=='True':
+        fraction = variable_mass[1]
+        Num_stars = len(Energies_i)
+        num_to_change = int(np.floor(fraction*Num_stars))
+        
+        fig, ax = plt.subplots(1,2, figsize =(12,6))
+    
+        #fraction = variable_mass[1]
+        #num_to_change = int(np.floor(fraction*Num_stars))
+        #Energies = W_Energies + K_Energies
+        xy0 = np.vstack([x[:num_to_change],y[:num_to_change]])
+        z0 = gaussian_kde(xy0)(xy0)
+        ax[0].scatter(x[:num_to_change],y[:num_to_change], c = z0, marker = ".", s = 10,label = "Heavy")
+        x_0 = np.min(x[:num_to_change])
+        x_1 = np.max(Energies_i[:num_to_change])
+        ax[0].plot([x_0,x_1],[0,0], "k-", label = "$y=0$")
+        # ax[0].set_xlim(-1e-7, 5e-6)
+        # ax[0].set_ylim(-1e-7, 5e-6)
+        ax[0].set_title("Heavier Particles")
+        
+
+        xy1 = np.vstack([x[num_to_change:],y[num_to_change:]])
+        z1 = gaussian_kde(xy1)(xy1)
+        ax[1].scatter(x[num_to_change:],y[num_to_change:], c = z1, marker = ".", s = 1, label = "Light")
+        x_0 = np.min(x[num_to_change:])
+        x_1 = np.max(x[num_to_change:])
+        ax[1].plot([x_0,x_1],[0,0], "k-", label = "$y=0$")
+        ax[1].set_title("Lighter Particles")
+        
+        ax[1].set_xlabel("$E_{initial}$")
+        ax[0].set_xlabel("$E_{initial}$")
+        ax[0].set_ylabel("$\\Delta E / E_{initial}$")
+        
+        sigma1 = variable_mass[2]
+        sigma2 = variable_mass[3]
+        
+        #plt.text("$M_{heavy}/m_{light}=$"+f"{sigma1/sigma2}",0,0)
+    
+        deltaE = np.sum(Energies_f[num_to_change:] - Energies_i[num_to_change:])
+        print(f"Net change in Energy = {deltaE}")
+    else:
+        plt.figure()
+        xy = np.vstack([x,y])
+        z = gaussian_kde(xy)(xy)
+        plt.scatter(x,y, c=z,marker = ".", s = 1)   
+
+        x_0 = np.min(x)
+        x_1 = np.max(x)
+        plt.plot([x_0,x_1],[0,0], "k-", label = "$y=0$")
+        
+        plt.xlabel("$E_{initial}$")
+        plt.ylabel("$\\Delta E / E_{initial}$")
+
+        deltaE = np.sum(Energies_f[:] - Energies_i[:])
+        print(f"Net change in Energy = {deltaE}")
+
+    plt.suptitle("Scattered $\\Delta E / E_{initial}$ vs $E_{initial}$ (of Stars)", fontsize = 20)
+    plt.legend()
+    plt.show()
+
+    return deltaE
 
 def plot_DeltaE(K_Energies,W_Energies):
     Energies = K_Energies + W_Energies
