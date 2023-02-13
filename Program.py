@@ -10,7 +10,7 @@ import cv2
 from PIL import Image 
 
 #Import My Library
-My_Package_PATH = "/home/boris/Documents/Research/FDM_n_Bodies"
+My_Package_PATH = "/home/boris/Documents/Research/FDM_Codes/FDM_n_Bodies"
 import sys
 sys.path.insert(1, My_Package_PATH)
 import OneD.FDM as FDM
