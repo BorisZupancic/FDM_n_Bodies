@@ -32,7 +32,7 @@ def plot_Energies(indices,Ks,Ws):
     y_max = y_avg + Dy/2
     ax[2].plot(indices, Ks+Ws,"o--")
     ax[2].set_title("FDM Total Energy")
-    #ax[2].set_ylim(y_min,y_max)
+    ax[2].set_ylim(y_min,y_max)
 
     ax[3].plot(indices, np.abs(Ks/Ws),"o--")
     ax[3].set_title("$\\frac{K}{|W|}$")

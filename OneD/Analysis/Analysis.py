@@ -29,14 +29,12 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     os.chdir(folder)
     print(os.getcwd())
 
-    
-
     #Load in the necessary quantities:
     Properties = np.loadtxt("Properties.csv", dtype = str, delimiter = ",")
     print(Properties)
     Properties = [Properties[1::,1][i] for i in range(len(Properties)-1)]
-    L,mu,Num_bosons,sigma = [np.float(Properties[i]) for i in range(4)]
-    fraction, sigma1, sigma2, Num_stars,r,N = [np.float(Properties[i]) for i in range(5,len(Properties)-1)]
+    L,mu,Num_bosons,sigma = [float(Properties[i]) for i in range(4)]
+    fraction, sigma1, sigma2, Num_stars,r,N = [float(Properties[i]) for i in range(5,len(Properties)-1)]
     variable_mass = Properties[4]
     variable_mass = [variable_mass, fraction, sigma1, sigma2]
     indices = Properties[-1].replace('[','').replace(']','')
@@ -79,10 +77,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         W_Energies = np.loadtxt("W_star_Energies.csv", dtype = float,delimiter = ",")
         K_fine_Energies = np.loadtxt("K_star_fine_Energies.csv", dtype = float,delimiter = ",")
         W_fine_Energies = np.loadtxt("W_star_fine_Energies.csv", dtype = float,delimiter = ",")
+        W2_Energies = np.loadtxt("W_2_star_Energies.csv",dtype=float,delimiter=",")
         
-        if Num_stars>=5:
-            K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
-            W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
         chi = np.loadtxt(f"Chi.csv", dtype = complex, delimiter=",")
         part_centroids = np.loadtxt("Particle_Centroids.csv",dtype = float, delimiter=',')
         #z_rms_storage = None#np.loadtxt("z_rms_storage.csv", dtype = float, delimiter=",")
@@ -97,14 +93,12 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         fdm_centroids = np.loadtxt("FDM_Centroids.csv",dtype = float, delimiter=',')
         stars_x = None
         star_v = None
-        K_5stars_Energies = None
-        W_5stars_Energies = None 
         K_Energies = None 
         W_Energies = None
 
     elif Num_bosons!=0 and Num_stars !=0:
-        stars_x = np.loadtxt("Stars_Pos.csv", dtype = float, delimiter=",")
-        stars_v = np.loadtxt("Stars_Vel.csv", dtype = float, delimiter=",")
+        stars_x = np.loadtxt("StarsOnly_Pos.csv", dtype = float, delimiter=",")
+        stars_v = np.loadtxt("StarsOnly_Vel.csv", dtype = float, delimiter=",")
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
         part_centroids = np.loadtxt("Particle_Centroids.csv",dtype = float, delimiter=',')
         fdm_centroids = np.loadtxt("FDM_Centroids.csv",dtype = float, delimiter=',')
@@ -113,11 +107,9 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         
         K_Energies = np.loadtxt("K_star_Energies.csv", dtype = float,delimiter = ",")
         W_Energies = np.loadtxt("W_star_Energies.csv", dtype = float,delimiter = ",")
-        #K_fine_Energies = np.loadtxt("K_star_fine_Energies.csv", dtype = float,delimiter = ",")
-        #W_fine_Energies = np.loadtxt("W_star_fine_Energies.csv", dtype = float,delimiter = ",")
-        
-        K_5stars_Energies = np.loadtxt("K_5stars_Energies.csv", dtype = float,delimiter = ",")
-        W_5stars_Energies = np.loadtxt("W_5stars_Energies.csv", dtype = float,delimiter = ",")
+        K_fine_Energies = np.loadtxt("K_star_fine_Energies.csv", dtype = float,delimiter = ",")
+        W_fine_Energies = np.loadtxt("W_star_fine_Energies.csv", dtype = float,delimiter = ",")
+        W2_Energies = np.loadtxt("W_2_star_Energies.csv",dtype=float,delimiter=",")
         
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
@@ -126,21 +118,25 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     #print(stars_x)
     if stars_x is not None:
         if variable_mass[0] == True:
-            num_to_change = int(np.floor(fraction*len(stars)))
+            num_to_change = int(np.floor(fraction*Num_stars))
             
-            stars1 = [NB.star(i,sigma1,stars_x[i],stars_v[i]) for i in range(0,num_to_change)] 
-            stars2 = [NB.star(i,sigma2,stars_x[i],stars_v[i]) for i in range(num_to_change,Num_stars)] 
+            stars1 = NB.stars(sigma1,[stars_x[i] for i in range(0,num_to_change)],[stars_v[i] for i in range(0,num_to_change)])#[NB.star(i,sigma1,stars_x[i],stars_v[i]) for i in range(0,num_to_change)] 
+            stars2 = NB.stars(sigma2,[stars_x[i] for i in range(num_to_change,Num_stars)],[stars_v[i] for i in range(num_to_change,Num_stars)]) 
             stars = [stars1[:],stars2[:]]
             
         else:
-            stars = [NB.star(i,sigma,stars_x[i],stars_v[i]) for i in range(len(stars_x))]
+            stars = NB.stars(sigma,[stars_x[i] for i in range(len(stars_x))],[stars_v[i] for i in range(len(stars_v))])
     else: 
         stars = []
     m=mu #M_s = 1
-    rho_part, rho_FDM = plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type,G_tilde)
-    phi_part = GF.fourier_potential(rho_part,L,type = type, G_tilde=G_tilde)
-    phi_FDM = GF.fourier_potential(rho_FDM,L,type = type, G_tilde=G_tilde)
-    phi = phi_part + phi_FDM
+    # if variable_mass[0]=='False':
+    #     #rho_part, rho_FDM = plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type,G_tilde)
+    # else:
+    #     rho_part = NB.particle_density(stars,L,z,variable_mass)
+    #     rho_FDM = np.zeros_like(rho_part)
+    # phi_part = GF.fourier_potential(rho_part,L,type = type, G_tilde=G_tilde)
+    # phi_FDM = GF.fourier_potential(rho_FDM,L,type = type, G_tilde=G_tilde)
+    # phi = phi_part + phi_FDM
     
     #######################################################
     ### FDM ANALAYSIS #######################################
@@ -166,40 +162,22 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     #######################################################
     ### NBODY ANALYSIS ######################################
     if Num_stars != 0:
-        NBody.plot_centroids(indices,part_centroids)
+        #NBody.plot_centroids(indices,part_centroids)
         
 
         #Calculate rms velocity and position
-        z_rms,v_rms = NBody.rms_stuff(sigma,stars,phi_part,L,z,dz,type = type)
+        #z_rms,v_rms = NBody.rms_stuff(sigma,stars,phi_part,L,z,dz,type = type)
 
-        z_rms_storage =np.append(z_rms_storage,z_rms)
-        v_rms_storage =np.append(v_rms_storage,v_rms)
-        NBody.rms_plots(indices,z_rms_storage,v_rms_storage)
+        #z_rms_storage =np.append(z_rms_storage,z_rms)
+        #v_rms_storage =np.append(v_rms_storage,v_rms)
+        #NBody.rms_plots(indices,z_rms_storage,v_rms_storage)
 
-        NBody.v_distribution(stars,L)
+        #NBody.v_distribution(stars,L)
 
         #NBody.select_stars_plots(z,K_5stars_Energies,W_5stars_Energies)
-
-        if len(K_Energies) != len(indices):
-            #compute the last Energies and add to array
-            K_array = np.array([])
-            W_array = np.array([])
-            for j in range(len(stars)):
-                star = stars[j]
-                W = star.get_W(z,phi,L)
-                K = 0.5*star.mass*star.v**2
-
-                K_array = np.append(K_array,K)
-                W_array = np.append(W_array,W)
-            print(len(K_array))
-            print(np.shape(K_Energies))
-            print(np.shape(K_array))
-            K_Energies = np.append(K_Energies, [K_array], axis = 0)
-            W_Energies = np.append(W_Energies, [W_array], axis = 0)
-
-            print(np.shape(K_Energies))
-            
-        NBody.all_stars_plots(indices,K_Energies,W_Energies, variable_mass=variable_mass)
+        dtau = 0.5*0.004831915000023168
+        energy_indices = dtau*np.linspace(0,len(K_Energies),len(K_Energies))
+        NBody.all_stars_plots(energy_indices,K_Energies,W2_Energies, variable_mass=variable_mass)
         #NBody.all_stars_plots(np.linspace(0,2.47943,len(K_fine_Energies[:,0])), K_fine_Energies,W_fine_Energies, variable_mass=variable_mass)
 
         
@@ -211,6 +189,11 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         deltaE = NBody.scatter_deltaE(Energies_i, Energies_f, variable_mass, Num_bosons, r)
         deltaE = NBody.scatter_deltaE_frac(Energies_i, Energies_f, variable_mass, Num_bosons, r)
         
+        deltaE_array = np.array([])
+        for i in range(len(indices)):
+            value = np.sum(Energies[i,:] - Energies_i)/Energies_i
+            deltaE_array = np.append(deltaE_array,value)
+        print(deltaE_array)
 
         # fig, ax = plt.subplots(1,3)
         # ax[0].plot([np.sum(K_fine_Energies[i,:]) for i in range(1000)],label ="Kinetic")
@@ -289,14 +272,14 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         plt.show()
 
     if Num_stars != 0 and Num_bosons != 0:#'FDM_z_rms' in locals() and 'FDM_v_rms' in locals() and 'z_rms' in locals() and 'v_rms' in locals():
-        return r, deltaE, Num_stars, FDM_z_rms, FDM_v_rms, z_rms,v_rms, popt
+        return r, deltaE, deltaE_array, Num_stars, popt
     elif Num_stars != 0 and variable_mass[0] == False: #'z_rms' in locals() and 'v_rms' in locals():
-        return r, Num_stars, z_rms, v_rms, popt
+        return r, Num_stars, popt
     elif Num_stars != 0 and variable_mass[0] == 'True':
         sigma1 = variable_mass[2]
         sigma2 = variable_mass[3]
         print(sigma1,sigma2)
-        return sigma1/sigma2, deltaE
+        return sigma1/sigma2, deltaE, deltaE_array
     elif Num_bosons != 0:#'FDM_z_rms' in locals() and 'FDM_v_rms' in locals():
         return r, Num_bosons, FDM_z_rms, FDM_v_rms
 
@@ -305,9 +288,13 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
 # ALL THE ACTUAL FUNCTIONS:
 ########################################################
 def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type = 'Periodic', G_tilde = None):
-    stars_x = [star.x for star in stars]
-    stars_v = [star.v for star in stars]
-    Num_stars = len(stars)
+    #stars_x = stars.x
+    #stars_v = stars.v
+    stars_x = np.zeros(1)
+    stars_v = np.zeros(1)
+    stars = NB.stars(1,0,0)
+    
+    Num_stars = len(stars_x)
 
     #rescale wavenumber k to velocity v:
     dz = z[1]-z[0]
@@ -320,7 +307,7 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type = 'Periodic', G_tilde = None
 
     #Calculate Particle distribution on Mesh
     if Num_stars !=0:
-        stars = [NB.star(i,sigma,stars_x[i],stars_v[i]) for i in range(len(stars_x))]
+        #stars = [NB.star(i,sigma,stars_x[i],stars_v[i]) for i in range(len(stars_x))]
         grid_counts = NB.grid_count(stars,L,z)
     else:
         grid_counts = np.zeros_like(z)
@@ -374,9 +361,9 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type = 'Periodic', G_tilde = None
         #     centroid_z += z[j]*grid_counts[j]
         # centroid_z = centroid_z / Num_stars
 
-        for star in stars:
-            star.x = star.x - centroid_z #shift
-            star.reposition(L) #reposition
+        # for star in stars:
+        #     star.x = star.x - centroid_z #shift
+        #     star.reposition(L) #reposition
 
         grid_counts = NB.grid_count(stars,L,z)
         rho_part = (grid_counts/dz)*sigma 
@@ -425,7 +412,7 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type = 'Periodic', G_tilde = None
     v = k*(hbar/mu)
     x_min, x_max = np.min(z), np.max(z)
     v_min, v_max = np.min(v), np.max(v)
-    F = FDM_OG.Husimi_phase(chi,z,dz,L,eta)
+    F = FDM_OG.Husimi_phase(chi,z,L,eta)
     max_F = np.max(F)/2
     y_max = 2
     ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.coolwarm, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y_max))
@@ -446,8 +433,8 @@ def plot_FDMnBodies(z,L,m,mu,sigma,r,stars,chi,type = 'Periodic', G_tilde = None
 
     #Plot the Phase Space distribution
     if Num_stars != 0:
-        x_s = np.array([star.x for star in stars])
-        v_s = np.array([star.v for star in stars])
+        x_s = stars.x
+        v_s = stars.v
         xy = np.vstack([x_s,v_s])
         z = gaussian_kde(xy)(xy)
         ax['lower right'].scatter(x_s,v_s,s = 1,c=z,label = "Particles")

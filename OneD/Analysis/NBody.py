@@ -207,6 +207,11 @@ def all_stars_plots(indices,K_Energies,W_Energies, variable_mass = [False]):
         
         ax[2].plot(indices,(K_totals+K_totals2+W_totals+ W_totals2)/2,"k--", marker = "o",label = "(Heavy + Light) /2")
         y_tot_avg = np.mean((K_totals+K_totals2+W_totals+ W_totals2)/2)
+    
+        Virial1 = np.abs(K_totals/W_totals)
+        Virial2 = np.abs(K_totals2/W_totals2)
+        ax[3].plot(indices,Virial1, "r--", label = "Heavy")
+        ax[3].plot(indices,Virial2, "b--", label = "Light")
     else:
         y_tot_avg = np.mean((K_totals+W_totals))
     ax[0].set_title("Potential Energy over time")
@@ -229,7 +234,8 @@ def all_stars_plots(indices,K_Energies,W_Energies, variable_mass = [False]):
     ax[2].legend()
 
     ax[3].set_title("Virial Ratio $|K/W|$ over time")
-    ax[3].plot(indices, Virial_ratios, "r-", marker = "o")
+    ax[3].plot(indices, Virial_ratios, "b-", marker = "o")
+    ax[3].legend()
     plt.show()
 
 def scatter_deltaE(Energies_i, Energies_f, variable_mass, Num_bosons, r = None):

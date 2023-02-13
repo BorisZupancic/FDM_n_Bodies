@@ -7,6 +7,8 @@ import cv2
 from PIL import Image
 import OneD.Global as GF
 
+from scipy.interpolate import interp1d
+
 ###################################
 # For HARMONIC OSCILATTOR
 # r and f Parameters as written in notebook
@@ -97,34 +99,59 @@ def time_evolveV2(chi,phi,r,dz,dtau,m,L):
 ###################################################################################
 # FOR PHASE-SPACE DISTRIBUTION STUFF
 ###################################################################################
-def Husimi_phase(chi,z,dz,L,eta):
+def Husimi_phase(chi,z,eta):
     N = len(chi)
+    dz = z[1]-z[0]
     
     k = 2*np.pi*np.fft.fftfreq(len(z),dz)
     dk = k[1]-k[0]
-    #print(f"k[N//2-1] = {k[N//2 -1]}, k[N//2] = {k[N//2]}")
-
-    f_s = np.ndarray((N,N), dtype = complex)
-    for i in range(len(z)):
-        z_0 = z[i]
-
-        g = np.exp(-(z_0-z)**2 / (2*eta**2))
-        f = np.fft.ifft(np.multiply(chi,g))
-        #f = np.multiply(np.exp(1j*k*x_0/2),f) #A*B*f
-
-        
-        f = np.append(f[N//2:N],f[0:N//2])
-        
-        f_s[i] = f
-
-    F_s = np.absolute(f_s)**2 
-    F_s = np.transpose(F_s)
+    g = np.array([np.exp(-(z_0-z)**2 / (2*eta**2)) for z_0 in z])
+    
+    f = np.fft.fft(np.multiply(chi,g))
+    f = np.append(f[:,N//2:N],f[:,0:N//2],axis = 1)
+  
+    F = np.absolute(f)**2 
+    F = np.transpose(F)
 
     #normalize it:
-    Norm_const = np.sum(dz*dk*F_s)
-    F_s = F_s/Norm_const
+    Norm_const = np.sum(dz*dk*F)
+    F = F/Norm_const
    
-    return F_s
+    return F
+
+
+def Husimi_phase_V2(chi, z, eta, pmax = None, dp = None):
+    
+    N = len(chi)
+    
+    dz = z[1]-z[0]
+    p = 2*np.pi*np.fft.fftfreq(len(chi),dz)
+    kmax = np.max(p)
+    
+    # if kmax < pmax:
+    #     #want: pmax = 2*np.pi*(0.5*N_) / (N_*dz)
+    #     #N_ = int(np.ceil(pmax/dp))
+    #     #z = dz*np.arange(-N_, N_, 1)
+        
+    #     dz = np.pi/pmax
+    #     z = np.arange(z[0],z[-1],dz)
+    #     N_new = len(z) - N
+
+    #     print(len(z))
+
+    #     chi = np.append(chi,np.zeros(N_new//2))
+    #     chi = np.append(np.zeros(N_new//2),chi)
+    #     p = 2*np.pi*np.fft.fftfreq(len(chi),dz)
+
+    #     z = np.linspace(z[0],z[-1],len(chi))
+
+    p = np.append(p[len(p)//2:],p[:len(p)//2])
+    
+    F = Husimi_phase(chi,z,eta)
+    
+    z_kn, p_kn = np.meshgrid(z,p)
+
+    return F, z_kn, p_kn
 
 def generate_phase_plots(psi_s,x,dx,L,m,hbar,max_F,eta,dt,frame_spacing, Directory,folder_name):
     
