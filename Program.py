@@ -23,8 +23,9 @@ import OneD.Init_C as IC
 print("Specify Path to create folder for saving images.")
 parent = str(input())
 
-dirExtension = "1D_Codes/Programs"
-Directory = os.getcwd()+"/"+dirExtension+"/"+parent #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
+# dirExtension = "1D_Codes/Programs"
+# Directory = os.getcwd()+"/"+dirExtension+"/"+parent #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
+Directory = os.getcwd()+"/"+parent #os.curdir() #"/home/boris/
 print(Directory)
 
 ############################################
