@@ -50,7 +50,7 @@ fixed_phi, bc_choice, sim_choice2, dynamical_times, ICs = IC.startup()
 
 print("---Creating Initial Conditions---")
 
-z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax = IC.init(hbar,L_s, v_s, ICs)    
+z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax, dtau = IC.init(hbar,L_s, v_s, ICs)    
 L = z[-1]-z[0]
 dz = z[1]-z[0]
 Num_stars = len(stars.x)
@@ -157,7 +157,7 @@ if Num_stars != 0:
 st = time.process_time() #Start Tracking CPU Time
 #Run simulation on Initial Conditions:
 
-snapshot_indices, stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, W_2_star_storage, K_star_fine_storage, W_star_fine_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dynamical_times, T_Dynamical, bc_choice, z,
+snapshot_indices, stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, W_2_star_storage, K_star_fine_storage, W_star_fine_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, T_Dynamical, bc_choice, z,
                                                                                                       mu, Num_bosons, r, chi, 
                                                                                                       stars,
                                                                                                       v_s,L_s, zmax, vmax,

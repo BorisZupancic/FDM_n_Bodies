@@ -378,7 +378,7 @@ def main_plot(type,G_tilde,L,eta,
     if track_centroid == True:
         return part_centroid, fdm_centroid
 
-def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, 
+def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice, z, 
                     mu, Num_bosons, r, chi, 
                     stars, 
                     v_s, L_s, zmax, vmax, 
@@ -505,21 +505,22 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
     ####################################################
     #PRE-LOOP TIME-SCALE SETUP
 
-    if Num_stars !=0:
-        if variable_mass[0]==False:
-            v_rms = np.std(stars.v)
-        else: 
-            v_rms = np.std([*stars[0].v,*stars[1].v])
-        print(f"dz/v_rms = {dz/v_rms}")
-        dtau = 0.5*dz/v_rms
-    else: #if there is FDM
-        z_dist = np.abs(chi)**2
-        norm = np.sum(z_dist)*dz
-        z_rms = np.sqrt(dz*np.sum(z_dist*z**2)/norm)
-        print(f"z_rms={z_rms}")
-        v_rms = z_rms/t_dynamical
-        lambda_deB = 4*np.pi*r / v_rms
-        dtau = (lambda_deB / z_rms)**2 * t_dynamical
+    # if Num_stars !=0:
+    #     if variable_mass[0]==False:
+    #         v_rms = np.std(stars.v)
+    #     else: 
+    #         v_rms = np.std([*stars[0].v,*stars[1].v])
+    #     print(f"dz/v_rms = {dz/v_rms}")
+    #     dtau = 0.5*dz/v_rms
+    # else: #if there is FDM
+    #     z_dist = np.abs(chi)**2
+    #     norm = np.sum(z_dist)*dz
+    #     z_rms = np.sqrt(dz*np.sum(z_dist*z**2)/norm)
+    #     print(f"z_rms={z_rms}")
+    #     v_rms = z_rms/t_dynamical
+    #     dtau = 0.5*dz/v_rms
+    #     # lambda_deB = 4*np.pi*r / v_rms
+        # dtau = (lambda_deB / z_rms)**2 * t_dynamical
 
     #dtau = 0.02* dtau 
     
@@ -674,14 +675,12 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
                     # W = 0.5*np.sum(rho_FDM*phi)*dz  
                     W = dz*np.sum(rho_FDM*z*np.gradient(phi,dz))
                     #Kinetic Energy:
-                    chi_tilde = np.fft.fft(chi)
+                    chi_tilde = np.fft.fft(chi, norm = "ortho")
                     k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
                     dk = k[1]-k[0]
-                    K = (L/(N**2))* r*np.sum(k**2 * np.abs(chi_tilde)**2)
-                    #K = K / (dk*np.sum(np.abs(chi_tilde)))
-                    #K = (2/(N**2))*r*np.sum(k**2 * np.absolute(chi_tilde)**2)
-                    # K = dz*np.sum(np.conj(chi)*(-r)*np.gradient(np.gradient(chi,dz),dz))
-                    # K =np.abs( K / (dz*np.sum(np.abs(chi)**2)) )
+                    #K = (L/(N**2))* r*np.sum(k**2 * np.abs(chi_tilde)**2)
+                    K = (L/N) * r*np.sum(k**2 * np.abs(chi_tilde)**2)
+                    
                     print(f"K/|W| = {K/np.abs(W)}")
                     if i == 0:
                         W_FDM_storage = np.array([[W]])

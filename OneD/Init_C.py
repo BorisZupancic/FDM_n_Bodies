@@ -123,7 +123,7 @@ def init(hbar,L_scale,v_scale, ICs):
     #     print("Sine^2 ICs instantiated.")
     elif ICs == 3:
         E0,v_sigma,f0 = .7, .5, .1 #.15, .3, .05
-        stars, chi, z_rms, v_rms, z, zmax, vmax  = Spitzer(Num_stars,percent_FDM,z,E0,v_sigma,f0, lambda_ratio)
+        stars, chi, z_rms, v_rms, z, zmax, vmax, dtau  = Spitzer(Num_stars,percent_FDM,z,E0,v_sigma,f0, lambda_ratio)
         T_Dynamical = z_rms/v_rms
         print("Spitzer ICs instantiated.")
 
@@ -152,7 +152,7 @@ def init(hbar,L_scale,v_scale, ICs):
     print(f"Num_Bosons = {Num_bosons}")
     print(f"mu = {mu}")
     
-    return z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax
+    return z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax, dtau
 
 ########################################################################################
 
@@ -312,9 +312,9 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio):
     #initial conditions:
     y = np.zeros(2) #phi = 0, dphi/dt = 0 
 
-    z_original = np.copy(z)
+    #z_original = np.copy(z)
     dz = z[1]-z[0]
-    N = len(z)
+    #N = len(z)
     z = np.zeros(len(z)//2)
     phi = np.zeros(len(z))
     rho = np.zeros(len(z))
@@ -394,15 +394,15 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio):
         stars = NB.stars(m,xIC,vIC) #[NB.star(0,m,x,v) for x,v in zip(xIC,vIC)]
         
         #re-center position and velocity centroids:
-        print("Re-centering position and velocity centroids.")
+        #print("Re-centering position and velocity centroids.")
         z_centroid = np.mean(stars.x)
         v_centroid = np.mean(stars.v)
-        print(f"z_centroid = {z_centroid}, v_centroid = {v_centroid}")
+        #print(f"z_centroid = {z_centroid}, v_centroid = {v_centroid}")
         stars.x += -z_centroid
         stars.v += -v_centroid
         z_centroid = np.mean(stars.x)
         v_centroid = np.mean(stars.v)
-        print(f"z_centroid = {z_centroid}, v_centroid = {v_centroid}")
+        #print(f"z_centroid = {z_centroid}, v_centroid = {v_centroid}")
         
         v_rms = np.std(stars.v)
         z_rms = np.std(stars.x)
@@ -410,9 +410,11 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio):
         print(f"v_rms = {v_rms}")
         t_dynamical = z_rms/v_rms
         print(f"t_dynamical = {t_dynamical}")
-        
+
+        star_v = v_rms
     else:
         stars = NB.stars(0,[],[])
+        star_v = 0
 
 #STEP 3: Create FDM wavefunction (if applicable)
     if percent_FDM!=0:
@@ -431,167 +433,111 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio):
             f[E_kn <= E0] = f0*(A*B_kn[E_kn <= E0] - 1)
 
             return f, phi_kn, v_kn
-        
-        
-        
 
-        N_new = np.copy(N)
+        #N_new = np.copy(N)
         z = z_new
         rho = rho_new
         phi = phi_new
         
-        #1. Re-set grid to proper resolution:
-        N = 5*int(np.ceil(lambda_ratio**2))
-        print(f"Num Grid Points = {N}")
+        #1. Set Default Grid:
+        N = 1000 #default
+        #print(f"Num Grid Points = {N}")
         z = np.linspace(z[0],z[-1],N)
         L = z[-1]-z[0]
         dz = z[1]-z[0]
         
-        L_new = 2*zmax*1.2
+        alpha = 1.2
+        L_new = 2*zmax*alpha
         N_new = int(np.ceil(L_new / dz))
         
         rho = rhointerp(z)
         phi = phiinterp(z)
 
-        #2. Create phase space distribution:
+        #2. Generate phase space distribution:
+        beta = 1.2
         vmax = np.sqrt(2.*E0)
-        v = np.linspace(-vmax,vmax,N)
+        v = np.linspace(-vmax*beta,vmax*beta,N)
         dv = v[1]-v[0]
         
         f, phi_kn, v_kn = DF(phi, v, E0,sigma,f0)
-
+        #calculate v_rms and z_rms
         v_dist = dz*np.sum(f, axis = 1)
         z_dist = dv*np.sum(f, axis = 0)
         v_rms = np.sqrt(dv*np.sum(v_dist*v**2))
         z_rms = np.sqrt(dz*np.sum(z_dist*z**2))
         t_dynamical = z_rms/v_rms
-        # print(f"z_rms = {z_rms}")
-        # print(f"v_rms = {v_rms}")
-        # print(f"t_dynamical = {t_dynamical}")
+        print(f"z_rms = {z_rms}")
+        print(f"v_rms = {v_rms}")
+        print(f"t_dynamical = {t_dynamical}")
 
         
-        #3. Make wavefunction
+        #3. Re-set grid to proper resolution:
+        
         lambda_deB = zmax / lambda_ratio
         r = lambda_deB*v_rms / (4*np.pi)
         mu = 1/(2*r)
-
-        if N < mu*vmax*L/np.pi:
-            N = 5*int(np.ceil(mu*vmax*L/np.pi))
-            z = np.linspace(z[0],z[-1],N)
-            L = z[-1]-z[0]
-            dz = z[1]-z[0]
-
-            L_new = 2*zmax*1.2
-            N_new = int(np.ceil(L_new / dz))
-            
-            rho = rhointerp(z)
-            phi = phiinterp(z)
-            
-        # print(f"lambda_deB = {lambda_deB}")
-        # print(f"Fuzziness: r = {r}")
-        # print(f"Mass mu = {mu}")
         
+        N = beta*zmax*vmax / np.pi / r #alpha*beta*zmax*vmax / np.pi / r
+        N = int(np.ceil(N))
+        
+        z = np.linspace(z[0],z[-1],N)
+        L = z[-1]-z[0]
+        dz = z[1]-z[0]
+        
+        alpha = 1.2
+        L_new = 2*zmax*alpha
+        N_new = int(np.ceil(L_new / dz)) + 1
+        print(f"Num Grid Points = {N_new}")
+
+        rho = rhointerp(z)
+        phi = phiinterp(z) 
 
         vmax = np.sqrt(2.*E0)
-        pmax = N/zmax
-        
-        # pmax = mu*vmax
+        pmax = np.pi*(N-1)/L_new 
+
         p = np.linspace(-pmax,pmax,N)
         dp = p[1]-p[0]
         v = p/mu
-        if pmax < vmax*mu:
-            p = np.arange(-vmax*mu,vmax*mu,dp)
-        v = p/mu
 
         f, phi_kn, v_kn = DF(phi, v, E0,sigma,f0)
-
+        
+        #4. Make wavefunction
         z_kn,p_kn = np.meshgrid(z, p, indexing = 'ij')
-
         thetas = np.random.uniform(0,2*np.pi,len(p))
         R_s = np.exp(1j*thetas)
-        
         chi_kn = np.multiply(R_s,np.sqrt(f)*np.exp(1j*z_kn*p_kn))
         chi = np.sum(chi_kn, axis = 1)
-        Normalization = np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
-        chi = chi * Normalization
-
-
-        eta=(z[-1]-z[0])/np.sqrt(np.pi*len(chi)/2)
         
-        # F, z_kn, p_kn,  = FDM.Husimi_phase_V2(chi, z, eta, pmax = vmax*mu, dp = dp)
-        # plt.pcolormesh(z_kn, p_kn/mu, F)
-        # plt.axis([z[0],z[-1],-np.max(p)/mu,np.max(p)/mu])
-        # plt.show()
-        
-        # F = FDM.Husimi_phase(chi, z, eta)
-        # k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
-        # kmax = np.max(k)
-        # plt.imshow(F, extent = (z[0],z[-1],-kmax/mu,kmax/mu), aspect = (z[-1]-z[0])/(2*kmax/mu))
-        # plt.plot([z[0],z[-1]],[pmax/mu,pmax/mu])
-        # plt.show()
-        
-        # print(f"Area under mu|chi|^2: {mu*dz*np.sum(np.abs(chi)**2)}")
-        # print(f"Area under rho (from DF): {dz*np.sum(rho)}")
-
-        #3b) corrections to momentum/velocity profile:
-        # print("Correcting center of momentum offset ...")
+        #4b) corrections to momentum/velocity profile:
         k_mean = np.sum(np.conj(chi)*(-1j)*np.gradient(chi,dz)) / np.sum(np.abs(chi)**2)
-        # print(f"k_mean={k_mean}")
-        # print(f"v_mean = {k_mean/mu}")
-        # print("-->")
-        
         T_drift = dz*mu/np.abs(k_mean)
         while t_dynamical/T_drift >= 10**(-3):
             chi = chi*np.exp(-1j*k_mean*z)
             k_mean = np.sum(np.conj(chi)*(-1j)*np.gradient(chi,dz)) / np.sum(np.abs(chi)**2)
             T_drift = mu*dz/np.abs(k_mean)
-        
-        # print(f"k_mean={k_mean}")
-        # print(f"v_mean = {k_mean/mu}")
             
         #Extend wavefunction to entire box:
         N_add = int(N_new-len(chi))
         chi = np.append(np.zeros(N_add//2),chi)
         chi = np.append(chi,np.zeros(N_add//2))
-        Normalization = np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
+        z = np.linspace(-L_new/2,L_new/2,len(chi))
+        dz = z[1]-z[0]
+        #Re-normalize:
+        Normalization = np.sqrt( M / (dz*np.sum(np.abs(chi)**2)) / mu) #np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
         chi = chi * Normalization
 
-        z = np.linspace(-L_new/2,L_new/2,len(chi))
-        
-
-
-        #Check:
-        #Virial Ratio:
-        rho_FDM = mu*np.abs(chi)**2
-        z_long = np.linspace(-L,L,2*len(rho_FDM)-1)
-        G = 0.5*np.abs(z_long)
-        G_tilde = np.fft.fft(G)
-
-        phi = GF.fourier_potential(rho_FDM,z[-1]-z[0],type='Isolated', G_tilde = G_tilde)
-        phi = phi - np.min(phi)
-        # plt.plot(z,rho_FDM)
-        # plt.plot(z,phi)
-        # plt.plot(z_new,rho_new, label = "RK4: $\\rho$")
-        # plt.plot(z_new,phi_new, label = "RK4: $\\phi$")
-        # plt.legend()
-        # plt.show()
-        # check normalization:
-        print(f"Total mass in FDM = {dz*np.sum(rho_FDM)}")
-
-        dz = z[1]-z[0]
-        N = len(z)
-        #W = 0.5*np.sum(rho_FDM*phi)*dz  #potential
-        W = dz*np.sum(rho_FDM*z*np.gradient(phi,dz))
-        chi_tilde = np.fft.fft(chi)
-        k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
-        K = (2/(N**2))*r*np.sum(k**2 * np.absolute(chi_tilde)**2) #Kinetic Energy:
-        print(f"K/|W| = {K/np.abs(W)}")
+        FDM_v = v_rms
 
     else:
         chi = np.zeros(N)
+        FDM_v = 0
 
     if percent_FDM!=0 and Num_stars!=0:
         chi = chi / np.sqrt(2)
         stars.mass = stars.mass / 2
 
-    return stars, chi, z_rms, v_rms, z, zmax, vmax  #,t_dynamical
+    dtau = 0.5*dz/np.sqrt(2*E0)
+    #print(dtau)
+    #dtau = 0.5*dz/np.max([star_v, FDM_v])
+    #print(dtau)
+    return stars, chi, z_rms, v_rms, z, zmax, vmax, dtau  #,t_dynamical
