@@ -21,8 +21,8 @@ class stars:
     v: (numpy) array of velocities
     '''
 
-    def __init__(self,mass,x,v):
-        self.mass = mass #mass of star(s)
+    def __init__(self,masses,x,v):
+        self.mass = masses #masses of star(s)
         self.x = x # positions
         self.v = v # velocities
             
@@ -44,7 +44,7 @@ class stars:
         sigma = self.mass
         dz = z[1]-z[0]
         N = len(phi)
-
+        #print(np.min(z))
         #Find the potential energies of each "star" in stars
         #zz = self.x
         phi_interp = interp1d(z,phi)
@@ -79,7 +79,7 @@ def grid_count(stars,L,z):
     '''Count the particles on the mesh-grid.'''
     N = len(z)
     dz = z[1]-z[0]
-    bin_counts, bin_edges = np.histogram(stars.x, bins = N, range = (-L/2-dz/2,L/2 + dz/2))
+    bin_counts, bin_edges = np.histogram(stars.x, bins = N, range = (-L/2-dz/2,L/2 + dz/2), weights = stars.mass)
     return bin_counts
 
 def particle_density(stars, L, z, variable_mass):
@@ -87,20 +87,24 @@ def particle_density(stars, L, z, variable_mass):
     if variable_mass[0] == True:
         stars1 = stars[0]
         stars2 = stars[1]
-        sigma1 = stars1.mass
-        sigma2 = stars2.mass
+        # sigma1 = stars1.mass
+        # sigma2 = stars2.mass
 
         grid_counts1 = grid_count(stars1,L,z)
         grid_counts2 = grid_count(stars2,L,z)
 
         dz = z[1]-z[0]
-        rho_part = (grid_counts1*sigma1 + grid_counts2*sigma2)/dz
+
+        rho_part1 = grid_counts1/dz 
+        rho_part2 = grid_counts2/dz
+        #rho_part = (grid_counts1*sigma1 + grid_counts2*sigma2)/dz
     else:
-        sigma = stars.mass 
+        # sigma = stars.mass 
         grid_counts = grid_count(stars,L,z)
         dz = z[1]-z[0]
-        rho_part = (grid_counts/dz)*sigma 
-    return rho_part
+        rho_part1 = (grid_counts/dz)
+        rho_part2 = np.zeros_like(rho_part1)
+    return rho_part1, rho_part2
     
 def acceleration(phi,L,type):
     grad = GF.gradient(phi,L,type = type)#GF.fourier_gradient(phi,L)

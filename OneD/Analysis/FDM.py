@@ -13,29 +13,62 @@ import OneD.NBody as NB
 import OneD.Global as GF
 
 
-def plot_Energies(indices,Ks,Ws):
-    #set the scale:
-    Dy_1 = np.max(Ks)-np.min(Ks)
-    Dy_2 = np.max(Ws)-np.min(Ws)
-    Dy = np.max([Dy_1,Dy_2])
-    
-    fig, ax = plt.subplots(1,4, figsize = (15,5))
-    
-    ax[0].plot(indices, Ws,"o--")
-    ax[0].set_title("FDM Potential")
-    
-    ax[1].plot(indices,Ks,"o--")
-    ax[1].set_title("FDM Kinetic")
-    
-    y_avg = np.mean(Ks+Ws)
-    y_min = y_avg - Dy/2
-    y_max = y_avg + Dy/2
-    ax[2].plot(indices, Ks+Ws,"o--")
-    ax[2].set_title("FDM Total Energy")
-    ax[2].set_ylim(y_min,y_max)
 
-    ax[3].plot(indices, np.abs(Ks/Ws),"o--")
-    ax[3].set_title("$\\frac{K}{|W|}$")
+def plot_Energies(time,Ks,Ws):
+    K = Ks - np.mean(Ks)
+    W = Ws - np.mean(Ws)
+    E = Ks+Ws
+    E = E - np.mean(E)
+
+    RMS_amplitude = np.sqrt(np.mean(E**2))
+    Max_amplitude = np.max(E)
+    print(Max_amplitude)
+
+    fig, ax = plt.subplots(2,1, figsize = (10,8), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
+    
+    ax[0].set_title("Variation from Mean Total Energies in FDM over Time", fontdict={'fontsize' : 15})
+    ax[0].plot(time,K,label = "$\\delta K$ Kinetic Energy")
+    ax[0].plot(time,W,label = "$\\delta W$ Potential Energy")
+    ax[0].plot(time,E, label = "$\\delta (K+W)$ Total Energy")
+    ax[0].legend(loc='upper right')
+    ax[0].set_ylabel("Energy (code units)")
+    ax[0].set_xlabel("Time (code units)")
+
+    ax[1].set_title("Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
+    ax[1].plot(time,Ks/np.abs(Ws)) #, label = "Virial Ratio $\\frac{K}{|W|}$")
+    ax[1].set_xlabel("Time (code units)")
+
+    ax[0].grid(True)
+    ax[1].grid(True)
+
+    fig.subplots_adjust(hspace = 0.3)
+    plt.show()
+
+    return RMS_amplitude, Max_amplitude
+
+def plot_Freqs(time,Ks,Ws):
+    
+
+    dtau = time[1]-time[0]
+    k = 2*np.pi*np.fft.rfftfreq(len(Ks),dtau)
+    
+    Ks = np.fft.rfft(Ks-np.mean(Ks))
+    Ws = np.fft.rfft(Ws-np.mean(Ws))
+    
+
+    K = np.abs(Ks)**2
+    W = np.abs(Ws)**2
+    #E = K+W
+    E=K
+
+    fig, ax = plt.subplots(1,1, figsize = (15,5), sharex = True)
+    fig.suptitle("Power Spectrum for Oscillations in Kinetic Energy", fontsize = 15)
+    ax.plot(k**(1/3), E,"-")
+    ax.set_xlabel("Cube Root Frequency $\\sqrt[3]{k}$",fontsize=12)
+    ax.set_ylabel("Power", fontsize=12)
+    
+    plt.grid(True)
+    plt.yscale("log")
     plt.show()
 
 def v_distribution(z,L,chi,r,mu):

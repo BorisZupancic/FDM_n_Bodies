@@ -32,27 +32,27 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     #Load in the necessary quantities:
     Properties = np.loadtxt("Properties.csv", dtype = str, delimiter = ",")
     print(Properties)
-    Properties = [Properties[1::,1][i] for i in range(len(Properties)-1)]
-    L,mu,Num_bosons,sigma = [float(Properties[i]) for i in range(4)]
-    fraction, sigma1, sigma2, Num_stars,r,N = [float(Properties[i]) for i in range(5,len(Properties)-1)]
+    Properties = [Properties[:,1][i] for i in range(len(Properties))]
+    Time_elapsed, L, mu,Num_bosons = [float(Properties[i]) for i in range(4)]
+    fraction, Num_stars,r,N = [float(Properties[i]) for i in range(5,len(Properties)-2)]
     variable_mass = Properties[4]
-    variable_mass = [variable_mass, fraction, sigma1, sigma2]
-    indices = Properties[-1].replace('[','').replace(']','')
+    variable_mass = [variable_mass, fraction]
+    indices = Properties[-2].replace('[','').replace(']','')
     indices = indices.split(' ')
     new_indices = []
     for x in indices:
         try: 
-            value = float(x)
+            value = int(x)
             new_indices.append(value)
         except:
-            pass
-        
+            pass    
     indices = new_indices
     print(indices)
 
+    dtau = float(Properties[-1])
     print(f"r={r},Num_stars = {Num_stars}")
 
-    percent_FDM = Num_bosons*mu / (Num_bosons*mu + Num_stars*sigma)
+    # percent_FDM = Num_bosons*mu / (Num_bosons*mu + Num_stars*sigma)
 
     N = int(N)
     z = np.linspace(-L/2,L/2,N)
@@ -73,6 +73,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     if Num_bosons == 0:
         stars_x = np.loadtxt("StarsOnly_Pos.csv", dtype = float, delimiter=",")
         stars_v = np.loadtxt("StarsOnly_Vel.csv", dtype = float, delimiter=",")
+        stars_m = np.loadtxt("Particle_masses.csv", dtype = float, delimiter=",")
         K_Energies = np.loadtxt("K_star_Energies.csv", dtype = float,delimiter = ",")
         W_Energies = np.loadtxt("W_star_Energies.csv", dtype = float,delimiter = ",")
         K_fine_Energies = np.loadtxt("K_star_fine_Energies.csv", dtype = float,delimiter = ",")
@@ -99,6 +100,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     elif Num_bosons!=0 and Num_stars !=0:
         stars_x = np.loadtxt("StarsOnly_Pos.csv", dtype = float, delimiter=",")
         stars_v = np.loadtxt("StarsOnly_Vel.csv", dtype = float, delimiter=",")
+        stars_m = np.loadtxt("Particle_masses.csv", dtype = float, delimiter=",")
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
         part_centroids = np.loadtxt("Particle_Centroids.csv",dtype = float, delimiter=',')
         fdm_centroids = np.loadtxt("FDM_Centroids.csv",dtype = float, delimiter=',')
@@ -120,12 +122,14 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         if variable_mass[0] == True:
             num_to_change = int(np.floor(fraction*Num_stars))
             
-            stars1 = NB.stars(sigma1,[stars_x[i] for i in range(0,num_to_change)],[stars_v[i] for i in range(0,num_to_change)])#[NB.star(i,sigma1,stars_x[i],stars_v[i]) for i in range(0,num_to_change)] 
-            stars2 = NB.stars(sigma2,[stars_x[i] for i in range(num_to_change,Num_stars)],[stars_v[i] for i in range(num_to_change,Num_stars)]) 
+            masses1 = stars_m[0]
+            masses2 = stars_m[1]
+            stars1 = NB.stars(masses1,[stars_x[i] for i in range(0,num_to_change)],[stars_v[i] for i in range(0,num_to_change)])#[NB.star(i,sigma1,stars_x[i],stars_v[i]) for i in range(0,num_to_change)] 
+            stars2 = NB.stars(masses2,[stars_x[i] for i in range(num_to_change,Num_stars)],[stars_v[i] for i in range(num_to_change,Num_stars)]) 
             stars = [stars1[:],stars2[:]]
             
         else:
-            stars = NB.stars(sigma,[stars_x[i] for i in range(len(stars_x))],[stars_v[i] for i in range(len(stars_v))])
+            stars = NB.stars(stars_m,[stars_x[i] for i in range(len(stars_x))],[stars_v[i] for i in range(len(stars_v))])
     else: 
         stars = []
     m=mu #M_s = 1
@@ -141,17 +145,14 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     #######################################################
     ### FDM ANALAYSIS #######################################
     if Num_bosons != 0:
-        #check normalization of chi:
-        chi_tilde = np.fft.fft(chi,len(chi))
-        sum = np.sum(np.sum(np.absolute(chi_tilde)**2))
-        print(f"sum chi^2 = {sum}")
+        
+        #NBody.plot_centroids(indices,fdm_centroids)
+        
+        time = dtau*np.linspace(0,len(Ks_FDM),len(Ks_FDM))
+        if Num_stars==0:
+            RMS_amplitude, Max_amplitude = FDM.plot_Energies(time,Ks_FDM,Ws_FDM)
 
-        NBody.plot_centroids(indices,fdm_centroids)
-
-        print((len(chi)**2)/2)
-        print(np.sum(dz*np.absolute(chi)**2))
-
-        FDM.plot_Energies(indices, Ks_FDM,Ws_FDM)
+            FDM.plot_Freqs(time, Ks_FDM,Ws_FDM)
 
         v_dist = FDM.v_distribution(z,L,chi,r,mu)
 
@@ -175,23 +176,61 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         #NBody.v_distribution(stars,L)
 
         #NBody.select_stars_plots(z,K_5stars_Energies,W_5stars_Energies)
-        dtau = 0.5*0.004831915000023168
-        energy_indices = dtau*np.linspace(0,len(K_Energies),len(K_Energies))
-        NBody.all_stars_plots(energy_indices,K_Energies,W2_Energies, variable_mass=variable_mass)
+        #dtau = 0.5*0.004831915000023168
+        print(W2_Energies.shape)
+        print(K_fine_Energies.shape)
+        
+        if variable_mass[0]=='True' or Num_bosons!=0:
+            W_fine_Energies = W2_Energies
+
+        time = dtau*np.linspace(0,len(K_fine_Energies),len(K_fine_Energies))
+        if Num_bosons==0:
+            RMS_amplitude, Max_amplitude = NBody.plot_Energies(time,K_fine_Energies,W_fine_Energies,variable_mass)
+        
+        if variable_mass[0]=='False' and Num_bosons==0:
+            NBody.plot_Freqs(time, K_fine_Energies,W_fine_Energies)
+
+        #NBody.all_stars_plots(time,K_Energies,W2_Energies, variable_mass=variable_mass)
         #NBody.all_stars_plots(np.linspace(0,2.47943,len(K_fine_Energies[:,0])), K_fine_Energies,W_fine_Energies, variable_mass=variable_mass)
 
-        
+        #Correct the potential's minimum point drift:
+        if variable_mass[0] == 'True':
+            fraction = variable_mass[1]
+            Num_stars = len(W_Energies[0])
+            num_to_change = int(np.floor(fraction*Num_stars))
+            
+            for i in range(len(W_Energies)):
+                j = indices[i]
+                correction = (2/Num_stars)*(0.5*np.sum(W_Energies[i])-(W2_Energies[j,0]+W2_Energies[j,1]))
+                W_Energies[i] = W_Energies[i] - correction
+
+            #check correction:
+            print(W2_Energies[-1,0]+W2_Energies[-1,1])
+            print(0.5*np.sum(W_Energies[-1]))
+
+        else:
+            for i in range(len(W_Energies)):
+                j = indices[i]
+                correction = (2/len(W_Energies[i]))*(0.5*np.sum(W_Energies[i]) - W2_Energies[-1])
+                W_Energies[i] = W_Energies[i] - correction
+
+            #check correction:
+            print(W2_Energies[-1])
+            print(0.5*np.sum(W_Energies[-1]))
+
         Energies = W_Energies + K_Energies
-        Energies_i = Energies[0,:]
-        Energies_f = Energies[-1,:]
+        Energies_i = Energies[0]
+        Energies_f = Energies[-1]
+
         
-        
-        deltaE = NBody.scatter_deltaE(Energies_i, Energies_f, variable_mass, Num_bosons, r)
-        deltaE = NBody.scatter_deltaE_frac(Energies_i, Energies_f, variable_mass, Num_bosons, r)
-        
+        # if variable_mass[0]=='True' or Num_bosons!=0:
+        #     deltaE = NBody.scatter_deltaE(Energies_i, Energies_f, variable_mass, Num_bosons, r)
+        #     deltaE = NBody.scatter_deltaE_frac(Energies_i, Energies_f, variable_mass, Num_bosons, r)
+        deltaE=0
+
         deltaE_array = np.array([])
         for i in range(len(indices)):
-            value = np.sum(Energies[i,:] - Energies_i)/Energies_i
+            value = np.mean((Energies[i] - Energies_i)/Energies_i)
             deltaE_array = np.append(deltaE_array,value)
         print(deltaE_array)
 
@@ -212,14 +251,14 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         # print(f"Total Potential: {np.sum(-1*z*np.gradient(phi_part,dz)*rho_part)*dz}")
         
         
-        #Hist the final energies:
-        Energies = K_Energies+W_Energies
-        n_bins = int(np.floor(np.sqrt(Num_stars)))#int(np.floor(np.sqrt(len(Energies))))
-        plt.hist(Energies[-1,:],bins = n_bins)#100)
-        plt.title("Histogram of Final Energies of Stars")
-        plt.xlabel("Energy (code units)")
-        plt.show()
-
+        # #Hist the final energies:
+        # Energies = K_Energies+W_Energies
+        # n_bins = int(np.floor(np.sqrt(Num_stars)))#int(np.floor(np.sqrt(len(Energies))))
+        # plt.hist(Energies[-1,:],bins = n_bins)#100)
+        # plt.title("Histogram of Final Energies of Stars")
+        # plt.xlabel("Energy (code units)")
+        # plt.show()
+        
         if type == 'Periodic':
             print("Curve Fitting Procedure ... ")
             NBz_whole,NBrho_whole = NBody.rho_distribution(z,rho_part)
@@ -229,21 +268,71 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
             popt = None
 
     if Num_bosons != 0 and Num_stars != 0:
-        W_totals = 0.5 * np.array([np.sum(W_Energies[i,:]) for i in range(np.shape(W_Energies)[0])])
-        K_totals = np.array([np.sum(K_Energies[i,:]) for i in range(np.shape(K_Energies)[0])])
+        
+        fig, ax = plt.subplots(2,2, figsize = (20,10), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
+
+        V1 = Ks_FDM/np.abs(Ws_FDM)
+        V2 = K_fine_Energies/np.abs(W_fine_Energies)
+        
+        K1 = (Ks_FDM - Ks_FDM[0])/Ks_FDM[0] 
+        W1 = (Ws_FDM - Ws_FDM[0])/Ws_FDM[0] 
+        E1 = Ks_FDM+Ws_FDM
+        E1 = (E1 - E1[0])/E1[0] 
+
+        K2 = (K_fine_Energies - K_fine_Energies[0])/K_fine_Energies[0]
+        W2 = (W_fine_Energies - W_fine_Energies[0])/W_fine_Energies[0]
+        E2 = K_fine_Energies+W_fine_Energies
+        E2 = (E2 - E2[0])/E2[0]
+        
+
+        plt.suptitle("Fractional Change in Total Energies in Particles over Time", fontsize = 15) #fontdict={'fontsize' : 15})
+        
+        ax[0,0].plot(time,K1,label = "$\\Delta K / K_0$ Kinetic Energy")
+        ax[0,0].plot(time,W1,label = "$\\Delta W / W_0$ Potential Energy")
+        ax[0,0].plot(time,E1,label = "$\\Delta (K+W) / (K_0+W_0)$ Total Energy")
+        ax[0,0].set_title("FDM")
+
+        ax[0,1].plot(time,K2,label = "$$\\Delta K / K_0$ Kinetic Energy")
+        ax[0,1].plot(time,W2,label = "$\\Delta W / W_0$ Potential Energy")
+        ax[0,1].plot(time,E2,label = "$\\delta (K+W) / (K_0+W_0)$ Total Energy")
+        ax[0,1].set_title("Particles")
+        
+        ax[0,0].legend(loc='upper right')
+        ax[0,1].legend(loc='upper right')
+
+        ax[1,0].set_title("FDM Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
+        ax[1,0].plot(time,V1)
+        ax[1,1].set_title("Particles Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
+        ax[1,1].plot(time,V2)
+        
+
+        ax[0,0].set_ylabel("$\\frac{\\Delta E}{E_0}$")
+        ax[0,0].set_xlabel("Time (code units)")
+        ax[0,1].set_xlabel("Time (code units)")
+        ax[1,0].set_xlabel("Time (code units)")
+        ax[1,1].set_xlabel("Time (code units)")
+
+        ax[0,0].grid(True)
+        ax[0,1].grid(True)
+        ax[1,0].grid(True)
+        ax[1,1].grid(True)
+    
+        fig.subplots_adjust(hspace = 0.3)
+        plt.show()
+
 
         #Check that total energy is conserved:
-        K = K_totals + Ks_FDM
-        W = W_totals + Ws_FDM
+        K = K_fine_Energies + Ks_FDM
+        W = W_fine_Energies + Ws_FDM
         Virial_ratios = np.abs(K/W)
     
         fig,ax = plt.subplots(1,4,figsize = (20,5))
         plt.suptitle("Energy of FDM+Stars, at Snapshot times/indices", fontsize = 20)
         ax[0].set_title("Potential Energy over time", fontsize = 15)
-        ax[0].plot(indices,W,"--", marker = "o",label = "$\\Sigma W$")
+        ax[0].plot(time,W,"--",label = "$\\Sigma W$")
         
         ax[1].set_title("Kinetic Energy over time", fontsize = 15)
-        ax[1].plot(indices,K,"--", marker = "o",label = "$\\Sigma K$")
+        ax[1].plot(time,K,"--",label = "$\\Sigma K$")
         ax[1].legend()
 
         #set the scale:
@@ -252,36 +341,34 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         y_min = y_min - Dy/2
         y_max = Dy + y_min
         ax[2].set_title("Total Energy K+W over time", fontsize = 15)
-        ax[2].plot(indices,K+W,"--", marker = "o",label = "$\\Sigma E$")
+        ax[2].plot(time,K+W,"--",label = "$\\Sigma E$")
         ax[2].set_ylim(y_min,y_max)
         ax[2].legend()
 
         ax[3].set_title("Virial Ratio $|K/W|$ over time", fontsize = 15)
-        ax[3].plot(indices, Virial_ratios, "b--", marker = "o")
+        ax[3].plot(time, Virial_ratios, "b--", marker = "o")
         plt.show()
 
         fig,ax = plt.subplots(1,2, figsize = (10,5))
-        star_total_E = K_totals + W_totals
+        star_total_E = K_fine_Energies + W_fine_Energies
         fdm_total_E = Ks_FDM + Ws_FDM
         E_total = star_total_E + fdm_total_E
-        ax[0].plot(indices,np.abs(star_total_E/E_total))
+        ax[0].plot(time,np.abs(star_total_E/E_total))
         ax[0].set_title("Stars: $E/E_{total}$")
         
-        ax[1].plot(indices,np.abs(fdm_total_E/E_total))
+        ax[1].plot(time,np.abs(fdm_total_E/E_total))
         ax[1].set_title("FDM: $E/E_{total}$")
         plt.show()
 
+    
     if Num_stars != 0 and Num_bosons != 0:#'FDM_z_rms' in locals() and 'FDM_v_rms' in locals() and 'z_rms' in locals() and 'v_rms' in locals():
         return r, deltaE, deltaE_array, Num_stars, popt
-    elif Num_stars != 0 and variable_mass[0] == False: #'z_rms' in locals() and 'v_rms' in locals():
-        return r, Num_stars, popt
+    elif Num_stars != 0 and variable_mass[0] == 'False': 
+        return Num_stars, RMS_amplitude, Max_amplitude #, popt
     elif Num_stars != 0 and variable_mass[0] == 'True':
-        sigma1 = variable_mass[2]
-        sigma2 = variable_mass[3]
-        print(sigma1,sigma2)
-        return sigma1/sigma2, deltaE, deltaE_array
+        return deltaE, deltaE_array
     elif Num_bosons != 0:#'FDM_z_rms' in locals() and 'FDM_v_rms' in locals():
-        return r, Num_bosons, FDM_z_rms, FDM_v_rms
+        return r, Num_bosons, FDM_z_rms, FDM_v_rms, RMS_amplitude, Max_amplitude
 
 
 ########################################################
