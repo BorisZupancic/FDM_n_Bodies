@@ -429,6 +429,7 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
                 ftmp = np.random.uniform(0,fmax)
             vIC[i] = vtmp
 
+        vmax = np.sqrt(2.*E0) #re-write the absolute max velocity
         
         #re-center position and velocity centroids:
         #print("Re-centering position and velocity centroids.")
@@ -486,6 +487,7 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
                 #uniformly sample xIC and vIC
                 #then assign masses proportional to f(x,v)
                 
+                
                 xIC = np.ndarray(Num_stars)
                 vIC = np.ndarray(Num_stars)
                 Es = np.ndarray(Num_stars)
@@ -518,7 +520,7 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
                 epsilon = net_momentum / np.sum(masses)
                 vIC = vIC - epsilon 
 
-                net_position = np.sum(masses*vIC)
+                net_position = np.sum(masses*xIC)
                 epsilon = net_position / np.sum(masses)
                 xIC = xIC - epsilon 
 

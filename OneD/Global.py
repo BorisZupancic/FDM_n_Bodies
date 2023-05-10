@@ -252,7 +252,7 @@ def main_plot(type,G_tilde,L,eta,
     ##############################################
     
     if variable_mass[0] == False:
-        Part_force = -gradient(fourier_potential(rho_part2,L,type = type, G_tilde = G_tilde),L,type = type)
+        Part_force = -gradient(fourier_potential(rho_part,L,type = type, G_tilde = G_tilde),L,type = type)
         ax['far right'].plot(z, Part_force, label = "Particle Contribution")
     else:
         Part1_force = -gradient(fourier_potential(rho_part1,L,type = type, G_tilde = G_tilde),L,type = type)
@@ -343,8 +343,8 @@ def main_plot(type,G_tilde,L,eta,
             ax['lower right'].plot([-L/2,L/2],[part2_centroid_v,part2_centroid_v],"k--")
             ax['lower right'].plot([part2_centroid_z,part2_centroid_z],[-y11_max,y11_max],"k--")
         else:
-            part_centroid_z = np.mean(stars.x)
-            part_centroid_v = np.mean(stars.v)
+            part_centroid_z = np.sum(stars.mass*stars.x)/np.sum(stars.mass)
+            part_centroid_v = np.sum(stars.mass*stars.v)/np.sum(stars.mass)
         
             #ax['lower right'].scatter(part_centroid_z,part_centroid_v,s = 100,c = "r",marker = "o")
             ax['lower right'].plot([-L/2,L/2],[part_centroid_v,part_centroid_v],"k--")
@@ -363,10 +363,15 @@ def main_plot(type,G_tilde,L,eta,
     else:
         fdm_centroid = None
     
-    ax['upper left'].legend(fontsize = 15)
-    ax['upper right'].legend(fontsize = 15)
-    ax['lower left'].legend(fontsize = 15)
-    ax['lower right'].legend(fontsize = 15) 
+    if ax['upper left'].lines:
+        ax['upper left'].legend(fontsize = 15)
+    if ax['upper right'].lines or ax['upper right'].collections or bool(ax['upper right'].get_images()):
+        ax['upper right'].legend(fontsize = 15)
+    if ax['lower left'].lines:
+        ax['lower left'].legend(fontsize = 15)
+    if ax['lower right'].collections:
+        ax['lower right'].legend(fontsize = 15) 
+    
     ax['far right'].legend(fontsize = 20)
 
     ax['lower left'].set_ylim(-y10_max,y10_max)
