@@ -180,17 +180,30 @@ elif Num_bosons!=0 and Num_stars!=0:
 
 
 if variable_mass[0] == True:
-    properties = [["Time Elapsed:", elapsed_time],
-              ["Box Length:", L],
-              ["Boson Mass:",mu],
-              ["Number of bosons:",Num_bosons],
-              ["Variable mass:", variable_mass[0]],
-              ["Variable mass fraction", variable_mass[1]],
-              ["Number of Particles:",Num_stars],
-              ["FDM Fuzziness:",r],
-              ["Grid Points:", len(z)],
-              ["Snapshot Indices:", snapshot_indices],
-              ["dtau:", dtau]]
+    if stars_type == 1:
+        properties = [["Time Elapsed:", elapsed_time],
+                ["Box Length:", L],
+                ["Boson Mass:",mu],
+                ["Number of bosons:",Num_bosons],
+                ["Variable mass:", variable_mass[0]],
+                ["Variable mass fraction", variable_mass[1]],
+                ["Number of Particles:",Num_stars],
+                ["FDM Fuzziness:",r],
+                ["Grid Points:", len(z)],
+                ["Snapshot Indices:", snapshot_indices],
+                ["dtau:", dtau]]
+    elif stars_type == 2:
+            properties = [["Time Elapsed:", elapsed_time],
+                ["Box Length:", L],
+                ["Boson Mass:",mu],
+                ["Number of bosons:",Num_bosons],
+                ["Variable mass:", variable_mass[0]],
+                ["Number (Quasi) Particles", variable_mass[1]],
+                ["Number of Particles:",Num_stars],
+                ["FDM Fuzziness:",r],
+                ["Grid Points:", len(z)],
+                ["Snapshot Indices:", snapshot_indices],
+                ["dtau:", dtau]]
 else:
     properties = [["Time Elapsed:", elapsed_time],
               ["Box Length:", L],

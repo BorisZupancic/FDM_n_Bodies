@@ -442,7 +442,8 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     
     #Calculate distribution on Mesh
     if Num_stars !=0:
-        rho_part = NB.particle_density(stars, L, z, variable_mass)
+        rho_part1, rho_part2 = NB.particle_density(stars, L, z, variable_mass)
+        rho_part = rho_part1 + rho_part2
     else:
         rho_part = np.zeros_like(z)
     
@@ -478,12 +479,23 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     ##########################################################
     #PLOT AXIS LIMITS:
     #y0_max = np.max(phi)*1.5
-    y00_max = np.max(rho_FDM)*3
-    y10_max = np.max(rho_part)*3
+    y00_max = np.max([np.max(rho_FDM),np.max(rho_part1)])*3
+    # y10_max = np.max(rho_part)*3
+
+    # if Num_bosons !=0:
+    #     y00_max = np.max(rho_FDM)*3
+    if Num_stars !=0:
+        if variable_mass[0]==True:
+            y00_max = np.max(rho_part1)*2
+            y10_max = np.max(rho_part2)*3
+        else:
+            y10_max = np.max(rho_part)*3
+
+    
 
     if Num_stars == 0:
         y10_max = y00_max
-    elif Num_bosons == 0:
+    if Num_bosons == 0 and variable_mass[0]!=True:
         y00_max = y10_max
     
     if Num_stars !=0:

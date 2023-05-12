@@ -451,7 +451,7 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         star_v = v_rms
 
         #Set-up appropriate grid:    
-        alpha = 1.5
+        alpha = 2
         L_new = 2*zmax*alpha
         #dz = 2*(2*z_rms)/(Num_stars**(1/3)) #1000 #int(np.ceil(np.sqrt(Num_stars)))
         dz = 2*(2*z_rms)/(100000**(1/3))
@@ -602,16 +602,22 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
                 #re-normalize mass:
                 masses = masses*(M/2)/np.sum(masses)
                 print(np.sum(masses))
-
-                net_momentum = np.sum(masses*vIC)
-                epsilon = net_momentum / np.sum(masses)
-                vIC = vIC - epsilon 
-
-                net_position = np.sum(masses*vIC)
-                epsilon = net_position / np.sum(masses)
-                xIC = xIC - epsilon 
-
                 stars1 = NB.stars(masses,xIC,vIC)
+
+                #correcting BOTH sets of stars:
+                net_position = np.sum(stars1.mass*stars1.x) + np.sum(stars2.mass*stars2.x)
+                epsilon = net_position / M # np.sum(masses)
+                stars1.x = stars1.x - epsilon
+                stars2.x = stars2.x - epsilon 
+
+                net_momentum = np.sum(stars1.mass*stars1.v) + np.sum(stars2.mass*stars2.v)
+                epsilon = net_momentum / M # np.sum(masses)
+                stars1.v = stars1.v - epsilon 
+                stars2.v = stars2.v - epsilon 
+
+                net_position = np.sum(stars1.mass*stars1.x) + np.sum(stars2.mass*stars2.x)
+                net_momentum = np.sum(stars1.mass*stars1.v) + np.sum(stars2.mass*stars2.v)
+                print(net_position,net_momentum)
 
                 stars = [stars1,stars2]
 

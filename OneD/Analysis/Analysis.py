@@ -366,7 +366,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     elif Num_stars != 0 and variable_mass[0] == 'False': 
         return Num_stars, RMS_amplitude, Max_amplitude #, popt
     elif Num_stars != 0 and variable_mass[0] == 'True':
-        return deltaE, deltaE_array
+        return fraction, deltaE, deltaE_array
     elif Num_bosons != 0:#'FDM_z_rms' in locals() and 'FDM_v_rms' in locals():
         return r, Num_bosons, FDM_z_rms, FDM_v_rms, RMS_amplitude, Max_amplitude
 
