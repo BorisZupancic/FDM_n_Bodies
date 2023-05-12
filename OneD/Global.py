@@ -217,120 +217,107 @@ def fourier_potential(rho,length = None, type = 'Periodic', G_tilde = None):
 #Full Calculation/Simulation Functions
 
 def main_plot(type,G_tilde,L,eta,
-                z,dz,pmax,dp,mu,chi,rho_FDM,rho_part,
+                z,dz,mu,chi,rho_FDM,rho_part,
                 stars,Num_bosons,Num_stars,dtau,i,
                 x_min,x_max,v_min,v_max,
                 y00_max,y10_max,y01_max,y11_max,
-                a_max,max_F,
-                Directory,folder_name,track_stars, track_centroid = False, variable_mass=[False]):
+                a_max,
+                Directory = None,folder_name = None,track_stars = None, track_centroid = False, variable_mass=[False]):
 
+    
+    rho_part1, rho_part2 = NB.particle_density(stars,L,z,variable_mass)
+    phi_part1 = fourier_potential(rho_part1,L,type = type, G_tilde = G_tilde)
+    phi_part2 = fourier_potential(rho_part2,L,type = type, G_tilde = G_tilde)
+     
+    
     layout = [['upper left', 'upper right', 'far right'],
                         ['lower left', 'lower right', 'far right']]
 
-    fig, ax = plt.subplot_mosaic(layout, constrained_layout = True)
+    fig, ax = plt.subplot_mosaic(layout, sharex = True, constrained_layout = True)
     fig.set_size_inches(20,10)
-    plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5)}".zfill(5), fontsize = 20)    
-    
-    ##############################################
-    #ACCELERATIONS
-    Part_force = -gradient(fourier_potential(rho_part,L,type = type, G_tilde = G_tilde),L,type = type)
-    FDM_force = -gradient(fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde),L,type = type)
-    ax['far right'].plot(z, Part_force, label = "Particle Contribution")
-    ax['far right'].plot(z, FDM_force, label = "FDM Contribution")
-    ax['far right'].set_ylim(-a_max,a_max)
+    plt.suptitle("Time $\\tau = $" +f"{round(dtau*i,5):.5f}".zfill(5), fontsize = 20)    
+    ax['upper left'].set_title("Densities and Potentials",fontsize = 15)
+    ax['upper right'].set_title("Phase Space Distributions", fontsize = 15)
     ax['far right'].set_title("Force contributions",fontsize = 15)
+    
     ax['far right'].set_xlabel("$z = x/L_s$")
     ax['far right'].set_ylabel("Acceleration Field (code units)")
-    ax['far right'].legend(fontsize = 20)
+    ax['upper left'].set_xlabel("$z$")
+    ax['lower left'].set_xlabel("$z$")
+    ax['upper right'].set_xlabel("$z$")
+    ax['lower right'].set_xlabel("$z$")
+    ax['upper right'].set_ylabel("Velocity (code units)")
+    ax['lower right'].set_ylabel("Velocity (code units)")
+
+    ##############################################
+    
+    if variable_mass[0] == False:
+        Part_force = -gradient(fourier_potential(rho_part,L,type = type, G_tilde = G_tilde),L,type = type)
+        ax['far right'].plot(z, Part_force, label = "Particle Contribution")
+    else:
+        Part1_force = -gradient(fourier_potential(rho_part1,L,type = type, G_tilde = G_tilde),L,type = type)
+        Part2_force = -gradient(fourier_potential(rho_part2,L,type = type, G_tilde = G_tilde),L,type = type)
+        ax['far right'].plot(z, Part1_force, label = "(Quasi) Particle Contribution")
+        ax['far right'].plot(z, Part2_force, label = "(Light) Particle Contribution")
+        ax['far right'].set_ylim(-a_max/2,a_max/2)
+        
+        ax['upper left'].plot(z,phi_part1, label = "$\\phi_{Quasi}$")
+        ax['upper left'].plot(z, rho_part1, label = "$\\rho_{Quasi}$")
+        
+        ax['lower left'].plot(z,phi_part2,label = "$\\Phi_{Particles}$")
+        ax['lower left'].plot(z,rho_part2,label = "$\\rho_{Particles}$")
+
+        ax['upper right'].set_ylim(-y11_max,y11_max)
     
     # FDM
-    phi_FDM = fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde)
-    ax['upper left'].plot(z,phi_FDM,label = "$\\varphi_{FDM}$")
-    ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = \\mu|\\chi|^2$")
-    ax['upper left'].set_ylim([-y00_max, y00_max] )
-    ax['upper left'].set_xlabel("$z = x/L_s$")
-    ax['upper left'].legend(fontsize = 15)
-    ax['upper left'].set_title("Non-Dimensional Densities and Potentials",fontsize = 15)
+    if Num_bosons != 0:
+        FDM_force = -gradient(fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde),L,type = type)
+        ax['far right'].plot(z, FDM_force, label = "FDM Contribution")
+        ax['far right'].set_ylim(-a_max,a_max)
+    
+        phi_FDM = fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde)
+        ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$")
+        ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = m_{FDM}|\\psi|^2$")
+        
+    
+    
     
     if Num_bosons !=0:
         #PHASE SPACE CALCULATION:
-        if len(chi)> 500:
-            F, z_kn, p_kn = FDM.Husimi_phase_V2(chi,z,eta, pmax, dp)
-
-            step_size = int(np.floor(len(chi)/500))
-            slices = np.arange(0,len(chi),step_size)
-            condition = [False for zz in chi]
-            for j in range(len(chi)):
-                if j in slices:
-                    condition[j] = True
-            # chi_compressed = np.compress(condition,chi)
-            # z_compressed = np.compress(condition,z)
-            
-            # F = FDM.Husimi_phase_V2(chi_compressed,z_compressed,eta)
-
-            F = np.compress(condition, F, axis = 0)
-            F = np.compress(condition, F, axis = 1)
-
-            z_kn = np.compress(condition, z_kn, axis = 0)
-            z_kn = np.compress(condition, z_kn, axis = 1)
-
-            p_kn = np.compress(condition, p_kn, axis = 0)
-            p_kn = np.compress(condition, p_kn, axis = 1)
-
-        else:
-            F, z_kn, p_kn = FDM.Husimi_phase_V2(chi, z, eta, pmax, dp) 
-        # print("Husimi Calculated")
+        F, z_kn, p_kn = FDM.Husimi_phase_V2(chi, z, eta) 
+    
         
-        ax['upper right'].set_title("Phase Space Distributions", fontsize = 15)
-        
-        #im = ax['upper right'].imshow(F,extent = (x_min,x_max,v_min,v_max),cmap = cm.coolwarm, norm = Normalize(0,max_F), aspect = (x_max-x_min)/(2*y01_max)) #LogNorm(0,max_F)
-        #im = ax['upper right'].imshow(F)
         ax['upper right'].pcolormesh(z_kn, p_kn/mu, F)
         
-        ax['upper right'].set_xlim(x_min,x_max)
-        ax['upper right'].set_ylim(-pmax/mu,pmax/mu)
-        # ax['upper right'].set_ylim(-y01_max,y01_max) #[v_min,v_max])
-        ax['upper right'].set_xlabel("$z = x/L_s$")
-        ax['upper right'].set_ylabel("Velocity (code units)")
+        if v_max<np.max(p_kn/mu):
+            ax['upper right'].set_ylim(-v_max,v_max)
+        else:    
+            ax['upper right'].set_ylim(np.min(p_kn)/mu,np.max(p_kn)/mu)
         #ax['upper right'].colorbar()
         #divider = make_axes_locatable(ax["upper right"])
         #cax = divider.new_horizontal(size = '5%',pad = 0.05, pack_start = True)
         #fig.add_axes(cax)
         #fig.colorbar(mappable = im, cax = cax, ax=ax["upper right"],shrink = 0.75)
+    
     ##############################################3
     # PARTICLES
-    phi_part = fourier_potential(rho_part,L,type = type, G_tilde = G_tilde)
-    ax['lower left'].plot(z,phi_part,label = "$\\varphi_{Particles}$")
-    ax['lower left'].plot(z,rho_part,label = "$\\rho_{Particles}$")
-    ax['lower left'].set_ylim(-y10_max,y10_max)
-    ax['lower left'].legend(fontsize = 15)
-
+    
     #Plot the Phase Space distribution
     if variable_mass[0] == True:
-        fraction = variable_mass[1]
-        num_to_change = int(np.floor(fraction*Num_stars))
-
         #Plot light particles
         x1_s = stars[1].x
         v1_s = stars[1].v 
-        ax['lower right'].scatter(x1_s,v1_s,s = 1,c = 'blue', label = "Lighter Particles")
+        ax['lower right'].scatter(x1_s,v1_s,s = 1,c = 'blue', label = "(Light) Particles")
         #Plot heavy particles 
         x2_s = stars[0].x
         v2_s = stars[0].v 
-        ax['lower right'].scatter(x2_s,v2_s,s = 8,c = 'red', label = "Heavier Particles")
-        
-        ax['lower right'].set_ylim(-y11_max,y11_max)
-        ax['lower right'].set_xlim(-L/2,L/2)
-        ax['lower right'].legend(fontsize = 15)
-        ax['lower right'].set_ylabel("Velocity (code units)")
+        ax['upper right'].scatter(x2_s,v2_s,s = 8,c = stars[0].mass, label = "(Quasi) Particles")
     else:
         x_s = stars.x
         v_s = stars.v
-        ax['lower right'].scatter(x_s,v_s,s = 1,label = "Particles")
-        ax['lower right'].set_ylim(-y11_max,y11_max)
-        ax['lower right'].set_xlim(-L/2,L/2)
-        ax['lower right'].legend(fontsize = 15)
-
+        ax['lower right'].scatter(x_s,v_s,c = stars.mass, s = 1,label = "Particles")
+        
+        
     #ADDITIONAL:
     # Plotting the paths of those select stars
     # if track_stars == True and Num_stars >= 5:
@@ -343,16 +330,25 @@ def main_plot(type,G_tilde,L,eta,
     #PLOT CENTROID IN PHASE SPACE
     if Num_stars != 0:#only calculate if there are stars
         if variable_mass[0]==True:
-            part_centroid_z = np.mean([np.mean(stars[0].x),np.mean(stars[1].x)])
-            part_centroid_v = np.mean([np.mean(stars[0].v),np.mean(stars[1].v)])
-        
+            part1_centroid_z = [np.mean(stars[0].x)]
+            part1_centroid_v = [np.mean(stars[0].v)]
+            part2_centroid_z = [np.mean(stars[1].x)]
+            part2_centroid_v = [np.mean(stars[1].v)]
+            part_centroid_z = np.mean([part1_centroid_z,part2_centroid_z])
+            part_centroid_v = np.mean([part1_centroid_v,part2_centroid_v])
+            
+            ax['upper right'].plot([-L/2,L/2],[part1_centroid_v,part1_centroid_v],"k--")
+            ax['upper right'].plot([part1_centroid_z,part1_centroid_z],[-y11_max,y11_max],"k--")
+
+            ax['lower right'].plot([-L/2,L/2],[part2_centroid_v,part2_centroid_v],"k--")
+            ax['lower right'].plot([part2_centroid_z,part2_centroid_z],[-y11_max,y11_max],"k--")
         else:
-            part_centroid_z = np.mean(stars.x)
-            part_centroid_v = np.mean(stars.v)
+            part_centroid_z = np.sum(stars.mass*stars.x)/np.sum(stars.mass)
+            part_centroid_v = np.sum(stars.mass*stars.v)/np.sum(stars.mass)
         
-        #ax['lower right'].scatter(part_centroid_z,part_centroid_v,s = 100,c = "r",marker = "o")
-        ax['lower right'].plot([-L/2,L/2],[part_centroid_v,part_centroid_v],"k--")
-        ax['lower right'].plot([part_centroid_z,part_centroid_z],[-y11_max,y11_max],"k--")
+            #ax['lower right'].scatter(part_centroid_z,part_centroid_v,s = 100,c = "r",marker = "o")
+            ax['lower right'].plot([-L/2,L/2],[part_centroid_v,part_centroid_v],"k--")
+            ax['lower right'].plot([part_centroid_z,part_centroid_z],[-y11_max,y11_max],"k--")
         part_centroid = np.array([part_centroid_z,part_centroid_v])
     else:
         part_centroid = None
@@ -366,7 +362,23 @@ def main_plot(type,G_tilde,L,eta,
         fdm_centroid = np.array([np.real(fdm_centroid_z),np.real(fdm_centroid_v)])
     else:
         fdm_centroid = None
-        
+    
+    if ax['upper left'].lines:
+        ax['upper left'].legend(fontsize = 15)
+    if ax['upper right'].lines or ax['upper right'].collections or bool(ax['upper right'].get_images()):
+        ax['upper right'].legend(fontsize = 15)
+    if ax['lower left'].lines:
+        ax['lower left'].legend(fontsize = 15)
+    if ax['lower right'].collections:
+        ax['lower right'].legend(fontsize = 15) 
+    
+    ax['far right'].legend(fontsize = 20)
+
+    ax['lower left'].set_ylim(-y10_max,y10_max)
+    ax['upper left'].set_ylim([-y00_max, y00_max] )
+    ax['lower right'].set_ylim(-y11_max,y11_max)
+    ax['lower right'].set_xlim(-L/2,L/2)
+    
     #now save it as a .jpg file:
     folder = Directory + "/" + folder_name
     filename = 'Plot' + str(i).zfill(4) + '.jpg';
@@ -377,8 +389,10 @@ def main_plot(type,G_tilde,L,eta,
 
     if track_centroid == True:
         return part_centroid, fdm_centroid
+    else:
+        return None, None
 
-def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z, 
+def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice, z, 
                     mu, Num_bosons, r, chi, 
                     stars, 
                     v_s, L_s, zmax, vmax, 
@@ -428,7 +442,8 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
     
     #Calculate distribution on Mesh
     if Num_stars !=0:
-        rho_part = NB.particle_density(stars, L, z, variable_mass)
+        rho_part1, rho_part2 = NB.particle_density(stars, L, z, variable_mass)
+        rho_part = rho_part1 + rho_part2
     else:
         rho_part = np.zeros_like(z)
     
@@ -464,12 +479,23 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
     ##########################################################
     #PLOT AXIS LIMITS:
     #y0_max = np.max(phi)*1.5
-    y00_max = np.max(rho_FDM)*3
-    y10_max = np.max(rho_part)*3
+    y00_max = np.max([np.max(rho_FDM),np.max(rho_part1)])*3
+    # y10_max = np.max(rho_part)*3
+
+    # if Num_bosons !=0:
+    #     y00_max = np.max(rho_FDM)*3
+    if Num_stars !=0:
+        if variable_mass[0]==True:
+            y00_max = np.max(rho_part1)*2
+            y10_max = np.max(rho_part2)*3
+        else:
+            y10_max = np.max(rho_part)*3
+
+    
 
     if Num_stars == 0:
         y10_max = y00_max
-    elif Num_bosons == 0:
+    if Num_bosons == 0 and variable_mass[0]!=True:
         y00_max = y10_max
     
     if Num_stars !=0:
@@ -478,23 +504,7 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
         else:
             y01_max = 2*np.max(stars.v)
     else:
-        # xi = np.fft.ifft(chi)/np.sqrt(2*np.pi)
-        # k_dist = np.abs(xi)**2
-        # k = 2*np.pi*np.fft.fftfreq(len(z),dz)
-        # #k = 
-        # plt.plot(k,k_dist)
-        # plt.show()
-        # delta = np.max(k_dist)-np.min(k_dist)
-        # threshold = 10**(-4)*delta + np.min(k_dist)
-        # k_max = 0
-        # for j in range(len(xi)):
-        #     if k_dist[j] < threshold:
-        #         k_max = np.abs(k[j])
-                
-        #         break
-        
-        # y01_max = 1.2*k_max/mu
-        vmax = vmax
+        v_max = 3*vmax
         pmax = vmax*mu
         p = np.linspace(-pmax,pmax,N)
         dp = p[1]-p[0]
@@ -504,26 +514,6 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
     
     ####################################################
     #PRE-LOOP TIME-SCALE SETUP
-
-    if Num_stars !=0:
-        if variable_mass[0]==False:
-            v_rms = np.std(stars.v)
-        else: 
-            v_rms = np.std([*stars[0].v,*stars[1].v])
-        print(f"dz/v_rms = {dz/v_rms}")
-        dtau = 0.5*dz/v_rms
-    else: #if there is FDM
-        z_dist = np.abs(chi)**2
-        norm = np.sum(z_dist)*dz
-        z_rms = np.sqrt(dz*np.sum(z_dist*z**2)/norm)
-        print(f"z_rms={z_rms}")
-        v_rms = z_rms/t_dynamical
-        lambda_deB = 4*np.pi*r / v_rms
-        dtau = (lambda_deB / z_rms)**2 * t_dynamical
-
-    #dtau = 0.02* dtau 
-    
-
     collapse_index = int(np.ceil(t_dynamical/dtau))
     
     dtau = (collapse_index**(-1))*t_dynamical
@@ -536,8 +526,12 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
         indices.append(2**x)
         x+=1
     if sim_choice2 == 1:
-        tau_stop = t_dynamical*2 #over-ride previous tau_stop
+        dtau = 0.1*t_dynamical/5
+        collapse_index = int(np.ceil(t_dynamical/dtau))
+        i_stop = dynamical_times * collapse_index
         
+        snapshot_indices = None 
+            
     elif sim_choice2 == 2:
         snapshot_indices = np.multiply(collapse_index,indices)
 
@@ -576,7 +570,8 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
         #1. Calculate Total Density
         #Calculate distribution on Mesh
         if Num_stars !=0:
-            rho_part = NB.particle_density(stars, L, z, variable_mass)
+            rho_part1, rho_part2 = NB.particle_density(stars, L, z, variable_mass)
+            rho_part = rho_part1 + rho_part2
         else:
             rho_part = np.zeros_like(z)
         
@@ -599,43 +594,50 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
                     K_array=[*stars[0].get_K(),*stars[1].get_K()]
                     W_array=[*stars[0].get_W(z,phi),*stars[1].get_W(z,phi)]
 
-                    W_2 = dz * np.sum(z*np.gradient(phi,dz))
                 else:
                     K_array = stars.get_K()
                     W_array = stars.get_W(z,phi)
-
-                    W_2 = dz * np.sum(z*np.gradient(phi,dz))
-                
+            
                 if i == 0:
                     K_star_storage = np.array([K_array])
                     W_star_storage = np.array([W_array])
 
-                    W_2_star_storage = np.array([W_2])
                 else:
                     K_star_storage = np.append(K_star_storage,[K_array],axis = 0)
                     W_star_storage = np.append(W_star_storage,[W_array],axis = 0)
 
-                    W_2_star_storage = np.append(W_2_star_storage,[W_2],axis = 0)
-
-            K_star_fine_storage = [] #None
-            W_star_fine_storage = [] #None
+            # K_star_fine_storage = [] #None
+            # W_star_fine_storage = [] #None
             
-            # if variable_mass[0]==True:
-            #     K_array=[*stars[0].get_K(),*stars[1].get_K()]
-            #     W_array=[*stars[0].get_W(z,phi),*stars[1].get_W(z,phi)]
-            # else:
-            #     K_array = stars.get_K()
-            #     W_array = stars.get_W(z,phi)
-            
-            # if i == 0:
-            #     K_star_fine_storage = np.array([K_array])
-            #     W_star_fine_storage = np.array([W_array])
-            # else:
-            #     K_star_fine_storage = np.append(K_star_fine_storage,[K_array],axis = 0)
-            #     W_star_fine_storage = np.append(W_star_fine_storage,[W_array],axis = 0)
+            if variable_mass[0]==True:
+                K_array=[stars[0].get_K(),stars[1].get_K()]
+                W_array=[stars[0].get_W(z,phi),stars[1].get_W(z,phi)]
 
+                K = np.array([np.sum(K_array[0]),np.sum(K_array[1])])
+                W = 0.5*np.array([np.sum(W_array[0]),np.sum(W_array[1])])
+
+                W_2 = np.array([dz * np.sum(rho_part1*z*np.gradient(phi,dz)),dz * np.sum(rho_part2*z*np.gradient(phi,dz))])
+            else:
+                K_array = stars.get_K()
+                W_array = stars.get_W(z,phi)
+
+                K = np.sum(K_array)
+                W = 0.5*np.sum(W_array) 
+
+                W_2 = dz * np.sum(rho_part*z*np.gradient(phi,dz))
+            if i == 0:
+                K_star_fine_storage = np.array([K])
+                W_star_fine_storage = np.array([W])
+
+                W_2_star_storage = np.array([W_2])
+            else:
+                K_star_fine_storage = np.append(K_star_fine_storage,[K], axis=0)
+                W_star_fine_storage = np.append(W_star_fine_storage,[W],axis=0)
+
+                W_2_star_storage = np.append(W_2_star_storage,[W_2],axis = 0)
             # K_star_storage = [] #None
             # W_star_storage = [] #None
+            # W_2_star_storage = []
             
         else:
             K_star_storage = [] #None
@@ -670,29 +672,24 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
         #FDM DIAGNOSTICS
         #Record Energies:
         if track_FDM == True:
-            if i in track_snapshot_indices:
-                    # W = 0.5*np.sum(rho_FDM*phi)*dz  
-                    W = dz*np.sum(rho_FDM*z*np.gradient(phi,dz))
-                    #Kinetic Energy:
-                    chi_tilde = np.fft.fft(chi)
-                    k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
-                    dk = k[1]-k[0]
-                    K = (L/(N**2))* r*np.sum(k**2 * np.abs(chi_tilde)**2)
-                    #K = K / (dk*np.sum(np.abs(chi_tilde)))
-                    #K = (2/(N**2))*r*np.sum(k**2 * np.absolute(chi_tilde)**2)
-                    # K = dz*np.sum(np.conj(chi)*(-r)*np.gradient(np.gradient(chi,dz),dz))
-                    # K =np.abs( K / (dz*np.sum(np.abs(chi)**2)) )
-                    print(f"K/|W| = {K/np.abs(W)}")
-                    if i == 0:
-                        W_FDM_storage = np.array([[W]])
-                        K_FDM_storage = np.array([[K]])
-                    else:
-                        W_FDM_storage = np.append(W_FDM_storage,[[W]],axis=0) 
-                        K_FDM_storage = np.append(K_FDM_storage,[[K]],axis=0)
+            # if i in track_snapshot_indices:
+            W = dz*np.sum(rho_FDM*z*np.gradient(phi,dz))
+            
+            chi_tilde = np.fft.fft(chi, norm = "ortho")
+            k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
+            dk = k[1]-k[0]
+            K = (L/N) * r*np.sum(k**2 * np.abs(chi_tilde)**2)
+            
+            if i == 0:
+                W_FDM_storage = np.array([[W]])
+                K_FDM_storage = np.array([[K]])
+            else:
+                W_FDM_storage = np.append(W_FDM_storage,[[W]],axis=0) 
+                K_FDM_storage = np.append(K_FDM_storage,[[K]],axis=0)
         else:
             W_FDM_storage = [] #None
             K_FDM_storage = [] #None
-        #################################################
+            #################################################
         # PLOTTING
         # Plot everytime if sim_choice2 == 1
         # Plot only specific time steps if sim_choice2 == 2
@@ -739,30 +736,14 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
                     plt.clf()
                     a_max = np.max(np.append(a1,a2))*2
                     print(f"a_max = {a_max}")
-                if i == 0:
-                    if len(chi)> 500:
-                        step_size = int(np.floor(len(chi)/500))
-                        slices = np.arange(0,len(chi),step_size)
-                        condition = [False for zz in chi]
-                        for j in range(len(chi)):
-                            if j in slices:
-                                condition[j] = True
-                        chi_compressed = np.compress(condition,chi)
-                        z_compressed = np.compress(condition,z)
-                        print("chi compressed")
-
-                        F, z_kn, p_kn = FDM.Husimi_phase_V2(chi_compressed,z_compressed,eta, pmax, dp)
-                    else:
-                        F, z_kn, p_kn = FDM.Husimi_phase_V2(chi,z,eta, pmax, dp)
-                    max_F = np.max(F)/2
-                
+                     
                 part_centroid, fdm_centroid = main_plot(type,G_tilde,L,eta,
-                z,dz,pmax,dp,mu, chi,rho_FDM,rho_part,
+                z,dz,mu, chi,rho_FDM,rho_part,
                 stars,Num_bosons,Num_stars,
                 dtau,i,
                 x_min,x_max,v_min,v_max,
                 y00_max,y10_max,y01_max,y11_max,
-                a_max,max_F,
+                a_max,
                 Directory,folder_name,track_stars,track_centroid, variable_mass)
                 
                 if track_centroid == True:
@@ -807,7 +788,8 @@ def run_FDM_n_Bodies(sim_choice2, dynamical_times, t_dynamical, bc_choice, z,
         #3 Re-update potential and acceleration fields
         if fixed_phi == False: #if True, potential is fixed
             if Num_stars !=0:
-                rho_part = NB.particle_density(stars, L, z, variable_mass)
+                rho_part1, rho_part2 = NB.particle_density(stars, L, z, variable_mass)
+                rho_part = rho_part1 + rho_part2
             else:
                 rho_part = np.zeros_like(z)
             rho_FDM = mu*np.absolute(chi)**2 

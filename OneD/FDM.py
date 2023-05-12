@@ -120,37 +120,15 @@ def Husimi_phase(chi,z,eta):
     return F
 
 
-def Husimi_phase_V2(chi, z, eta, pmax = None, dp = None):
-    
-    N = len(chi)
-    
+def Husimi_phase_V2(chi, z, eta):
     dz = z[1]-z[0]
     p = 2*np.pi*np.fft.fftfreq(len(chi),dz)
-    kmax = np.max(p)
-    
-    # if kmax < pmax:
-    #     #want: pmax = 2*np.pi*(0.5*N_) / (N_*dz)
-    #     #N_ = int(np.ceil(pmax/dp))
-    #     #z = dz*np.arange(-N_, N_, 1)
-        
-    #     dz = np.pi/pmax
-    #     z = np.arange(z[0],z[-1],dz)
-    #     N_new = len(z) - N
-
-    #     print(len(z))
-
-    #     chi = np.append(chi,np.zeros(N_new//2))
-    #     chi = np.append(np.zeros(N_new//2),chi)
-    #     p = 2*np.pi*np.fft.fftfreq(len(chi),dz)
-
-    #     z = np.linspace(z[0],z[-1],len(chi))
-
     p = np.append(p[len(p)//2:],p[:len(p)//2])
+    z_kn, p_kn = np.meshgrid(z,p)
+    
+    #print(max(p),min(p))
     
     F = Husimi_phase(chi,z,eta)
-    
-    z_kn, p_kn = np.meshgrid(z,p)
-
     return F, z_kn, p_kn
 
 def generate_phase_plots(psi_s,x,dx,L,m,hbar,max_F,eta,dt,frame_spacing, Directory,folder_name):
