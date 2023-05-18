@@ -551,13 +551,14 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
 
     print(f"Sim will stop at tau = {tau_stop}")
     time = 0
-    i = 0 #counter, for saving images
+    # i = 0 #counter, for saving images
     
     if absolute_PLOT == True:
         os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     
-    #while time <= tau_stop:
-    while i <= i_stop:
+    # while time <= tau_stop:
+    # while i <= i_stop:
+    for i in range(i_stop+1):
         overflow = checkMemory(mem_limit = 95)
         if overflow == True:
             break      
