@@ -177,7 +177,7 @@ def plot_Energies(time,Ks,Ws,variable_mass=None):
         E = Ks+Ws
         E = E - np.mean(E)
 
-        RMS_amplitude = np.sqrt(np.mean(E**2))
+        RMS_amplitude = np.sqrt(np.mean(E**2)) #np.sqrt(np.mean(E**2))
         Max_amplitude = np.max(E)
         print(Max_amplitude)
 

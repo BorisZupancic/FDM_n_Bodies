@@ -113,6 +113,8 @@ def init(hbar,L_scale,v_scale, ICs):
                 
     else:
         Num_stars = 0
+        variable_mass=[False]
+        stars_type = None
 
     #Set up Grid
     L = L*L_scale #new length. Length of the box
@@ -188,7 +190,7 @@ def init(hbar,L_scale,v_scale, ICs):
     print(f"Num_stars = {Num_stars}")
     
     print(f"Num_Bosons = {Num_bosons}")
-    print(f"mu = {mu}")
+    # print(f"mu = {mu}")
     
     return z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax, dtau, variable_mass, stars_type
 
@@ -347,13 +349,11 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         dy[1] = 4.*np.pi*density(y[0]) #second derivative
         return dy
 
-# STEP 1: SOLVE FOR rho, phi VIA RK4
+    # STEP 1: SOLVE FOR rho, phi VIA RK4
     #initial conditions:
     y = np.zeros(2) #phi = 0, dphi/dt = 0 
 
-    #z_original = np.copy(z)
     dz = z[1]-z[0]
-    #N = len(z)
     z = np.zeros(len(z)//2)
     phi = np.zeros(len(z))
     rho = np.zeros(len(z))
@@ -394,12 +394,11 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
 
     rhomax = rho[0]
     zmax = z[imax-1]
-    from scipy.interpolate import interp1d
     rhointerp = interp1d(z_new,rho_new)
     phiinterp = interp1d(z_new,phi_new)
     print ('cut-off in z', zmax)
 
-    z_rms = np.sqrt(dz*np.sum(rho_new*z_new**2))
+    z_rms = np.sqrt(np.sum(rho_new*z_new**2) / np.sum(rho_new)) 
     print(f"z_rms = {z_rms}")
 
 #STEP 2: Randomly Sample Stars (if applicable)
@@ -451,7 +450,7 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         star_v = v_rms
 
         #Set-up appropriate grid:    
-        alpha = 2
+        alpha = 1.5
         L_new = 2*zmax*alpha
         #dz = 2*(2*z_rms)/(Num_stars**(1/3)) #1000 #int(np.ceil(np.sqrt(Num_stars)))
         dz = 2*(2*z_rms)/(100000**(1/3))
@@ -541,11 +540,6 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
                 print(len(i_s))
                 part1 = np.array([[stars.x[i],stars.v[i]] for i in i_s])
                 part2 = np.array([[stars.x[i],stars.v[i]] for i in range(Num_stars) if i not in i_s])
-                # for i in range(Num_stars):
-                #     if i in i_s:
-                #         part1 = np.append(part1,[stars.x[i],stars.v[i]],axis = 1)
-                #     else:
-                #         part2 = np.append(part2,[stars.x[i],stars.v[i]],axis = 1)
                 masses1 = sigma1*np.ones(len(part1[:,0]))
                 masses2 = sigma2*np.ones(len(part2[:,0]))
                 stars1 = NB.stars(masses1,part1[:,0],part1[:,1])
@@ -601,7 +595,6 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
                 masses[Es<E0] = f0*(np.exp((E0-Es[Es<E0])/sigma**2))
                 #re-normalize mass:
                 masses = masses*(M/2)/np.sum(masses)
-                print(np.sum(masses))
                 stars1 = NB.stars(masses,xIC,vIC)
 
                 #correcting BOTH sets of stars:
@@ -617,12 +610,11 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
 
                 net_position = np.sum(stars1.mass*stars1.x) + np.sum(stars2.mass*stars2.x)
                 net_momentum = np.sum(stars1.mass*stars1.v) + np.sum(stars2.mass*stars2.v)
-                print(net_position,net_momentum)
-
+                
                 stars = [stars1,stars2]
 
     else:
-        stars = NB.stars(0,[],[])
+        stars = NB.stars([],[],[])
         star_v = 0
 
         N_star=None
@@ -655,12 +647,11 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         
         #1. Set Default Grid:
         N = 1000 #default
-        #print(f"Num Grid Points = {N}")
         z = np.linspace(z[0],z[-1],N)
         L = z[-1]-z[0]
         dz = z[1]-z[0]
         
-        alpha = 2
+        alpha = 1.5
         L_new = 2*zmax*alpha
         N_new = int(np.ceil(L_new / dz))
         
@@ -674,19 +665,12 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         dv = v[1]-v[0]
         
         f, phi_kn, v_kn = DF(phi, v, E0,sigma,f0)
-        #calculate v_rms and z_rms
-        v_dist = dz*np.sum(f, axis = 1)
-        z_dist = dv*np.sum(f, axis = 0)
-        v_rms = np.sqrt(dv*np.sum(v_dist*v**2))
-        z_rms = np.sqrt(dz*np.sum(z_dist*z**2))
-        t_dynamical = z_rms/v_rms
-        print(f"z_rms = {z_rms}")
-        print(f"v_rms = {v_rms}")
-        print(f"t_dynamical = {t_dynamical}")
-
+        #calculate v_rms
+        v_dist = dz*np.sum(f, axis = 0)
+        v_rms = np.sqrt(np.sum(v_dist*v**2) / np.sum(v_dist)) 
+        
         
         #3. Re-set grid to proper resolution:
-        
         lambda_deB = zmax / lambda_ratio
         r = lambda_deB*v_rms / (4*np.pi)
         mu = 1/(2*r)
@@ -701,7 +685,7 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         L = z[-1]-z[0]
         dz = z[1]-z[0]
         
-        alpha = 2
+        alpha = 1.5
         L_new = 2*zmax*alpha
         N_new = int(np.ceil(L_new / dz)) + 1
         print(f"Num Grid Points = {N_new}")
@@ -710,14 +694,26 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         phi = phiinterp(z) 
 
         vmax = np.sqrt(2.*E0)
-        pmax = np.pi*(N-1)/L_new 
+        pmax = np.pi*(N_new-1)/L_new 
 
-        p = np.linspace(-pmax,pmax,N)
+        p = np.linspace(-pmax,pmax,N_new)
         dp = p[1]-p[0]
         v = p/mu
 
         f, phi_kn, v_kn = DF(phi, v, E0,sigma,f0)
-        
+        #calculate v_rms and z_rms
+        v_dist = dz*np.sum(f, axis = 0)
+        z_dist = dv*np.sum(f, axis = 1)
+        v_rms = np.sqrt(np.sum(v_dist*v**2) / np.sum(v_dist)) 
+        z_rms = np.sqrt(np.sum(z_dist*z**2) / np.sum(z_dist))
+        t_dynamical = z_rms/v_rms
+        print(f"z_rms = {z_rms}")
+        print(f"v_rms = {v_rms}")
+        print(f"t_dynamical = {t_dynamical}")
+
+        # plt.imshow(f.transpose())
+        # plt.show()
+
         #4. Make wavefunction
         z_kn,p_kn = np.meshgrid(z, p, indexing = 'ij')
         thetas = np.random.uniform(0,2*np.pi,len(p))
