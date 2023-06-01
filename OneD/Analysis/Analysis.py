@@ -8,6 +8,7 @@ import cv2
 from PIL import Image 
 import scipy.optimize as opt
 from scipy.stats import gaussian_kde
+from scipy.special import erf as erf
 
 import OneD.FDM as FDM_OG
 import OneD.NBody as NB
@@ -31,7 +32,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
 
     #Load in the necessary quantities:
     Properties = np.loadtxt("Properties.csv", dtype = str, delimiter = ",")
-    print(Properties)
+    # print(Properties)
     Properties = [Properties[:,1][i] for i in range(len(Properties))]
     Time_elapsed, L, mu,Num_bosons = [float(Properties[i]) for i in range(4)]
     fraction, Num_stars,r,N = [float(Properties[i]) for i in range(5,len(Properties)-2)]
@@ -47,11 +48,13 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         except:
             pass    
     indices = new_indices
-    print(indices)
+    # print(indices)
 
     dtau = float(Properties[-1])
     print(f"r={r},Num_stars = {Num_stars}")
 
+    time = dtau*np.arange(indices[-1]+1)
+        
     # percent_FDM = Num_bosons*mu / (Num_bosons*mu + Num_stars*sigma)
 
     N = int(N)
@@ -116,6 +119,100 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
     
+    do_spectra = False
+    if Num_bosons!=0 and do_spectra==True:
+        #Get Spitzer Density:
+        E0,sigma,f0 = .7, .5, .1
+        def density(psi):
+            rho = np.zeros_like(psi)
+            tm2 = (E0 - psi)/sigma**2
+            coef = 2**1.5*f0*sigma
+            rho[tm2>0] = coef*(np.sqrt(np.pi)/2.*np.exp(tm2[tm2>0])*erf(np.sqrt(tm2[tm2>0]))-np.sqrt(tm2[tm2>0]))
+            return rho
+
+        def derivs(y):
+            dy = np.zeros(2)
+            dy[0] = y[1] #first derivative
+            dy[1] = 4.*np.pi*density(y[0]) #second derivative
+            return dy
+        #initial conditions:
+        y = np.zeros(2) #phi = 0, dphi/dt = 0 
+
+        #z_original = np.copy(z)
+        dz = z[1]-z[0]
+        #N = len(z)
+        # z = np.zeros(len(z)//2)
+        z_trunc = 0
+        phi = np.zeros(len(z)//2)
+        rho = np.zeros(len(z)//2)
+        rho[0] = density(phi[0])
+        i = 0
+        while rho[i] > 0 and i<len(z)//2-1:
+            k1 = derivs(y)
+            k2 = derivs(y + dz*k1/2.)
+            k3 = derivs(y + dz*k2/2.)
+            k4 = derivs(y + dz*k3)
+            y = y + (k1 + 2.*k2 + 2.*k3 + k4)*dz/6.
+            
+            i+=1
+            phi[i] = y[0]
+            rho[i] = density(y[0])
+            z_trunc+=dz
+
+        imax = i    
+        rho = rho[:imax]
+        rho = np.append(rho,np.zeros(len(z)//2 - len(rho)))
+        rho = np.append(rho[::-1],rho)
+
+        chi_storage = np.loadtxt("chi_storage.csv", dtype=complex, delimiter=",")
+        rho_FDM_storage = mu*np.abs(chi_storage)**2
+        if len(rho_FDM_storage[0])>len(rho):
+            rho = np.append(rho,[0])
+        delta_FDM = np.array([rho_FDM_storage[i] - rho for i in range(len(rho_FDM_storage))])
+        N_t = np.shape(rho_FDM_storage)[0]
+
+        # z_ij,t_ij = np.meshgrid(z,time)
+
+        # plt.figure()
+        # plt.title("FDM Density over position and time: $\\rho(x,t)$ ")
+        # plt.pcolormesh(z_ij, t_ij, rho_FDM_storage, cmap = "coolwarm")
+        # plt.xlabel("Position $x$")
+        # plt.ylabel("Time $t$")
+        # plt.colorbar()
+        # plt.show()
+
+        spectrum = np.fft.fft2(delta_FDM)
+        spectrum = np.fft.fftshift(spectrum)
+        power_spectrum = np.abs(spectrum)**2
+        k = 2*np.pi*np.fft.fftfreq(N, d=dz)
+        w = 2*np.pi*np.fft.fftfreq(N_t, d=dtau)
+        
+        k = np.fft.fftshift(k)
+        w = np.fft.fftshift(w)
+        k_ij,w_ij = np.meshgrid(k,w)
+
+        plt.figure()
+        plt.title("Power Spectrum of Density Fluctuations: $\\hat{\\rho}(k,\\omega)$")
+        pcm = plt.pcolormesh(k_ij, w_ij, power_spectrum, norm = LogNorm(), cmap = "coolwarm")
+        plt.xlabel("Wavenumer $k = 2\\pi/\\lambda$")
+        plt.ylabel("Frequency $\\omega$")
+        plt.colorbar(pcm)
+        plt.show()
+        
+        # fig,ax = plt.subplots(1,2)
+        # ax[0].plot(z,delta_FDM[0,:])
+        # ax[1].plot(1/np.fft.rfftfreq(N,d=dz)[1:],np.abs(np.fft.rfft(delta_FDM[0,:])[1:])**2)
+        # ax[1].set_yscale("log")
+        # # ax[1].set_xlim(0,50)
+        # plt.show()
+
+        # fig,ax = plt.subplots(1,2)
+        # ax[0].plot(time,delta_FDM[:,N//2])
+        # ax[1].plot(2*np.pi*np.fft.rfftfreq(N_t,d=dtau)[1:],np.abs(np.fft.rfft(delta_FDM[:,N//2])[1:])**2)
+        # ax[1].set_yscale("log")
+        # # ax[1].set_xlim(0,20)
+        # plt.show()
+
     #Setup our data post-import:
     #print(stars_x)
     if stars_x is not None:
@@ -148,11 +245,11 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         
         #NBody.plot_centroids(indices,fdm_centroids)
         
-        time = dtau*np.linspace(0,len(Ks_FDM),len(Ks_FDM))
+        # time = dtau*np.linspace(0,len(Ks_FDM),len(Ks_FDM))
         if Num_stars==0:
             RMS_amplitude, Max_amplitude = FDM.plot_Energies(time,Ks_FDM,Ws_FDM)
 
-            FDM.plot_Freqs(time, Ks_FDM,Ws_FDM)
+        #     FDM.plot_Freqs(time, Ks_FDM,Ws_FDM)
 
         v_dist = FDM.v_distribution(z,L,chi,r,mu)
 
@@ -177,8 +274,6 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
 
         #NBody.select_stars_plots(z,K_5stars_Energies,W_5stars_Energies)
         #dtau = 0.5*0.004831915000023168
-        print(W2_Energies.shape)
-        print(K_fine_Energies.shape)
         
         if variable_mass[0]=='True' or Num_bosons!=0:
             W_fine_Energies = W2_Energies
@@ -187,8 +282,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         if Num_bosons==0:
             RMS_amplitude, Max_amplitude = NBody.plot_Energies(time,K_fine_Energies,W_fine_Energies,variable_mass)
         
-        if variable_mass[0]=='False' and Num_bosons==0:
-            NBody.plot_Freqs(time, K_fine_Energies,W_fine_Energies)
+        # if variable_mass[0]=='False' and Num_bosons==0:
+        #     NBody.plot_Freqs(time, K_fine_Energies,W_fine_Energies)
 
         #NBody.all_stars_plots(time,K_Energies,W2_Energies, variable_mass=variable_mass)
         #NBody.all_stars_plots(np.linspace(0,2.47943,len(K_fine_Energies[:,0])), K_fine_Energies,W_fine_Energies, variable_mass=variable_mass)
@@ -205,8 +300,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
                 W_Energies[i] = W_Energies[i] - correction
 
             #check correction:
-            print(W2_Energies[-1,0]+W2_Energies[-1,1])
-            print(0.5*np.sum(W_Energies[-1]))
+            # print(W2_Energies[-1,0]+W2_Energies[-1,1])
+            # print(0.5*np.sum(W_Energies[-1]))
 
         else:
             for i in range(len(W_Energies)):
@@ -215,8 +310,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
                 W_Energies[i] = W_Energies[i] - correction
 
             #check correction:
-            print(W2_Energies[-1])
-            print(0.5*np.sum(W_Energies[-1]))
+            # print(W2_Energies[-1])
+            # print(0.5*np.sum(W_Energies[-1]))
 
         Energies = W_Energies + K_Energies
         Energies_i = Energies[0]
@@ -229,10 +324,10 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         deltaE=0
 
         deltaE_array = np.array([])
-        for i in range(len(indices)):
+        for i in range(len(Energies)):
             value = np.mean((Energies[i] - Energies_i)/Energies_i)
             deltaE_array = np.append(deltaE_array,value)
-        print(deltaE_array)
+        # print(deltaE_array)
 
         # fig, ax = plt.subplots(1,3)
         # ax[0].plot([np.sum(K_fine_Energies[i,:]) for i in range(1000)],label ="Kinetic")

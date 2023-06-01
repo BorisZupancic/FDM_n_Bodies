@@ -15,34 +15,34 @@ import OneD.Global as GF
 
 
 def plot_Energies(time,Ks,Ws):
-    K = Ks - np.mean(Ks)
-    W = Ws - np.mean(Ws)
-    E = Ks+Ws
+    K = Ks# - np.mean(Ks)
+    W = Ws# - np.mean(Ws)
+    E = Ks/np.abs(Ws) #+Ws 
     E = E - np.mean(E)
 
-    RMS_amplitude = np.sqrt(np.mean(E**2))
+    RMS_amplitude = np.sqrt(np.mean(E**2)) #np.sqrt(np.mean(E**2))
     Max_amplitude = np.max(E)
     print(Max_amplitude)
-
-    fig, ax = plt.subplots(2,1, figsize = (10,8), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
     
-    ax[0].set_title("Variation from Mean Total Energies in FDM over Time", fontdict={'fontsize' : 15})
-    ax[0].plot(time,K,label = "$\\delta K$ Kinetic Energy")
-    ax[0].plot(time,W,label = "$\\delta W$ Potential Energy")
-    ax[0].plot(time,E, label = "$\\delta (K+W)$ Total Energy")
-    ax[0].legend(loc='upper right')
-    ax[0].set_ylabel("Energy (code units)")
-    ax[0].set_xlabel("Time (code units)")
+    # fig, ax = plt.subplots(2,1, figsize = (10,8), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
+    
+    # ax[0].set_title("Variation from Mean Total Energies in FDM over Time", fontdict={'fontsize' : 15})
+    # ax[0].plot(time,K,label = "$\\delta K$ Kinetic Energy")
+    # ax[0].plot(time,W,label = "$\\delta W$ Potential Energy")
+    # ax[0].plot(time,E, label = "$\\delta (K+W)$ Total Energy")
+    # ax[0].legend(loc='upper right')
+    # ax[0].set_ylabel("Energy (code units)")
+    # ax[0].set_xlabel("Time (code units)")
 
-    ax[1].set_title("Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
-    ax[1].plot(time,Ks/np.abs(Ws)) #, label = "Virial Ratio $\\frac{K}{|W|}$")
-    ax[1].set_xlabel("Time (code units)")
+    # ax[1].set_title("Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
+    # ax[1].plot(time,Ks/np.abs(Ws)) #, label = "Virial Ratio $\\frac{K}{|W|}$")
+    # ax[1].set_xlabel("Time (code units)")
 
-    ax[0].grid(True)
-    ax[1].grid(True)
+    # ax[0].grid(True)
+    # ax[1].grid(True)
 
-    fig.subplots_adjust(hspace = 0.3)
-    plt.show()
+    # fig.subplots_adjust(hspace = 0.3)
+    # plt.show()
 
     return RMS_amplitude, Max_amplitude
 
@@ -63,7 +63,7 @@ def plot_Freqs(time,Ks,Ws):
 
     fig, ax = plt.subplots(1,1, figsize = (15,5), sharex = True)
     fig.suptitle("Power Spectrum for Oscillations in Kinetic Energy", fontsize = 15)
-    ax.plot(k**(1/3), E,"-")
+    ax.plot(k[1:]**(1/3), E[1:],"-")
     ax.set_xlabel("Cube Root Frequency $\\sqrt[3]{k}$",fontsize=12)
     ax.set_ylabel("Power", fontsize=12)
     
@@ -71,7 +71,7 @@ def plot_Freqs(time,Ks,Ws):
     plt.yscale("log")
     plt.show()
 
-def v_distribution(z,L,chi,r,mu):
+def v_distribution(z,L,chi,r,mu, plot=False):
     dz = z[1]-z[0]
     
     # eta = 10*r #resolution for Husimi
@@ -97,27 +97,28 @@ def v_distribution(z,L,chi,r,mu):
     #normalize:
     Norm_const = np.sum(dv*v_dist)
     v_dist = v_dist/Norm_const
-   
-    print(np.sum(dv*v_dist))
-    plt.plot(v,v_dist)
-    plt.ylabel("Density (Normalized)")
-    plt.xlabel("Velocity $v$")
-    plt.title("FDM Virialized Velocity Distribution")
-    plt.show()
     
+    if plot==True:
+        plt.plot(v,v_dist)
+        plt.ylabel("Density (Normalized)")
+        plt.xlabel("Velocity $v$")
+        plt.title("FDM Virialized Velocity Distribution")
+        plt.show()
+        
     return v_dist
 
-def rms_stuff(z,L,chi,v_dist,mu):
+def rms_stuff(z,L,chi,v_dist,mu, plot=False):
     dz = z[1]-z[0]
     #Must re-center |chi|^2:
     #First, get center:
     weight = np.abs(chi)**2
     center = dz*np.sum([zz*w for zz,w in zip(z,weight)])
     center = center/np.sum(dz*np.abs(chi)**2)
-    print(center)
-    plt.plot(z,np.abs(chi)**2)
-    plt.scatter(center,0,s = 10, c = "red")
-    plt.show()
+    if plot==True:
+        plt.plot(z,np.abs(chi)**2)
+        plt.scatter(center,0,s = 10, c = "red")
+        plt.show()
+    
     # #Second, find index of center
     # index = 0
     # for zz in z:

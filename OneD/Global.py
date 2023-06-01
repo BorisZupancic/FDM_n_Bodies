@@ -1,6 +1,9 @@
-from matplotlib.image import AxesImage
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from matplotlib.image import AxesImage
+from matplotlib.colors import LogNorm, Normalize
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from scipy.special import erf as erf
 from scipy.interpolate import interp1d
 from scipy.stats import gaussian_kde
@@ -9,9 +12,6 @@ import cv2
 from PIL import Image
 import OneD.FDM as FDM
 import OneD.NBody as NB
-import matplotlib.cm as cm
-from matplotlib.colors import LogNorm, Normalize
-from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 
 import multiprocessing as mp
 import threading 
@@ -26,72 +26,6 @@ def checkMemory(mem_limit):
         overflow = True
     return overflow
 
-# def Startup(hbar,L_scale,v_scale):
-
-#     M_scale = L_scale*v_scale**2
-    
-#     print("")
-#     print("Choose a (non-dimensional) box length:")
-#     L = float(input())
-#     print(f"L={L}")
-#     print("")
-
-#     Total_mass = 1
-#     print("Choose percentage (as a decimal) of FDM (by mass)")
-#     percent_FDM = float(input())
-#     percent_Particles = 1 - percent_FDM
-#     print(f"Fraction of Particles (by mass) = {percent_Particles}")
-    
-#     print("")
-#     if percent_FDM != 0:
-#         print("Choose a FDM fuzziness.")
-#         print("Input a desired FDM velocity dispersion, and de Broglie wavelength ratio to Characteristic size:")
-#         # R = float(input()) #/L_scale
-#         v_FDM = float(input()) #/v_scale
-#         lambda_deB = float(input()) #/R
-        
-#         r = lambda_deB*v_FDM / (4*np.pi)
-#         print(f"lambda_deB = {R*lambda_deB}")
-#         print(f"Fuzziness: r = {r}")
-#         m = hbar/(2*r*v_scale*L_scale)
-#         #Calculate dimensional mass:
-#         mu = m/M_scale
-#         #print(f"This gives non-dim mass: mu = {mu}")
-#         print(f"Mass mu = {mu}, m = mu*M = {m}")
-#     elif percent_FDM == 0:
-#         r = 0.5
-#         mu = 1 #set as default
-#         R = None
-#         lambda_deB = None 
-
-
-#     print("")
-#     if percent_FDM != 1:
-#         print("How many particles?")
-#         Num_stars = int(input())
-
-            
-#         sigma = Total_mass*(1-percent_FDM) / Num_stars
-        
-#         FDM_mass = Total_mass*percent_FDM #int(input())
-#         Num_bosons = FDM_mass/mu
-#     else:
-#         Num_stars = 0
-#         sigma = 0
-
-#         FDM_mass = Total_mass
-#         Num_bosons = FDM_mass/mu
-    
-#     print(f"Num_stars = {Num_stars}")
-#     print(f"sigma = {sigma}")
-    
-#     print(f"Num_Bosons = {Num_bosons}")
-#     print(f"mu = {mu}")
-    
-#     return L, mu, Num_bosons, r, lambda_deB, v_FDM, sigma, Num_stars
-
-# def gaussian(x,b,std):
-#     return np.exp(-(x-b)**2/(2*std**2))/(np.sqrt(2*np.pi)*std)
 
 #########################################################3
 #FOURIER STUFF
@@ -398,7 +332,7 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
                     v_s, L_s, zmax, vmax, 
                     Directory, folder_name, 
                     absolute_PLOT = True, track_stars = False, track_stars_rms = False, track_centroid = False, fixed_phi = False,
-                    track_FDM = False, variable_mass = False):
+                    track_FDM = False, variable_mass = False, history = False):
     
     #########################################
     #RETRIEVE INFO FROM INITIAL STARTUP/CONDITIONS
@@ -446,6 +380,7 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         rho_part = rho_part1 + rho_part2
     else:
         rho_part = np.zeros_like(z)
+        rho_part1 = np.zeros_like(z)
     
     #Calculate total density
     rho = rho_FDM + rho_part
@@ -551,13 +486,20 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
 
     print(f"Sim will stop at tau = {tau_stop}")
     time = 0
-    i = 0 #counter, for saving images
+    # i = 0 #counter, for saving images
     
     if absolute_PLOT == True:
         os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     
-    #while time <= tau_stop:
-    while i <= i_stop:
+    # while time <= tau_stop:
+    # while i <= i_stop:
+
+    stars_x_storage = []
+    stars_v_storage = []
+    chi_storage = []
+    acceleration_storage = []
+
+    for i in range(i_stop+1):
         overflow = checkMemory(mem_limit = 95)
         if overflow == True:
             break      
@@ -585,6 +527,7 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         
         #3. Calculate Acceleration Field on Mesh:
         a_grid = NB.acceleration(phi,L,type = type) 
+        a_grid -= np.mean(a_grid)
         
         ##########################################
         #Tracking energies of ALL stars
@@ -801,7 +744,9 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         chi = FDM.kick(chi,phi/2,r,dtau/2)
 
         #PARTICLES
-        a_grid = NB.acceleration(phi,L,type = type) 
+        a_grid = NB.acceleration(phi,L,type = type)
+        a_grid -= np.mean(a_grid)
+
         g_interp = interp1d(z,a_grid)
         if variable_mass[0] == True:
             g_0 = g_interp(stars[0].x)
@@ -815,6 +760,18 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
 
         time += dtau
         i += 1
+        
+        if history == True:
+            chi_storage.append(chi)
+            acceleration_storage.append(a_grid)
+            if variable_mass[0] == False:
+                stars_x_storage.append(stars.x)
+                stars_v_storage.append(stars.v)
+
+    np.savetxt("chi_storage.csv", chi_storage, delimiter=",")
+    np.savetxt("acceleration_storage.csv", acceleration_storage, delimiter=",")
+    np.savetxt("stars_x_storage.csv", stars_x_storage, delimiter=",")
+    np.savetxt("stars_v_storage.csv", stars_v_storage, delimiter=",")
     
     if track_centroid == False:
         part_centroids = []
