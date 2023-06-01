@@ -156,7 +156,13 @@ def init(hbar,L_scale,v_scale, ICs):
     #     print("Sine^2 ICs instantiated.")
     elif ICs == 3:
         E0,v_sigma,f0 = .7, .5, .1 #.15, .3, .05
-        stars, chi, z_rms, v_rms, z, zmax, vmax, dtau, variable_mass  = Spitzer(Num_stars,percent_FDM,z,E0,v_sigma,f0, lambda_ratio, variable_mass, stars_type)
+        choose_mesh=input("Bypass mesh-size [y/n]?")
+        if choose_mesh=='y':
+            choose_mesh=True
+        else:
+            choose_mesh=False
+            
+        stars, chi, z_rms, v_rms, z, zmax, vmax, dtau, variable_mass  = Spitzer(Num_stars,percent_FDM,z,E0,v_sigma,f0, lambda_ratio, variable_mass, stars_type, choose_mesh)
         T_Dynamical = z_rms/v_rms
         print("Spitzer ICs instantiated.")
 
@@ -335,7 +341,7 @@ def sine2(z, L, Num_bosons, sigma, Num_stars, v_s, L_s):
 
 ##########################################
 #Spitzer ICs, based off Larry's:
-def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mass, stars_type):
+def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mass, stars_type, choose_mesh = False):
     def density(psi):
         rho = np.zeros_like(psi)
         tm2 = (E0 - psi)/sigma**2
@@ -453,20 +459,22 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         alpha = 1.5
         L_new = 2*zmax*alpha
         #dz = 2*(2*z_rms)/(Num_stars**(1/3)) #1000 #int(np.ceil(np.sqrt(Num_stars)))
-        dz = 2*(2*z_rms)/(100000**(1/3))
-        print(f"dz={dz}")
+        # dz = 2*(2*z_rms)/(100000**(1/3))
+        # print(f"dz={dz}")
         
-        # x1_kn,x2_kn = np.meshgrid(stars.x,stars.x)
-        # x_diff = x1_kn-x2_kn
-        # ave_spacing = np.mean(x_diff,axis=(0,1))
-        x_diff = np.ndarray(Num_stars)
-        for i in range(Num_stars):
-            x = np.delete(xIC,i)
-            x_diff[i] = np.mean(np.abs(x-xIC[i]))
-        ave_spacing = np.mean(x_diff)
-        dz = .025*ave_spacing
-        #dz = np.min(x_diff)
-        print(f"dz={dz}")
+        if choose_mesh == True:
+            dz = float(input("Input a mesh-size dz:"))
+        else:
+            # x1_kn,x2_kn = np.meshgrid(stars.x,stars.x)
+            # x_diff = x1_kn-x2_kn
+            # ave_spacing = np.mean(x_diff,axis=(0,1))
+            x_diff = np.ndarray(Num_stars)
+            for i in range(Num_stars):
+                x = np.delete(xIC,i)
+                x_diff[i] = np.mean(np.abs(x-xIC[i]))
+            ave_spacing = np.mean(x_diff)
+            dz = .025*ave_spacing
+            #dz = np.min(x_diff)
         
 
         N_star = L_new/dz + 1
@@ -474,7 +482,8 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         print(f"N={N_star}")
         z = np.linspace(-L_new/2,L_new/2,N_star)
         dz = z[1]-z[0]
-
+        print(f"dz={dz}")
+        
         #(Re-)Assigning masses:
         if variable_mass[0] == False:
             if stars_type == 1:
@@ -485,7 +494,6 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
             elif stars_type == 2:
                 #uniformly sample xIC and vIC
                 #then assign masses proportional to f(x,v)
-                
                 
                 xIC = np.ndarray(Num_stars)
                 vIC = np.ndarray(Num_stars)

@@ -274,8 +274,6 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
 
         #NBody.select_stars_plots(z,K_5stars_Energies,W_5stars_Energies)
         #dtau = 0.5*0.004831915000023168
-        print(W2_Energies.shape)
-        print(K_fine_Energies.shape)
         
         if variable_mass[0]=='True' or Num_bosons!=0:
             W_fine_Energies = W2_Energies
@@ -284,8 +282,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         if Num_bosons==0:
             RMS_amplitude, Max_amplitude = NBody.plot_Energies(time,K_fine_Energies,W_fine_Energies,variable_mass)
         
-        if variable_mass[0]=='False' and Num_bosons==0:
-            NBody.plot_Freqs(time, K_fine_Energies,W_fine_Energies)
+        # if variable_mass[0]=='False' and Num_bosons==0:
+        #     NBody.plot_Freqs(time, K_fine_Energies,W_fine_Energies)
 
         #NBody.all_stars_plots(time,K_Energies,W2_Energies, variable_mass=variable_mass)
         #NBody.all_stars_plots(np.linspace(0,2.47943,len(K_fine_Energies[:,0])), K_fine_Energies,W_fine_Energies, variable_mass=variable_mass)
@@ -302,8 +300,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
                 W_Energies[i] = W_Energies[i] - correction
 
             #check correction:
-            print(W2_Energies[-1,0]+W2_Energies[-1,1])
-            print(0.5*np.sum(W_Energies[-1]))
+            # print(W2_Energies[-1,0]+W2_Energies[-1,1])
+            # print(0.5*np.sum(W_Energies[-1]))
 
         else:
             for i in range(len(W_Energies)):
@@ -312,8 +310,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
                 W_Energies[i] = W_Energies[i] - correction
 
             #check correction:
-            print(W2_Energies[-1])
-            print(0.5*np.sum(W_Energies[-1]))
+            # print(W2_Energies[-1])
+            # print(0.5*np.sum(W_Energies[-1]))
 
         Energies = W_Energies + K_Energies
         Energies_i = Energies[0]
@@ -326,10 +324,10 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         deltaE=0
 
         deltaE_array = np.array([])
-        for i in range(len(indices)):
+        for i in range(len(Energies)):
             value = np.mean((Energies[i] - Energies_i)/Energies_i)
             deltaE_array = np.append(deltaE_array,value)
-        print(deltaE_array)
+        # print(deltaE_array)
 
         # fig, ax = plt.subplots(1,3)
         # ax[0].plot([np.sum(K_fine_Energies[i,:]) for i in range(1000)],label ="Kinetic")

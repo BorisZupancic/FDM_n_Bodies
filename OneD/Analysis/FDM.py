@@ -15,9 +15,9 @@ import OneD.Global as GF
 
 
 def plot_Energies(time,Ks,Ws):
-    K = Ks - np.mean(Ks)
-    W = Ws - np.mean(Ws)
-    E = Ks+Ws
+    K = Ks# - np.mean(Ks)
+    W = Ws# - np.mean(Ws)
+    E = Ks/np.abs(Ws) #+Ws 
     E = E - np.mean(E)
 
     RMS_amplitude = np.sqrt(np.mean(E**2)) #np.sqrt(np.mean(E**2))

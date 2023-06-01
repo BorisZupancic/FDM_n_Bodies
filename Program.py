@@ -117,7 +117,11 @@ if sim_choice2 != 1:
     if Num_bosons !=0:
         track_FDM = True
 #Whether to track full history or not:
-history=True
+history=input("Track full history [y/n]?")
+if history == 'y':
+    history=True
+else:
+    history=False
 
 for trial_num in range(num_trials):
     print("------------------------------")
