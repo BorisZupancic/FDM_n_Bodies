@@ -18,6 +18,8 @@ import threading
 
 import psutil
 
+from time import process_time
+
 def checkMemory(mem_limit):
     memoryUsage = psutil.virtual_memory().percent
     overflow = False
@@ -30,40 +32,40 @@ def checkMemory(mem_limit):
 #########################################################3
 #FOURIER STUFF
 
-def fourier_gradient(phi,length):
-    n = len(phi)
-    L = length 
+# def fourier_gradient(phi,length):
+#     n = len(phi)
+#     L = length 
 
-    #1. FFT the density (perturbation)
-    phi_n = np.fft.fft(phi,n) #fft for real input
+#     #1. FFT the density (perturbation)
+#     phi_n = np.fft.fft(phi,n) #fft for real input
     
-    #2. Compute the fourier coefficients of phi
-    grad_n = np.array([]) #empty for storage. Will hold the fourier coefficients
-    for nn in range(len(phi_n)):
-        k = 2*np.pi*nn/L
-        val = -1j*phi_n[nn]*k
-        grad_n = np.append(grad_n,val)
+#     #2. Compute the fourier coefficients of phi
+#     grad_n = np.array([]) #empty for storage. Will hold the fourier coefficients
+#     for nn in range(len(phi_n)):
+#         k = 2*np.pi*nn/L
+#         val = -1j*phi_n[nn]*k
+#         grad_n = np.append(grad_n,val)
     
-    #3. IFFT back to get Potential
-    grad = np.fft.ifft(grad_n,n) #use Phi_n as Fourier Coefficients
+#     #3. IFFT back to get Potential
+#     grad = np.fft.ifft(grad_n,n) #use Phi_n as Fourier Coefficients
     
-    grad = np.real(grad)
-    return grad
+#     grad = np.real(grad)
+#     return grad
 
-def gradient(f,length,type = 'Periodic'):
-    if type == 'Isolated':
-        N = len(f)
-        dx = length/(N-1)
-        grad = np.gradient(f,dx,edge_order = 2)
-        return grad
-    elif type == 'Periodic':
-        #grad = fourier_gradient(f,length)
-        #Have decided to do the same thing:
-        N = len(f)
-        dx = length/(N-1)
-        grad = np.gradient(f,dx,edge_order = 2)
+# def gradient(f,length,type = 'Periodic'):
+#     if type == 'Isolated':
+#         N = len(f)
+#         dx = length/(N-1)
+#         grad = np.gradient(f,dx,edge_order = 2)
+#         return grad
+#     elif type == 'Periodic':
+#         #grad = fourier_gradient(f,length)
+#         #Have decided to do the same thing:
+#         N = len(f)
+#         dx = length/(N-1)
+#         grad = np.gradient(f,dx,edge_order = 2)
         
-        return grad
+#         return grad
 
 def Periodic_Poisson(rho,length):
     """
@@ -129,8 +131,7 @@ def Isolated_Poisson(rho,L,G_tilde):
 
 def fourier_potential(rho,length = None, type = 'Periodic', G_tilde = None):
     """
-    A FFT Poisson solver, taking as input a (non-dimensional) density array
-    and the length of the interval on which it is defined.
+    Solve for the potential in Poisson's equation using an FFT method, under either Periodic or Isolated boundary conditions. 
 
     Has option for solving either Periodic or Isolated boundary conditions.
 
@@ -146,12 +147,96 @@ def fourier_potential(rho,length = None, type = 'Periodic', G_tilde = None):
         return phi
     elif type == "James's":
         pass
+
+def potential_solver(length, type = 'Periodic', G_tilde = None):
+    if type == 'Periodic':
+        solver = lambda rho : Periodic_Poisson(rho,length)
+    elif type == 'Isolated':
+        solver = lambda rho : Isolated_Poisson(rho,length,G_tilde)
+    return solver
+
+#####################################################
+# DIAGNOSTICS / TRACKERS
+def stars_tracker(track_stars : bool, variable_mass, z):
+    dz = z[1]-z[0]
+
+    if track_stars == True:
+        if variable_mass[0]==True:
+            def stars_KW(stars, rho_part1, rho_part2, phi):
+                K_array=[stars[0].get_K(),stars[1].get_K()]
+                W_array=[stars[0].get_W(z,phi),stars[1].get_W(z,phi)]
+
+                K = np.array([np.sum(K_array[0]),np.sum(K_array[1])])
+                W = 0.5*np.array([np.sum(W_array[0]),np.sum(W_array[1])])
+
+                W_2 = np.array([dz * np.sum(rho_part1*z*np.gradient(phi,dz)),dz * np.sum(rho_part2*z*np.gradient(phi,dz))])
+            
+                return K, W, W_2
+        else: 
+            def stars_KW(stars, rho_part1, rho_part2, phi):
+                K_array=stars.get_K()
+                W_array=stars.get_W(z,phi)
+
+                K = np.sum(K_array)
+                W = 0.5*np.sum(W_array)
+
+                W_2 = dz * np.sum(rho_part1*z*np.gradient(phi,dz))
+            
+                return K, W, W_2
+    else:
+        def stars_KW(stars, rho_part1, rho_part2, phi):
+            return None, None, None
     
-#####################################################3
+    return stars_KW  
+
+def stars_RMS_tracker(track_stars_rms : bool, variable_mass):
+    if track_stars_rms == True:
+        if variable_mass[0]==True:
+            def stars_rms(stars):
+                z_rms = np.sqrt(np.mean([*stars[0].x**2,*stars[1].x**2]))
+                v_rms = np.sqrt(np.mean([*stars[0].v**2,*stars[1].v**2]))
+                return z_rms, v_rms
+        else:
+            def stars_rms(stars):
+                z_rms = np.sqrt(np.mean(stars.x**2))
+                v_rms = np.sqrt(np.mean(stars.x**2))
+                return z_rms, v_rms
+
+        def get_rms(stars, z_rms_storage, v_rms_storage):
+            z_rms_storage.append(stars_rms(stars)[0])
+            v_rms_storage.append(stars_rms(stars)[1]),
+            return z_rms_storage, v_rms_storage
+    else: 
+        def get_rms(stars, z_rms_storage, v_rms_storage):
+            return z_rms_storage, v_rms_storage
+
+    return get_rms
+
+def FDM_tracker(track_FDM : bool, z, r):
+    dz = z[1]-z[0]
+    L = z[-1]-z[0]
+    N = len(z)
+    k = 2*np.pi*np.fft.fftfreq(N,dz)
+
+    if track_FDM == True:
+        def FDM_KW(chi,rho_FDM,phi):
+            W = dz*np.sum(rho_FDM*z*np.gradient(phi,dz))
+            
+            chi_tilde = np.fft.fft(chi, norm = "ortho")
+            K = (L/N) * r*np.sum(k**2 * np.abs(chi_tilde)**2)
+
+            return K, W
+    else:
+        def FDM_KW(chi,rho_FDM,phi):
+            return None, None
+
+    return FDM_KW
+    
+#####################################################
 #Full Calculation/Simulation Functions
 
 def main_plot(type,G_tilde,L,eta,
-                z,dz,mu,chi,rho_FDM,rho_part,
+                z,dz,mu,chi,rho_FDM,rho_part1,rho_part2,
                 stars,Num_bosons,Num_stars,dtau,i,
                 x_min,x_max,v_min,v_max,
                 y00_max,y10_max,y01_max,y11_max,
@@ -159,11 +244,14 @@ def main_plot(type,G_tilde,L,eta,
                 Directory = None,folder_name = None,track_stars = None, track_centroid = False, variable_mass=[False]):
 
     
-    rho_part1, rho_part2 = NB.particle_density(stars,L,z,variable_mass)
+    rho_part = rho_part1 + rho_part2
+    # rho_part1, rho_part2 = NB.particle_density(stars,L,z,variable_mass)
     phi_part1 = fourier_potential(rho_part1,L,type = type, G_tilde = G_tilde)
     phi_part2 = fourier_potential(rho_part2,L,type = type, G_tilde = G_tilde)
-     
     
+    phi_part1 -= np.min(phi_part1)
+    phi_part2 -= np.min(phi_part2) 
+
     layout = [['upper left', 'upper right', 'far right'],
                         ['lower left', 'lower right', 'far right']]
 
@@ -184,18 +272,21 @@ def main_plot(type,G_tilde,L,eta,
     ax['lower right'].set_ylabel("Velocity (code units)")
 
     ##############################################
-    
+    ax['far right'].set_ylim(-a_max/2,a_max/2)
     if variable_mass[0] == False:
-        Part_force = -gradient(fourier_potential(rho_part,L,type = type, G_tilde = G_tilde),L,type = type)
+        Part_force = -np.gradient(fourier_potential(rho_part,L,type = type, G_tilde = G_tilde),dz)
         ax['far right'].plot(z, Part_force, label = "Particle Contribution")
+
+        ax['lower left'].plot(z, phi_part1, label = "$\\phi_{Quasi}$")
+        ax['lower left'].plot(z, rho_part1, label = "$\\rho_{Quasi}$")
     else:
-        Part1_force = -gradient(fourier_potential(rho_part1,L,type = type, G_tilde = G_tilde),L,type = type)
-        Part2_force = -gradient(fourier_potential(rho_part2,L,type = type, G_tilde = G_tilde),L,type = type)
+        Part1_force = -np.gradient(fourier_potential(rho_part1,L,type = type, G_tilde = G_tilde),dz)
+        Part2_force = -np.gradient(fourier_potential(rho_part2,L,type = type, G_tilde = G_tilde),dz)
         ax['far right'].plot(z, Part1_force, label = "(Quasi) Particle Contribution")
         ax['far right'].plot(z, Part2_force, label = "(Light) Particle Contribution")
         ax['far right'].set_ylim(-a_max/2,a_max/2)
         
-        ax['upper left'].plot(z,phi_part1, label = "$\\phi_{Quasi}$")
+        ax['upper left'].plot(z, phi_part1, label = "$\\phi_{Quasi}$")
         ax['upper left'].plot(z, rho_part1, label = "$\\rho_{Quasi}$")
         
         ax['lower left'].plot(z,phi_part2,label = "$\\Phi_{Particles}$")
@@ -205,9 +296,9 @@ def main_plot(type,G_tilde,L,eta,
     
     # FDM
     if Num_bosons != 0:
-        FDM_force = -gradient(fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde),L,type = type)
+        FDM_force = -np.gradient(fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde),dz)
         ax['far right'].plot(z, FDM_force, label = "FDM Contribution")
-        ax['far right'].set_ylim(-a_max,a_max)
+        
     
         phi_FDM = fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde)
         ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$")
@@ -299,7 +390,7 @@ def main_plot(type,G_tilde,L,eta,
     
     if ax['upper left'].lines:
         ax['upper left'].legend(fontsize = 15)
-    if ax['upper right'].lines or ax['upper right'].collections or bool(ax['upper right'].get_images()):
+    if ax['upper right'].lines or ax['upper right'].collections: #or bool(ax['upper right'].get_images()):
         ax['upper right'].legend(fontsize = 15)
     if ax['lower left'].lines:
         ax['lower left'].legend(fontsize = 15)
@@ -312,7 +403,8 @@ def main_plot(type,G_tilde,L,eta,
     ax['upper left'].set_ylim([-y00_max, y00_max] )
     ax['lower right'].set_ylim(-y11_max,y11_max)
     ax['lower right'].set_xlim(-L/2,L/2)
-    
+    ax['far right'].set_ylim(-a_max,a_max)
+
     #now save it as a .jpg file:
     folder = Directory + "/" + folder_name
     filename = 'Plot' + str(i).zfill(4) + '.jpg';
@@ -334,72 +426,17 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
                     absolute_PLOT = True, track_stars = False, track_stars_rms = False, track_centroid = False, fixed_phi = False,
                     track_FDM = False, variable_mass = False, history = False):
     
+    st = process_time()
     #########################################
     #RETRIEVE INFO FROM INITIAL STARTUP/CONDITIONS
-    #Re-calcualte Mass and Time scales
-    M_s = v_s**2 * L_s
-    T_s = L_s / v_s
-
     L = z[-1]-z[0]
     dz = z[1]-z[0]
-
-    if variable_mass[0] == True:
-        Num_stars = len(stars[0].x) + len(stars[1].x)
-    else:
-        Num_stars = len(stars.x)
-
-
-    #Chooce Poisson-Solving Routine:
-    if bc_choice == 1:
-        type = 'Isolated'
-    
-        N = len(z)
-        z_long = np.linspace(-L,L,2*N-1)
-        G = 0.5*np.abs(z_long)
-        G_tilde = np.fft.fft(G)
-        
-    elif bc_choice == 2:
-        type = 'Periodic'
-        G_tilde = None
-
-    ##############################################
-    # INITIAL SETUP
-    #Calculate initial Density perturbation (non-dimensionalized and reduced)
-    rho_FDM = mu*np.absolute(chi)**2 #just norm-squared of wavefunction
-    psi = chi* L_s**(-3/2)
-
-    #Check how it's normalized:
-    print(f"integral of |chi|^2 : {np.sum(dz*rho_FDM)}")
-    print(f"Numerically calculated integral of |psi|^2 : {np.sum(dz*np.absolute(psi)**2)}")
-
-    m = mu*M_s
-    
-    #Calculate distribution on Mesh
-    if Num_stars !=0:
-        rho_part1, rho_part2 = NB.particle_density(stars, L, z, variable_mass)
-        rho_part = rho_part1 + rho_part2
-    else:
-        rho_part = np.zeros_like(z)
-        rho_part1 = np.zeros_like(z)
-    
-    #Calculate total density
-    rho = rho_FDM + rho_part
-    #check normalization
-    print(f"Density Normalization Check: {np.sum(rho)*dz}")
-    #Now option to freeze the potential:
-    if fixed_phi == True:
-        if variable_mass[0]==True:
-            sigma = stars[0].mass
-        else:
-            sigma = stars.mass
-        phi = 0.5*sigma*((z**2) / (L/2)**2 - 1)  #equal to 0 at boundaries 
-
-    ###################################################
-    #PHASE SPACE STUFF
     N = len(z)
+
+    #PHASE SPACE STUFF
     eta=(z[-1]-z[0])/np.sqrt(np.pi*len(chi)/2)
-    #eta = (z[-1]-z[0]) / np.sqrt(2*np.pi*N)
-    k = 2*np.pi*np.fft.fftfreq(len(z),dz)
+    k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
+    dk = k[1]-k[0]      
     #rescale wavenumber k to velocity v:
     hbar = 1
     v = k*(hbar/mu)
@@ -410,6 +447,97 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     elif np.abs(v_min) > v_max:
         v_max = -v_min
     print(f"v_min = {v_min}, v_max = {v_max}")
+    if variable_mass[0] == True:
+        Num_stars = len(stars[0].x) + len(stars[1].x)
+    else:
+        Num_stars = len(stars.x)
+
+
+    #######################################################
+    # DEFINE ROUTINES (to avoid redundant if-statements in main loop)
+    #1. Choose Poisson-Solving Routine:
+    if bc_choice == 1:
+        type = 'Isolated'
+        z_long = np.linspace(-L,L,2*N-1)
+        G = 0.5*np.abs(z_long)
+        G_tilde = np.fft.fft(G)    
+    elif bc_choice == 2:
+        type = 'Periodic'
+        G_tilde = None
+    get_phi = lambda rho : fourier_potential(rho,L,type=type,G_tilde=G_tilde)
+    #Now option to freeze the potential:
+    if fixed_phi == True:
+        if variable_mass[0]==True:
+            sigma = stars[0].mass
+        else:
+            sigma = stars.mass
+        phi = 0.5*sigma*((z**2) / (L/2)**2 - 1)  #equal to 0 at boundaries 
+        get_phi = lambda rho : phi 
+
+    #2. Choose Density-getting Routine:
+    #For FDM:
+    if Num_bosons!=0:
+        get_rho_FDM = lambda chi : mu*np.absolute(chi)**2
+    else: 
+        get_rho_FDM = lambda chi : np.zeros_like(z)
+    #For Stars
+    if Num_stars !=0:
+        if variable_mass[0]==True:
+            get_rho_part1 = lambda stars : NB.particle_density(stars[0],L,z)
+            get_rho_part2 = lambda stars : NB.particle_density(stars[1],L,z)
+        else:
+            get_rho_part1 = lambda stars : NB.particle_density(stars,L,z)
+            get_rho_part2 = lambda stars : np.zeros_like(z)
+    else:
+        get_rho_part1 = lambda stars : np.zeros_like(z)
+        get_rho_part2 = lambda stars : np.zeros_like(z)
+
+    get_rho_part = lambda stars : get_rho_part1(stars) + get_rho_part2(stars)
+    get_rho = lambda chi,stars : get_rho_FDM(chi) + get_rho_part(stars) 
+
+    #3. Kick and Drift Routines for Stars
+    if variable_mass[0] == True:
+        def kick(stars,g_interp,dtau):
+            g_0 = g_interp(stars[0].x)
+            stars[0].kick(g_0,dtau/2)
+            g_1 = g_interp(stars[1].x)
+            stars[1].kick(g_1,dtau/2)
+            return stars 
+        def drift(stars,dtau):
+            stars[0].drift(dtau)
+            stars[1].drift(dtau)
+            return stars
+    else:
+        def kick(stars,g_interp,dtau):
+            g_s = g_interp(stars.x)
+            stars.kick(g_s,dtau/2)
+            return stars 
+        def drift(stars,dtau):
+            stars.drift(dtau)
+            return stars
+        
+    ##############################################
+    # INITIAL SETUP
+    rho_FDM = get_rho_FDM(chi)
+    rho_part1 = get_rho_part1(stars)
+    rho_part2 = get_rho_part2(stars)
+    rho_part = rho_part1+rho_part2
+
+    #Check how it's normalized:
+    print(f"integral of |chi|^2 : {np.sum(dz*rho_FDM)}")
+    
+    rho = get_rho(chi,stars)
+    #check normalization
+    print(f"Density Normalization Check: {np.sum(rho)*dz}")
+
+    Part_force = -np.gradient(fourier_potential(rho_part,L, type = type, G_tilde = G_tilde),dz)
+    FDM_force = -np.gradient(fourier_potential(rho_FDM,L, type = type, G_tilde = G_tilde),dz)
+
+    a1 = np.abs([np.max(Part_force),np.min(Part_force)])
+    a2 = np.abs([np.max(FDM_force),np.min(FDM_force)])
+
+    a_max = np.max(np.append(a1,a2))*2
+    print(f"a_max = {a_max}")   
 
     ##########################################################
     #PLOT AXIS LIMITS:
@@ -476,13 +604,7 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     
         print(f"Snapshots at i = {snapshot_indices}")
     
-    if track_stars == True or track_FDM == True:
-        if sim_choice2 == 1:
-            # collapse_index = int(np.floor(t_dynamical/dtau))
-            snapshot_indices = np.multiply(collapse_index,indices)        
-            track_snapshot_indices = snapshot_indices
-        elif sim_choice2 == 2:
-            track_snapshot_indices = snapshot_indices
+    
 
     print(f"Sim will stop at tau = {tau_stop}")
     time = 0
@@ -491,18 +613,47 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     if absolute_PLOT == True:
         os.chdir(Directory + "/" + folder_name) #Change Directory to where Image Folders are
     
-    # while time <= tau_stop:
-    # while i <= i_stop:
 
-    stars_x_storage = []
-    stars_v_storage = []
-    chi_storage = []
+    ######################################
+    # DIAGNOSTICS + STORAGE SETTUP
+    # stars_x_storage = []
+    # stars_v_storage = []
+    # chi_storage = []
     acceleration_storage = []
 
+    if track_stars == True or track_FDM == True:
+        if sim_choice2 == 1:
+            snapshot_indices = np.multiply(collapse_index,indices)        
+            track_snapshot_indices = snapshot_indices
+        elif sim_choice2 == 2:
+            track_snapshot_indices = snapshot_indices
+
+    K_star_storage = [] #None #Total Energy at each snapshot 
+    W_star_storage = [] #None
+    K_star_fine_storage = np.ndarray(i_stop+1) #None #Total Energy at each timestep
+    W_star_fine_storage = np.ndarray(i_stop+1) #None
+    W_2_star_storage = np.ndarray(i_stop+1) #None
+    get_stars_KW = stars_tracker(track_stars, variable_mass, z)
+    
+    z_rms_storage = [] #None
+    v_rms_storage = [] #None
+    get_stars_rms = stars_RMS_tracker(track_stars_rms, variable_mass)
+
+    #FDM DIAGNOSTICS 
+    W_FDM_storage = np.ndarray(i_stop+1) #None
+    K_FDM_storage = np.ndarray(i_stop+1) #None    
+    get_FDM_KW = FDM_tracker(track_FDM,z,r)
+
+    et = process_time()
+    print(f" `Startup` CPU Time = {et-st}")
+    #################################################################
+    # MAIN LOOP #####################################################
     for i in range(i_stop+1):
         overflow = checkMemory(mem_limit = 95)
         if overflow == True:
             break      
+
+        
 
         #################################################
         #CALCULATION OF PHYSICAL QUANTITIES
@@ -510,129 +661,37 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         #################################################
         #POSITION SPACE CALCULATIONS:
         #1. Calculate Total Density
-        #Calculate distribution on Mesh
-        if Num_stars !=0:
-            rho_part1, rho_part2 = NB.particle_density(stars, L, z, variable_mass)
-            rho_part = rho_part1 + rho_part2
-        else:
-            rho_part = np.zeros_like(z)
-        
-        #Then add the density from the FDM
-        rho_FDM = mu*np.absolute(chi)**2
-        rho = rho_FDM + rho_part 
+        # rho = get_rho(chi,stars)
+        rho_FDM = get_rho_FDM(chi)
+        rho_part1,rho_part2 = get_rho_part1(stars),get_rho_part2(stars)
+        rho = rho_FDM + rho_part1 + rho_part2
 
         #2. Calculate potential 
-        if fixed_phi == False:
-            phi = fourier_potential(rho,L, type = type, G_tilde = G_tilde)
-        
+        phi = get_phi(rho)
+
         #3. Calculate Acceleration Field on Mesh:
-        a_grid = NB.acceleration(phi,L,type = type) 
+        a_grid = -np.gradient(phi,dz)
         a_grid -= np.mean(a_grid)
         
-        ##########################################
-        #Tracking energies of ALL stars
-        if track_stars == True:
-            if i in track_snapshot_indices: # Happens only at snapshot indices
-                if variable_mass[0]==True:
-                    K_array=[*stars[0].get_K(),*stars[1].get_K()]
-                    W_array=[*stars[0].get_W(z,phi),*stars[1].get_W(z,phi)]
+        # ##########################################
+        # DIAGNOSTICS + STORAGE
+        K_star_fine_storage[i], W_star_fine_storage[i], W_2_star_storage[i] = get_stars_KW(stars, rho_part1, rho_part2, phi)
+        
+        K_FDM_storage[i], W_FDM_storage[i] = get_FDM_KW(chi,rho_FDM,phi)
+        
+        if i in track_snapshot_indices: # Happens only at snapshot indices     
+            z_rms_storage, v_rms_storage = get_stars_rms(stars, z_rms_storage, v_rms_storage)
+        
+        if history == True:
+            chi_storage.append(chi)
+            acceleration_storage.append(a_grid)
+            if variable_mass[0] == False:
+                stars_x_storage.append(stars.x)
+                stars_v_storage.append(stars.v)
 
-                else:
-                    K_array = stars.get_K()
-                    W_array = stars.get_W(z,phi)
-            
-                if i == 0:
-                    K_star_storage = np.array([K_array])
-                    W_star_storage = np.array([W_array])
-
-                else:
-                    K_star_storage = np.append(K_star_storage,[K_array],axis = 0)
-                    W_star_storage = np.append(W_star_storage,[W_array],axis = 0)
-
-            # K_star_fine_storage = [] #None
-            # W_star_fine_storage = [] #None
-            
-            if variable_mass[0]==True:
-                K_array=[stars[0].get_K(),stars[1].get_K()]
-                W_array=[stars[0].get_W(z,phi),stars[1].get_W(z,phi)]
-
-                K = np.array([np.sum(K_array[0]),np.sum(K_array[1])])
-                W = 0.5*np.array([np.sum(W_array[0]),np.sum(W_array[1])])
-
-                W_2 = np.array([dz * np.sum(rho_part1*z*np.gradient(phi,dz)),dz * np.sum(rho_part2*z*np.gradient(phi,dz))])
-            else:
-                K_array = stars.get_K()
-                W_array = stars.get_W(z,phi)
-
-                K = np.sum(K_array)
-                W = 0.5*np.sum(W_array) 
-
-                W_2 = dz * np.sum(rho_part*z*np.gradient(phi,dz))
-            if i == 0:
-                K_star_fine_storage = np.array([K])
-                W_star_fine_storage = np.array([W])
-
-                W_2_star_storage = np.array([W_2])
-            else:
-                K_star_fine_storage = np.append(K_star_fine_storage,[K], axis=0)
-                W_star_fine_storage = np.append(W_star_fine_storage,[W],axis=0)
-
-                W_2_star_storage = np.append(W_2_star_storage,[W_2],axis = 0)
-            # K_star_storage = [] #None
-            # W_star_storage = [] #None
-            # W_2_star_storage = []
-            
-        else:
-            K_star_storage = [] #None
-            W_star_storage = [] #None
-
-            K_star_fine_storage = [] #None
-            W_star_fine_storage = [] #None
-
-            W_2_star_storage = [] #None
-
-
-        if track_stars_rms == True:
-            if i in track_snapshot_indices:
-                if variable_mass[0]==True:
-                    z_rms = np.sqrt(np.mean([*stars[0].x**2,*stars[1].x**2]))
-                    v_rms = np.sqrt(np.mean([*stars[0].v**2,*stars[1].v**2]))
-                else:
-                    z_rms = np.sqrt(np.mean(stars.x**2))
-                    v_rms = np.sqrt(np.mean(stars.x**2))
-    
-                if i == 0:
-                    z_rms_storage = np.array(z_rms)
-                    v_rms_storage = np.array(v_rms)
-                else:
-                    z_rms_storage = np.append(z_rms_storage,z_rms)
-                    v_rms_storage = np.append(v_rms_storage,v_rms)
-        else:
-            z_rms_storage = [] #None
-            v_rms_storage = [] #None
-
-        #########################################
-        #FDM DIAGNOSTICS
-        #Record Energies:
-        if track_FDM == True:
-            # if i in track_snapshot_indices:
-            W = dz*np.sum(rho_FDM*z*np.gradient(phi,dz))
-            
-            chi_tilde = np.fft.fft(chi, norm = "ortho")
-            k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
-            dk = k[1]-k[0]
-            K = (L/N) * r*np.sum(k**2 * np.abs(chi_tilde)**2)
-            
-            if i == 0:
-                W_FDM_storage = np.array([[W]])
-                K_FDM_storage = np.array([[K]])
-            else:
-                W_FDM_storage = np.append(W_FDM_storage,[[W]],axis=0) 
-                K_FDM_storage = np.append(K_FDM_storage,[[K]],axis=0)
-        else:
-            W_FDM_storage = [] #None
-            K_FDM_storage = [] #None
-            #################################################
+        # st = process_time() 
+        
+        #################################################
         # PLOTTING
         # Plot everytime if sim_choice2 == 1
         # Plot only specific time steps if sim_choice2 == 2
@@ -642,52 +701,18 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
             if sim_choice2 == 1:
                 PLOT = True #always plot
             elif sim_choice2 == 2:
-                #check if time-step is correct one.
-                if i in snapshot_indices:
+                if i in snapshot_indices: #check if time-step is correct one.
                     PLOT = True
-                #else:
-                #   PLOT = False
+    
                     
             if PLOT == True:
-                if i == 0: #want to set a limit on the acceleration graph
-                    z_long = np.linspace(-L,L,2*N-1)
-                    G = 0.5*np.abs(z_long)
-                    G_tilde = np.fft.fft(G)
-
-                    Part_force = -gradient(fourier_potential(rho_part,L, type = type, G_tilde = G_tilde),L,type = type)
-                    FDM_force = -gradient(fourier_potential(rho_FDM,L, type = type, G_tilde = G_tilde),L,type = type)
-
-                    a1 = np.abs([np.max(Part_force),np.min(Part_force)])
-                    a2 = np.abs([np.max(FDM_force),np.min(FDM_force)])
-                    fig, ax = plt.subplots(1,2,figsize = (15,5))
-                    ax[0].set_title("Fuzzy Dark Matter")
-                    ax[0].plot(z,-gradient(fourier_potential(rho_FDM,L,type = 'Periodic'),L,type = 'Periodic'),label = 'Periodic')
-                    ax[0].plot(z,fourier_potential(rho_FDM,L,type = 'Periodic'),label = 'Periodic')
-                    ax[0].plot(z,fourier_potential(rho_FDM,L, type = 'Isolated', G_tilde = G_tilde),label = 'Isolated')
-                    ax[0].plot(z,-gradient(fourier_potential(rho_FDM, L, type = 'Isolated', G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
-                    ax[0].set_xlabel("$z$")
-                    ax[0].legend()
-                    
-                    ax[1].set_title("Particles")
-                    ax[1].plot(z,-gradient(fourier_potential(rho_part,L,type = 'Periodic'),L,type = 'Periodic'),label = 'Periodic')
-                    ax[1].plot(z,fourier_potential(rho_part,L,type = 'Periodic'),label = 'Periodic')
-                    ax[1].plot(z,fourier_potential(rho_part,L, type = 'Isolated', G_tilde = G_tilde),label = 'Isolated')
-                    ax[1].plot(z,-gradient(fourier_potential(rho_part,L, type = 'Isolated', G_tilde = G_tilde),L,type = 'Isolated'),label = 'Isolated')
-                    ax[1].set_xlabel("$z$")
-                    ax[1].legend()
-                    plt.savefig("Initial Periodic vs Isolated")
-                    plt.clf()
-                    a_max = np.max(np.append(a1,a2))*2
-                    print(f"a_max = {a_max}")
-                     
                 part_centroid, fdm_centroid = main_plot(type,G_tilde,L,eta,
-                z,dz,mu, chi,rho_FDM,rho_part,
-                stars,Num_bosons,Num_stars,
-                dtau,i,
+                z,dz,mu,chi,rho_FDM,rho_part1,rho_part2,
+                stars,Num_bosons,Num_stars,dtau,i,
                 x_min,x_max,v_min,v_max,
                 y00_max,y10_max,y01_max,y11_max,
                 a_max,
-                Directory,folder_name,track_stars,track_centroid, variable_mass)
+                Directory,folder_name, track_stars, track_centroid, variable_mass)
                 
                 if track_centroid == True:
                     if i == 0:
@@ -697,81 +722,48 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
                         part_centroids.append(part_centroid)
                         fdm_centroids.append(fdm_centroid)
 
+        # et = process_time()
+    
         ############################################################
         #EVOLVE SYSTEM (After calculations on the Mesh)
         ############################################################
         #1,2: Kick+Drift
 
+        
         #FUZZY DM
         chi = FDM.kick(chi,phi/2,r,dtau/2)
         chi = FDM.drift(chi,r,dz,dtau)
 
         #PARTICLES
         g_interp = interp1d(z,a_grid)
-        if variable_mass[0] == True:
-            g_0 = g_interp(stars[0].x)
-            stars[0].kick(g_0,dtau/2)
-            g_1 = g_interp(stars[1].x)
-            stars[1].kick(g_1,dtau/2)
+        stars = kick(stars, g_interp, dtau)
+        stars = drift(stars, dtau)
 
-            stars[0].drift(dtau)
-            stars[1].drift(dtau)
-        else:
-            g_s = g_interp(stars.x)
-            stars.kick(g_s,dtau/2)
-            stars.drift(dtau)
+        #3: Re-update potential and acceleration fields
+        rho = get_rho(chi,stars)
+        phi = get_phi(rho)
 
-        #     #corrective maneuvers on star position
-        #     if bc_choice == 2:
-        #         if np.absolute(star.x) > L/2:
-        #             star.reposition(L)
-        #     elif bc_choice == 1:
-        #         pass
-
-        #3 Re-update potential and acceleration fields
-        if fixed_phi == False: #if True, potential is fixed
-            if Num_stars !=0:
-                rho_part1, rho_part2 = NB.particle_density(stars, L, z, variable_mass)
-                rho_part = rho_part1 + rho_part2
-            else:
-                rho_part = np.zeros_like(z)
-            rho_FDM = mu*np.absolute(chi)**2 
-            rho = rho_FDM + rho_part
-            phi = fourier_potential(rho,L, type = type, G_tilde = G_tilde)
-        
-        #4. KICK in updated potential
+        #4: KICK in updated potential
         #FUZZY DM
         chi = FDM.kick(chi,phi/2,r,dtau/2)
 
         #PARTICLES
-        a_grid = NB.acceleration(phi,L,type = type)
+        a_grid = -np.gradient(phi,dz)
         a_grid -= np.mean(a_grid)
 
         g_interp = interp1d(z,a_grid)
-        if variable_mass[0] == True:
-            g_0 = g_interp(stars[0].x)
-            stars[0].kick(g_0,dtau/2)
-            
-            g_1 = g_interp(stars[1].x)
-            stars[1].kick(g_1,dtau/2)
-        else:
-            g_s = g_interp(stars.x)
-            stars.kick(g_s,dtau/2)
+        stars = kick(stars, g_interp, dtau)
 
+        
         time += dtau
         i += 1
-        
-        if history == True:
-            chi_storage.append(chi)
-            acceleration_storage.append(a_grid)
-            if variable_mass[0] == False:
-                stars_x_storage.append(stars.x)
-                stars_v_storage.append(stars.v)
 
-    np.savetxt("chi_storage.csv", chi_storage, delimiter=",")
+        # print(et-st)
+
+    # np.savetxt("chi_storage.csv", chi_storage, delimiter=",")
+    # np.savetxt("stars_x_storage.csv", stars_x_storage, delimiter=",")
+    # np.savetxt("stars_v_storage.csv", stars_v_storage, delimiter=",")
     np.savetxt("acceleration_storage.csv", acceleration_storage, delimiter=",")
-    np.savetxt("stars_x_storage.csv", stars_x_storage, delimiter=",")
-    np.savetxt("stars_v_storage.csv", stars_v_storage, delimiter=",")
     
     if track_centroid == False:
         part_centroids = []

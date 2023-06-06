@@ -101,9 +101,9 @@ def time_evolveV2(chi,phi,r,dz,dtau,m,L):
 ###################################################################################
 def Husimi_phase(chi,z,eta):
     N = len(chi)
-    dz = z[1]-z[0]
-    
-    k = 2*np.pi*np.fft.fftfreq(len(z),dz)
+    dz = z[1]-z[0]                                                  
+        
+    k = 2*np.pi*np.fft.fftfreq(N,dz)
     dk = k[1]-k[0]
     g = np.array([np.exp(-(z_0-z)**2 / (2*eta**2)) for z_0 in z])
     
@@ -125,8 +125,6 @@ def Husimi_phase_V2(chi, z, eta):
     p = 2*np.pi*np.fft.fftfreq(len(chi),dz)
     p = np.append(p[len(p)//2:],p[:len(p)//2])
     z_kn, p_kn = np.meshgrid(z,p)
-    
-    #print(max(p),min(p))
     
     F = Husimi_phase(chi,z,eta)
     return F, z_kn, p_kn

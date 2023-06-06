@@ -118,10 +118,12 @@ if sim_choice2 != 1:
         track_FDM = True
 #Whether to track full history or not:
 history=input("Track full history [y/n]?")
+# print("["+history+"]")
 if history == 'y':
     history=True
 else:
     history=False
+print(history)
 
 for trial_num in range(num_trials):
     print("------------------------------")
@@ -140,7 +142,6 @@ for trial_num in range(num_trials):
     
     st = time.process_time() #Start Tracking CPU Time
     #Run simulation on Initial Conditions:
-    
     snapshot_indices, stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, W_2_star_storage, K_star_fine_storage, W_star_fine_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, T_Dynamical, bc_choice, z,
                                                                                                         mu, Num_bosons, r, chi, 
                                                                                                         stars,
