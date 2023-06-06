@@ -313,21 +313,23 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
             # print(W2_Energies[-1])
             # print(0.5*np.sum(W_Energies[-1]))
 
+        # Energies = W_fine_Energies + K_fine_Energies
         Energies = W_Energies + K_Energies
-        Energies_i = Energies[0]
-        Energies_f = Energies[-1]
+        if len(Energies)>0:
+            Energies_i = Energies[0]
+            Energies_f = Energies[-1]
 
-        
-        # if variable_mass[0]=='True' or Num_bosons!=0:
-        #     deltaE = NBody.scatter_deltaE(Energies_i, Energies_f, variable_mass, Num_bosons, r)
-        #     deltaE = NBody.scatter_deltaE_frac(Energies_i, Energies_f, variable_mass, Num_bosons, r)
-        deltaE=0
+            
+            # if variable_mass[0]=='True' or Num_bosons!=0:
+            #     deltaE = NBody.scatter_deltaE(Energies_i, Energies_f, variable_mass, Num_bosons, r)
+            #     deltaE = NBody.scatter_deltaE_frac(Energies_i, Energies_f, variable_mass, Num_bosons, r)
+            deltaE=0
 
-        deltaE_array = np.array([])
-        for i in range(len(Energies)):
-            value = np.mean((Energies[i] - Energies_i)/Energies_i)
-            deltaE_array = np.append(deltaE_array,value)
-        # print(deltaE_array)
+            deltaE_array = np.array([])
+            for i in range(len(Energies)):
+                value = np.mean((Energies[i] - Energies_i)/Energies_i)
+                deltaE_array = np.append(deltaE_array,value)
+            # print(deltaE_array)
 
         # fig, ax = plt.subplots(1,3)
         # ax[0].plot([np.sum(K_fine_Energies[i,:]) for i in range(1000)],label ="Kinetic")

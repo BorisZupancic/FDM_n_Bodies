@@ -170,36 +170,38 @@ def select_stars_plots(z,K_5stars_Energies,W_5stars_Energies):
 def plot_Energies(time,Ks,Ws,variable_mass=None):
     
     if variable_mass[0] == 'False':
-        # fig, ax = plt.subplots(2,1, figsize = (10,8), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
-    
-        K = Ks# - np.mean(Ks)
-        W = Ws# - np.mean(Ws)
-        E = Ks/np.abs(Ws) #+Ws 
+        
+        K = Ks - np.mean(Ks)
+        W = Ws - np.mean(Ws)
+        E = Ks+Ws
         E = E - np.mean(E)
-
-        RMS_amplitude = np.sqrt(np.mean(E**2)) #np.sqrt(np.mean(E**2))
-        Max_amplitude = np.max(E)
-       
-        # ax[0].set_title("Variation from Mean Total Energies in Particles over Time", fontdict={'fontsize' : 15})
-        # ax[0].plot(time,K,label = "$\\delta K$ Kinetic Energy")
-        # ax[0].plot(time,W,label = "$\\delta W$ Potential Energy")
-        # ax[0].plot(time,E, label = "$\\delta (K+W)$ Total Energy")
-        # ax[0].legend(loc='upper right')
-        # ax[0].set_ylabel("Energy (code units)")
-        # ax[0].set_xlabel("Time (code units)")
-
-        # ax[1].set_title("Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
-        # ax[1].plot(time,Ks/np.abs(Ws)) #, label = "Virial Ratio $\\frac{K}{|W|}$")
-        # ax[1].set_xlabel("Time (code units)")
+        V = Ks/np.abs(Ws)
+        delta_V = V - np.mean(V)
     
-        # ax[0].grid(True)
-        # ax[1].grid(True)
+        RMS_amplitude = np.sqrt(np.mean(delta_V**2)) #np.sqrt(np.mean(E**2))
+        Max_amplitude = np.max(delta_V)
+        
+        fig, ax = plt.subplots(2,1, figsize = (10,8), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
+    
+        ax[0].set_title("Variation from Mean Total Energies in Particles over Time", fontdict={'fontsize' : 15})
+        ax[0].plot(time,K,label = "$\\delta K$ Kinetic Energy")
+        ax[0].plot(time,W,label = "$\\delta W$ Potential Energy")
+        ax[0].plot(time,E, label = "$\\delta (K+W)$ Total Energy")
+        ax[0].legend(loc='upper right')
+        ax[0].set_ylabel("Energy (code units)")
+        ax[0].set_xlabel("Time (code units)")
 
-        # fig.subplots_adjust(hspace = 0.3)
-        # plt.show()
+        ax[1].set_title("Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
+        ax[1].plot(time,Ks/np.abs(Ws)) #, label = "Virial Ratio $\\frac{K}{|W|}$")
+        ax[1].set_xlabel("Time (code units)")
+    
+        ax[0].grid(True)
+        ax[1].grid(True)
+
+        fig.subplots_adjust(hspace = 0.3)
+        plt.show()
 
     else:
-        fig, ax = plt.subplots(2,2, figsize = (20,10), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
 
         V1 = Ks[:,0]/np.abs(Ws[:,0])
         V2 = Ks[:,1]/np.abs(Ws[:,1])
@@ -214,8 +216,11 @@ def plot_Energies(time,Ks,Ws,variable_mass=None):
         E2 = K2+W2
         E2 = E2 - np.mean(E2)
 
-        RMS_amplitude = np.sqrt(np.mean(E1**2))
-        Max_amplitude = np.max(E1)
+        delta_V1 = V1-np.mean(V1)
+        RMS_amplitude = np.sqrt(np.mean(delta_V1**2))
+        Max_amplitude = np.max(V1)
+    
+        fig, ax = plt.subplots(2,2, figsize = (20,10), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
         
         plt.suptitle("Variation from Mean Total Energies in Particles over Time", fontsize = 15) #fontdict={'fontsize' : 15})
         

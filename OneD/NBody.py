@@ -76,35 +76,44 @@ def collectEnergies(K1,W1,K2=None,W2=None):
 ########
 
 def grid_count(stars,L,z):
-    '''Count the particles on the mesh-grid.'''
+    '''Count the particles' masses on the mesh-grid. This is a weighted histogram, where weights are the masses.'''
     N = len(z)
     dz = z[1]-z[0]
     bin_counts, bin_edges = np.histogram(stars.x, bins = N, range = (-L/2-dz/2,L/2 + dz/2), weights = stars.mass)
     return bin_counts
 
-def particle_density(stars, L, z, variable_mass):
+# def particle_density(stars, L, z, variable_mass):
+#     '''Get the density of the particle distribution on the mesh-grid.'''
+#     if variable_mass[0] == True:
+#         stars1 = stars[0]
+#         stars2 = stars[1]
+#         # sigma1 = stars1.mass
+#         # sigma2 = stars2.mass
+
+#         grid_counts1 = grid_count(stars1,L,z)
+#         grid_counts2 = grid_count(stars2,L,z)
+
+#         dz = z[1]-z[0]
+
+#         rho_part1 = grid_counts1/dz 
+#         rho_part2 = grid_counts2/dz
+#         #rho_part = (grid_counts1*sigma1 + grid_counts2*sigma2)/dz
+#     else:
+#         # sigma = stars.mass 
+#         grid_counts = grid_count(stars,L,z)
+#         dz = z[1]-z[0]
+#         rho_part1 = (grid_counts/dz)
+#         rho_part2 = np.zeros_like(rho_part1)
+#     return rho_part1, rho_part2
+
+def particle_density(stars, L, z):
     '''Get the density of the particle distribution on the mesh-grid.'''
-    if variable_mass[0] == True:
-        stars1 = stars[0]
-        stars2 = stars[1]
-        # sigma1 = stars1.mass
-        # sigma2 = stars2.mass
-
-        grid_counts1 = grid_count(stars1,L,z)
-        grid_counts2 = grid_count(stars2,L,z)
-
-        dz = z[1]-z[0]
-
-        rho_part1 = grid_counts1/dz 
-        rho_part2 = grid_counts2/dz
-        #rho_part = (grid_counts1*sigma1 + grid_counts2*sigma2)/dz
-    else:
-        # sigma = stars.mass 
-        grid_counts = grid_count(stars,L,z)
-        dz = z[1]-z[0]
-        rho_part1 = (grid_counts/dz)
-        rho_part2 = np.zeros_like(rho_part1)
-    return rho_part1, rho_part2
+    # sigma = stars.mass 
+    grid_counts = grid_count(stars,L,z)
+    dz = z[1]-z[0]
+    rho_part = (grid_counts/dz)
+    # rho_part2 = np.zeros_like(rho_part1)
+    return rho_part
     
 def acceleration(phi,L,type):
     grad = GF.gradient(phi,L,type = type)#GF.fourier_gradient(phi,L)

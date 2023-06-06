@@ -155,14 +155,17 @@ def init(hbar,L_scale,v_scale, ICs):
     #     stars,chi = sine2(z, L, Num_bosons, sigma, Num_stars, v_s, L_s)
     #     print("Sine^2 ICs instantiated.")
     elif ICs == 3:
-        E0,v_sigma,f0 = .7, .5, .1 #.15, .3, .05
-        choose_mesh=input("Bypass mesh-size [y/n]?")
+        # E0,v_sigma,f0 = .7, .5, .1 #.15, .3, .05
+        E0,v_sigma,Sigma = 3., 1., 1/np.pi
+        print("Bypass mesh-size [y/n]?")    
+        choose_mesh=input()
+        print("["+choose_mesh+"]")
         if choose_mesh=='y':
             choose_mesh=True
         else:
             choose_mesh=False
             
-        stars, chi, z_rms, v_rms, z, zmax, vmax, dtau, variable_mass  = Spitzer(Num_stars,percent_FDM,z,E0,v_sigma,f0, lambda_ratio, variable_mass, stars_type, choose_mesh)
+        stars, chi, z_rms, v_rms, z, zmax, vmax, dtau, variable_mass  = Spitzer(Num_stars,percent_FDM,z,E0,v_sigma,Sigma, lambda_ratio, variable_mass, stars_type, choose_mesh)
         T_Dynamical = z_rms/v_rms
         print("Spitzer ICs instantiated.")
 
@@ -341,55 +344,97 @@ def sine2(z, L, Num_bosons, sigma, Num_stars, v_s, L_s):
 
 ##########################################
 #Spitzer ICs, based off Larry's:
-def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mass, stars_type, choose_mesh = False):
-    def density(psi):
+def Spitzer(Num_stars, percent_FDM, z, E0, sigma, Sigma, lambda_ratio, variable_mass, stars_type, choose_mesh = False):
+    def density(psi, E0,sigma,f0):
         rho = np.zeros_like(psi)
         tm2 = (E0 - psi)/sigma**2
         coef = 2**1.5*f0*sigma
         rho[tm2>0] = coef*(np.sqrt(np.pi)/2.*np.exp(tm2[tm2>0])*erf(np.sqrt(tm2[tm2>0]))-np.sqrt(tm2[tm2>0]))
         return rho
 
-    def derivs(y):
+    def derivs(y, E0,sigma,f0):
         dy = np.zeros(2)
         dy[0] = y[1] #first derivative
-        dy[1] = 4.*np.pi*density(y[0]) #second derivative
+        dy[1] = 4.*np.pi*density(y[0], E0,sigma,f0) #second derivative
         return dy
 
+    def rk4_v2(E0,v_sigma,Sigma, epsilon_factor):
+        z = np.linspace(0,1,1000)
+        dz = z[1]-z[0]
+        phi=np.array([0])
+        error = 100
+
+        f0 = 1 #Initial Guess
+        while error > epsilon_factor:
+            z=np.array([0])
+            rho=np.array([density(phi[0],E0,v_sigma,f0)]) #Guess
+            phi = np.array([phi[0]])
+            
+            i = 0
+            y = np.zeros(2)
+            while rho[i] > 0:
+                k1 = derivs(y, E0,v_sigma,f0)
+                k2 = derivs(y + dz*k1/2., E0,v_sigma,f0)
+                k3 = derivs(y + dz*k2/2., E0,v_sigma,f0)
+                k4 = derivs(y + dz*k3, E0,v_sigma,f0)
+                y = y + (k1 + 2.*k2 + 2.*k3 + k4)*dz/6.
+                
+                i+=1
+                z = np.append(z,i*dz)
+                phi = np.append(phi,y[0])
+                rho = np.append(rho,density(y[0], E0,v_sigma,f0))
+            
+            imax = i  
+            z = z[:imax]  
+            rho = rho[:imax]
+            phi = phi[:imax]
+
+            M = 2*dz*np.sum(rho)
+            error = np.abs((Sigma)-M)/Sigma
+           
+            f0 *= ((Sigma)/M)
+        return z,rho,phi, f0
+
+    f0 = 0.1
+
     # STEP 1: SOLVE FOR rho, phi VIA RK4
-    #initial conditions:
-    y = np.zeros(2) #phi = 0, dphi/dt = 0 
+    # #initial conditions:
+    # y = np.zeros(2) #phi = 0, dphi/dt = 0 
 
-    dz = z[1]-z[0]
-    z = np.zeros(len(z)//2)
-    phi = np.zeros(len(z))
-    rho = np.zeros(len(z))
-    rho[0] = density(phi[0])
-    i = 0
-    while rho[i] > 0 and i<len(z)-1:
-        k1 = derivs(y)
-        k2 = derivs(y + dz*k1/2.)
-        k3 = derivs(y + dz*k2/2.)
-        k4 = derivs(y + dz*k3)
-        y = y + (k1 + 2.*k2 + 2.*k3 + k4)*dz/6.
+    # dz = z[1]-z[0]
+    # z = np.zeros(len(z)//2)
+    # phi = np.zeros(len(z))
+    # rho = np.zeros(len(z))
+    # rho[0] = density(phi[0], E0,sigma,f0)
+    # i = 0
+    # while rho[i] > 0 and i<len(z)-1:
+    #     k1 = derivs(y, E0,sigma,f0)
+    #     k2 = derivs(y + dz*k1/2., E0,sigma,f0)
+    #     k3 = derivs(y + dz*k2/2., E0,sigma,f0)
+    #     k4 = derivs(y + dz*k3, E0,sigma,f0)
+    #     y = y + (k1 + 2.*k2 + 2.*k3 + k4)*dz/6.
         
-        i+=1
-        z[i] = z[i-1]+dz
-        phi[i] = y[0]
-        rho[i] = density(y[0])
+    #     i+=1
+    #     z[i] = z[i-1]+dz
+    #     phi[i] = y[0]
+    #     rho[i] = density(y[0], E0,sigma,f0)
 
-    imax = i    
-    rho = rho[:imax]
-    phi = phi[:imax]
-    z = z[:imax]
-    
+    # imax = i    
+    # rho = rho[:imax]
+    # phi = phi[:imax]
+    # z = z[:imax]
+
+    z,rho,phi,f0 = rk4_v2(E0,sigma,Sigma,1e-5)
+    dz = z[1]-z[0]
+
     # check normalization:
     M = 2*np.sum(rho)*dz
     print(f"Mass from distribution function (via RK4): M = {M}")
      
     L = 2*(z[-1]-z[0])
-    z_new = np.append(-z[::-1],z)
-    rho_new = np.append(rho[::-1],rho)
-    phi_new = np.append(phi[::-1],phi)
+    z_new = np.append(-z[::-1][:-2],z)
+    rho_new = np.append(rho[::-1][:-2],rho)
+    phi_new = np.append(phi[::-1][:-2],phi)
     
     z_long = np.linspace(-L,L,2*len(z_new)-1)
     G = 0.5*np.abs(z_long)
@@ -399,7 +444,7 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
     my_phi = my_phi - np.min(my_phi)
 
     rhomax = rho[0]
-    zmax = z[imax-1]
+    zmax = np.max(z_new)
     rhointerp = interp1d(z_new,rho_new)
     phiinterp = interp1d(z_new,phi_new)
     print ('cut-off in z', zmax)
@@ -454,35 +499,6 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         print(f"t_dynamical = {t_dynamical}")
 
         star_v = v_rms
-
-        #Set-up appropriate grid:    
-        alpha = 1.5
-        L_new = 2*zmax*alpha
-        #dz = 2*(2*z_rms)/(Num_stars**(1/3)) #1000 #int(np.ceil(np.sqrt(Num_stars)))
-        # dz = 2*(2*z_rms)/(100000**(1/3))
-        # print(f"dz={dz}")
-        
-        if choose_mesh == True:
-            dz = float(input("Input a mesh-size dz:"))
-        else:
-            # x1_kn,x2_kn = np.meshgrid(stars.x,stars.x)
-            # x_diff = x1_kn-x2_kn
-            # ave_spacing = np.mean(x_diff,axis=(0,1))
-            x_diff = np.ndarray(Num_stars)
-            for i in range(Num_stars):
-                x = np.delete(xIC,i)
-                x_diff[i] = np.mean(np.abs(x-xIC[i]))
-            ave_spacing = np.mean(x_diff)
-            dz = .025*ave_spacing
-            #dz = np.min(x_diff)
-        
-
-        N_star = L_new/dz + 1
-        N_star = int(N_star)
-        print(f"N={N_star}")
-        z = np.linspace(-L_new/2,L_new/2,N_star)
-        dz = z[1]-z[0]
-        print(f"dz={dz}")
         
         #(Re-)Assigning masses:
         if variable_mass[0] == False:
@@ -621,6 +637,31 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
                 
                 stars = [stars1,stars2]
 
+        #Set-up appropriate grid:    
+        alpha = 1.5
+        L_new = 2*zmax*alpha
+        
+        if choose_mesh == True:
+            # dz = float(input("Input a mesh-size dz:"))
+            # dz = L/(750)
+            N_star=500
+        else:
+            xIC = np.random.uniform(-zmax,zmax,Num_stars)
+            x_diff = np.ndarray(Num_stars)
+            for i in range(Num_stars):
+                x = np.delete(xIC,i)
+                x_diff[i] = np.min(np.abs(x-xIC[i]))
+                
+            ave_spacing = np.mean(x_diff)
+            dz = .5*ave_spacing
+            N_star = L_new/dz + 1
+        
+        N_star = int(N_star)
+        z = np.linspace(-L_new/2,L_new/2,N_star)
+        dz = z[1]-z[0]
+        print(f"N={N_star}")
+        print(f"dz={dz}")
+            
     else:
         stars = NB.stars([],[],[])
         star_v = 0
@@ -635,7 +676,7 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         print("------Sampling FDM------")
         def DF(phi, v, E0, sigma, f0):
             '''
-            Function that will return N by N array for Spitzer DF:
+            Function that will return grid/array for Spitzer DF:
             '''
             phi_kn, v_kn  = np.meshgrid(phi, v, indexing = 'ij')
 
@@ -648,70 +689,61 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
 
             return f, phi_kn, v_kn
 
-        #N_new = np.copy(N)
-        z = z_new
-        rho = rho_new
-        phi = phi_new
-        
-        #1. Set Default Grid:
-        N = 1000 #default
-        z = np.linspace(z[0],z[-1],N)
-        L = z[-1]-z[0]
-        dz = z[1]-z[0]
-        
-        alpha = 1.5
-        L_new = 2*zmax*alpha
-        N_new = int(np.ceil(L_new / dz))
-        
-        rho = rhointerp(z)
-        phi = phiinterp(z)
+        def get_vrms(z):
+            #1. Set Default Grid:
+            N = 1000
+            z = np.linspace(z[0],z[-1],N)
+            
+            #2. Generate phase space distribution to Calculate v_rms:
+            beta = 1.2
+            vmax = np.sqrt(2.*E0)
+            v = np.linspace(-vmax*beta,vmax*beta,N)
+            
+            phi = phiinterp(z)
+            f, phi_kn, v_kn = DF(phi, v, E0,sigma,f0)
+            v_dist = np.sum(f, axis = 0)
+            v_rms = np.sqrt(np.sum(v_dist*v**2) / np.sum(v_dist)) 
+            
+            return v_rms
 
-        #2. Generate phase space distribution:
+        z = z_new
         beta = 1.2
-        vmax = np.sqrt(2.*E0)
-        v = np.linspace(-vmax*beta,vmax*beta,N)
-        dv = v[1]-v[0]
+        alpha = 1.5
+        vmax = np.sqrt(2*E0)
+
+        #Calculate v_rms:
+        v_rms = get_vrms(z)
         
-        f, phi_kn, v_kn = DF(phi, v, E0,sigma,f0)
-        #calculate v_rms
-        v_dist = dz*np.sum(f, axis = 0)
-        v_rms = np.sqrt(np.sum(v_dist*v**2) / np.sum(v_dist)) 
-        
-        
-        #3. Re-set grid to proper resolution:
+        #1. RE-SET GRID RESOLUTION
+        #Determine fuzziness r
         lambda_deB = zmax / lambda_ratio
         r = lambda_deB*v_rms / (4*np.pi)
         mu = 1/(2*r)
         
-        N = beta*zmax*vmax / np.pi / r #alpha*beta*zmax*vmax / np.pi / r
+        #Determine Number of grid-points to go into size of system (0,zmax):
+        N = beta*zmax*vmax / np.pi / r 
         N = int(np.ceil(N))
-        
-        if N_star is not None:
-            N = np.max([N,N_star])
+        z = np.linspace(-zmax,zmax,N)
+        dz = 2*zmax/(N-1)
+        dv = 2*beta*vmax/(N-1)
 
-        z = np.linspace(z[0],z[-1],N)
-        L = z[-1]-z[0]
-        dz = z[1]-z[0]
-        
-        alpha = 1.5
+        # Determine Number of grid-points for extended box:
         L_new = 2*zmax*alpha
         N_new = int(np.ceil(L_new / dz)) + 1
-        print(f"Num Grid Points = {N_new}")
+        if N_star is not None:
+            N_new = np.max([N_new,N_star])
 
-        rho = rhointerp(z)
-        phi = phiinterp(z) 
-
-        vmax = np.sqrt(2.*E0)
+        #2. GENERATE DF ON GRID
         pmax = np.pi*(N_new-1)/L_new 
-
         p = np.linspace(-pmax,pmax,N_new)
         dp = p[1]-p[0]
         v = p/mu
 
+        phi = phiinterp(z) 
         f, phi_kn, v_kn = DF(phi, v, E0,sigma,f0)
-        #calculate v_rms and z_rms
-        v_dist = dz*np.sum(f, axis = 0)
-        z_dist = dv*np.sum(f, axis = 1)
+        #calculate v_rms and z_rms to get t_dynamical
+        v_dist = np.sum(f, axis = 0)
+        z_dist = np.sum(f, axis = 1)
         v_rms = np.sqrt(np.sum(v_dist*v**2) / np.sum(v_dist)) 
         z_rms = np.sqrt(np.sum(z_dist*z**2) / np.sum(z_dist))
         t_dynamical = z_rms/v_rms
@@ -719,17 +751,15 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         print(f"v_rms = {v_rms}")
         print(f"t_dynamical = {t_dynamical}")
 
-        # plt.imshow(f.transpose())
-        # plt.show()
-
-        #4. Make wavefunction
+        #3. MAKE WAVEFUNCTION
+        #3a) Widrow-Kaiser Trick:
         z_kn,p_kn = np.meshgrid(z, p, indexing = 'ij')
         thetas = np.random.uniform(0,2*np.pi,len(p))
         R_s = np.exp(1j*thetas)
         chi_kn = np.multiply(R_s,np.sqrt(f)*np.exp(1j*z_kn*p_kn))
         chi = np.sum(chi_kn, axis = 1)
         
-        #4b) corrections to momentum/velocity profile:
+        #3b) Corrections to momentum:
         chi_tilde = np.fft.fft(chi)
         k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
         k_mean = np.sum(k*np.abs(chi_tilde)**2) / np.sum(np.abs(chi_tilde)**2)
@@ -742,13 +772,16 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, f0, lambda_ratio, variable_mas
         k_mean = np.sum(k*np.abs(chi_tilde)**2) / np.sum(np.abs(chi_tilde)**2)
         print(f"k_mean = {k_mean}")
                 
-        #Extend wavefunction to entire box:
+        #3c) Extend wavefunction to entire box:
         N_add = int(N_new-len(chi))
         chi = np.append(np.zeros(N_add//2),chi)
         chi = np.append(chi,np.zeros(N_add//2))
         z = np.linspace(-L_new/2,L_new/2,len(chi))
         dz = z[1]-z[0]
-        #Re-normalize:
+
+        print(f"Num Grid Points = {len(chi)}")
+        
+        #3d) Re-normalize:
         Normalization = np.sqrt( M / (dz*np.sum(np.abs(chi)**2)) / mu) #np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
         chi = chi * Normalization
 
