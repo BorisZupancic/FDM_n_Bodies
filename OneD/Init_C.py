@@ -50,13 +50,14 @@ def startup():
 
     print("How long to run for? Enter Integer for number of dynamical times:")
     dynamical_times = int(input())
-    print(f"Will run for {dynamical_times} dynamical times")
+    # print(f"Will run for {dynamical_times} dynamical times")
+    print(dynamical_times)
     print("")
 
 
     #Create Initial Conditions:
     print("Initial Conditions: Gaussian, Sine^2, or Spitzer? Enter [1,2,or 3]:")
-    ICs = float(input())
+    ICs = int(input())
     print(ICs)
     print("")
 
@@ -83,18 +84,21 @@ def init(hbar,L_scale,v_scale, ICs):
     if percent_FDM != 1:
         print("How many particles?")
         Num_stars = int(input())
+        print(Num_stars)
         print("Variable Star Masses [y/n]? (Split in two)")
         variable_mass = input()
         print("["+variable_mass+"]")
         if variable_mass == 'n':
-            print("How to instantiate particle masses? Identical [1] or Proportional to f(E) [2]")
+            print("How to instantiate particle masses? Identical [1] or Proportional to f(E) [2]:")
             stars_type = int(input())
+            print(stars_type)
 
             variable_mass = [False]
 
         elif variable_mass == 'y':
             print("How to instantiate (heavy) particle masses? Identical [1] or Proportional to f(E) [2]")
             stars_type = int(input())
+            print(stars_type)
             if stars_type == 2:
                 print("Input number of heavy/quasi-particles:")
                 num_heavy = int(input())
@@ -192,6 +196,8 @@ def init(hbar,L_scale,v_scale, ICs):
     elif variable_mass[0] == True:
         Num_stars = len(stars[0].x)+len(stars[1].x)
         mass_part = np.sum(stars[0].mass) + np.sum(stars[1].mass)
+
+    dz=z[1]-z[0]    
     mass_FDM = mu*dz*np.sum(np.abs(chi)**2)
     Total_mass = mass_part + mass_FDM
     Num_bosons = Total_mass*percent_FDM/mu
@@ -199,7 +205,13 @@ def init(hbar,L_scale,v_scale, ICs):
     print(f"Num_stars = {Num_stars}")
     
     print(f"Num_Bosons = {Num_bosons}")
-    # print(f"mu = {mu}")
+
+    print(f"Total mass of Particles = {mass_part}")
+    print(f"Total mass of FDM = {mass_FDM}")
+    print(f"Total_mass = {Total_mass}")
+    percent_FDM = mass_FDM/Total_mass
+    print("")
+
     
     return z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax, dtau, variable_mass, stars_type
 
@@ -452,6 +464,11 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, Sigma, lambda_ratio, variable_
     z_rms = np.sqrt(np.sum(rho_new*z_new**2) / np.sum(rho_new)) 
     print(f"z_rms = {z_rms}")
 
+    if choose_mesh == True:
+        print("Input number of grid-points:")
+        N_master = int(input())
+        print(N_master)
+
 #STEP 2: Randomly Sample Stars (if applicable)
     if Num_stars !=0:
         print("-----Sampling Stars-----")
@@ -641,21 +658,18 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, Sigma, lambda_ratio, variable_
         alpha = 1.5
         L_new = 2*zmax*alpha
         
-        if choose_mesh == True:
-            # dz = float(input("Input a mesh-size dz:"))
-            # dz = L/(750)
-            N_star=500
-        else:
-            xIC = np.random.uniform(-zmax,zmax,Num_stars)
-            x_diff = np.ndarray(Num_stars)
-            for i in range(Num_stars):
-                x = np.delete(xIC,i)
-                x_diff[i] = np.min(np.abs(x-xIC[i]))
-                
-            ave_spacing = np.mean(x_diff)
-            dz = .5*ave_spacing
-            N_star = L_new/dz + 1
         
+        # xIC = np.random.uniform(-zmax,zmax,Num_stars)
+        # x_diff = np.ndarray(Num_stars)
+        # for i in range(Num_stars):
+        #     x = np.delete(xIC,i)
+        #     x_diff[i] = np.min(np.abs(x-xIC[i]))
+            
+        # ave_spacing = np.mean(x_diff)
+        # dz = .5*ave_spacing
+        # N_star = L_new/dz + 1
+        N_star = 500
+
         N_star = int(N_star)
         z = np.linspace(-L_new/2,L_new/2,N_star)
         dz = z[1]-z[0]
@@ -667,8 +681,6 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, Sigma, lambda_ratio, variable_
         star_v = 0
 
         N_star=None
-    
-    
         
             
 #STEP 3: Create FDM wavefunction (if applicable)
@@ -730,9 +742,7 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, Sigma, lambda_ratio, variable_
         # Determine Number of grid-points for extended box:
         L_new = 2*zmax*alpha
         N_new = int(np.ceil(L_new / dz)) + 1
-        if N_star is not None:
-            N_new = np.max([N_new,N_star])
-
+        
         #2. GENERATE DF ON GRID
         pmax = np.pi*(N_new-1)/L_new 
         p = np.linspace(-pmax,pmax,N_new)
@@ -785,13 +795,38 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, Sigma, lambda_ratio, variable_
         Normalization = np.sqrt( M / (dz*np.sum(np.abs(chi)**2)) / mu) #np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
         chi = chi * Normalization
 
+        chiinterp = interp1d(z,chi)
+
     else:
         chi = np.zeros(len(z))
-        
+        chiinterp = interp1d(z,chi)
+
+
+    if N_star is not None:
+        N = np.max([N,N_star])
+
+        z = np.linspace(z[0],z[-1],N)
+        dz = z[1]-z[0]  
+
+        chi = chiinterp(z)
+        #Re-normalize:
+        Normalization = np.sqrt( M / (dz*np.sum(np.abs(chi)**2)) / mu) #np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
+        chi = chi * Normalization
+
+    if choose_mesh==True:
+        z = np.linspace(z[0],z[-1],N_master)
+        dz = z[1]-z[0]  
+
+        chi = chiinterp(z)
+        #Re-normalize:
+        Normalization = np.sqrt( M / (dz*np.sum(np.abs(chi)**2)) / mu) #np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
+        chi = chi * Normalization
+    
     if percent_FDM!=0 and Num_stars!=0:
+        print("Here")
         chi = chi / np.sqrt(2)
         stars.mass = stars.mass / 2
-
+    
     dtau = 0.5*dz/np.sqrt(2*E0)
     
     return stars, chi, z_rms, v_rms, z, zmax, vmax, dtau, variable_mass  #,t_dynamical

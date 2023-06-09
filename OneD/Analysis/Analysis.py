@@ -103,7 +103,9 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
     elif Num_bosons!=0 and Num_stars !=0:
         stars_x = np.loadtxt("StarsOnly_Pos.csv", dtype = float, delimiter=",")
         stars_v = np.loadtxt("StarsOnly_Vel.csv", dtype = float, delimiter=",")
-        stars_m = np.loadtxt("Particle_masses.csv", dtype = float, delimiter=",")
+        # stars_m = np.loadtxt("Particle_masses.csv", dtype = float, delimiter=",")
+        Sigma = 1/np.pi
+        stars_m =Sigma * np.ones_like(stars_x)
         chi = np.loadtxt("Chi.csv", dtype = complex, delimiter=",")
         part_centroids = np.loadtxt("Particle_Centroids.csv",dtype = float, delimiter=',')
         fdm_centroids = np.loadtxt("FDM_Centroids.csv",dtype = float, delimiter=',')
@@ -118,7 +120,10 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         
         Ks_FDM = np.loadtxt("K_FDM_storage.csv",dtype=float,delimiter=",")
         Ws_FDM = np.loadtxt("W_FDM_storage.csv",dtype=float,delimiter=",")
-    
+        # Ws_FDM *= 2
+
+        print(np.mean(Ks_FDM/np.abs(Ws_FDM)))
+
     do_spectra = False
     if Num_bosons!=0 and do_spectra==True:
         #Get Spitzer Density:
@@ -257,6 +262,11 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         print(f"z_rms = {FDM_z_rms}")
         print(f"v_rms = {FDM_v_rms}")
 
+        lambda_deB = r / ( FDM_v_rms / (4*np.pi)) 
+        zmax = 2.
+        lambda_ratio = zmax/lambda_deB
+        print(f"lambda_ratio = {lambda_ratio}")
+
     #######################################################
     ### NBODY ANALYSIS ######################################
     if Num_stars != 0:
@@ -288,49 +298,51 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         #NBody.all_stars_plots(time,K_Energies,W2_Energies, variable_mass=variable_mass)
         #NBody.all_stars_plots(np.linspace(0,2.47943,len(K_fine_Energies[:,0])), K_fine_Energies,W_fine_Energies, variable_mass=variable_mass)
 
-        #Correct the potential's minimum point drift:
-        if variable_mass[0] == 'True':
-            fraction = variable_mass[1]
-            Num_stars = len(W_Energies[0])
-            num_to_change = int(np.floor(fraction*Num_stars))
-            
-            for i in range(len(W_Energies)):
-                j = indices[i]
-                correction = (2/Num_stars)*(0.5*np.sum(W_Energies[i])-(W2_Energies[j,0]+W2_Energies[j,1]))
-                W_Energies[i] = W_Energies[i] - correction
+        if len(W_Energies)>0:
+            #Correct the potential's minimum point drift:
+            if variable_mass[0] == 'True':
+                fraction = variable_mass[1]
+                Num_stars = len(W_Energies[0])
+                num_to_change = int(np.floor(fraction*Num_stars))
+                
+                for i in range(len(W_Energies)):
+                    j = indices[i]
+                    correction = (2/Num_stars)*(0.5*np.sum(W_Energies[i])-(W2_Energies[j,0]+W2_Energies[j,1]))
+                    W_Energies[i] = W_Energies[i] - correction
 
-            #check correction:
-            # print(W2_Energies[-1,0]+W2_Energies[-1,1])
-            # print(0.5*np.sum(W_Energies[-1]))
+                #check correction:
+                # print(W2_Energies[-1,0]+W2_Energies[-1,1])
+                # print(0.5*np.sum(W_Energies[-1]))
 
-        else:
-            for i in range(len(W_Energies)):
-                j = indices[i]
-                correction = (2/len(W_Energies[i]))*(0.5*np.sum(W_Energies[i]) - W2_Energies[-1])
-                W_Energies[i] = W_Energies[i] - correction
+            else:
+                for i in range(len(W_Energies)):
+                    j = indices[i]
+                    correction = (2/len(W_Energies[i]))*(0.5*np.sum(W_Energies[i]) - W2_Energies[-1])
+                    W_Energies[i] = W_Energies[i] - correction
 
-            #check correction:
-            # print(W2_Energies[-1])
-            # print(0.5*np.sum(W_Energies[-1]))
-
-        # Energies = W_fine_Energies + K_fine_Energies
-        Energies = W_Energies + K_Energies
-        if len(Energies)>0:
+                # check correction:
+                print(W2_Energies[-1])
+                print(0.5*np.sum(W_Energies[-1]))
+            Energies = W_Energies + K_Energies
+            print(f"len(Energies) = {len(Energies)}")
+        
             Energies_i = Energies[0]
             Energies_f = Energies[-1]
 
             
-            # if variable_mass[0]=='True' or Num_bosons!=0:
-            #     deltaE = NBody.scatter_deltaE(Energies_i, Energies_f, variable_mass, Num_bosons, r)
-            #     deltaE = NBody.scatter_deltaE_frac(Energies_i, Energies_f, variable_mass, Num_bosons, r)
-            deltaE=0
-
+            if variable_mass[0]=='True' or Num_bosons!=0:
+                # deltaE = NBody.scatter_deltaE(Energies_i, Energies_f, variable_mass, Num_bosons, r)
+                deltaE = NBody.scatter_deltaE_frac(Energies_i, Energies_f, variable_mass, Num_bosons, r)
+            
             deltaE_array = np.array([])
             for i in range(len(Energies)):
                 value = np.mean((Energies[i] - Energies_i)/Energies_i)
                 deltaE_array = np.append(deltaE_array,value)
-            # print(deltaE_array)
-
+            
+        else:
+            deltaE = None 
+            deltaE_array = None
+            
         # fig, ax = plt.subplots(1,3)
         # ax[0].plot([np.sum(K_fine_Energies[i,:]) for i in range(1000)],label ="Kinetic")
         # ax[1].plot([np.sum(W_fine_Energies[i,:]) for i in range(1000)],label ="Potential")
@@ -366,8 +378,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
 
     if Num_bosons != 0 and Num_stars != 0:
         
-        fig, ax = plt.subplots(2,2, figsize = (20,10), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
-
+        
         V1 = Ks_FDM/np.abs(Ws_FDM)
         V2 = K_fine_Energies/np.abs(W_fine_Energies)
         
@@ -381,6 +392,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         E2 = K_fine_Energies+W_fine_Energies
         E2 = (E2 - E2[0])/E2[0]
         
+        fig, ax = plt.subplots(2,2, figsize = (20,10), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
 
         plt.suptitle("Fractional Change in Total Energies in Particles over Time", fontsize = 15) #fontdict={'fontsize' : 15})
         
@@ -389,9 +401,9 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         ax[0,0].plot(time,E1,label = "$\\Delta (K+W) / (K_0+W_0)$ Total Energy")
         ax[0,0].set_title("FDM")
 
-        ax[0,1].plot(time,K2,label = "$$\\Delta K / K_0$ Kinetic Energy")
+        ax[0,1].plot(time,K2,label = "$\\Delta K / K_0$ Kinetic Energy")
         ax[0,1].plot(time,W2,label = "$\\Delta W / W_0$ Potential Energy")
-        ax[0,1].plot(time,E2,label = "$\\delta (K+W) / (K_0+W_0)$ Total Energy")
+        ax[0,1].plot(time,E2,label = "$\\Delta (K+W) / (K_0+W_0)$ Total Energy")
         ax[0,1].set_title("Particles")
         
         ax[0,0].legend(loc='upper right')
@@ -402,6 +414,8 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         ax[1,1].set_title("Particles Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
         ax[1,1].plot(time,V2)
         
+        ax[1,0].plot([time[0],time[-1]],[np.mean(V1),np.mean(V1)],"k--")
+        ax[1,1].plot([time[0],time[-1]],[np.mean(V2),np.mean(V2)],"k--")
 
         ax[0,0].set_ylabel("$\\frac{\\Delta E}{E_0}$")
         ax[0,0].set_xlabel("Time (code units)")
@@ -413,37 +427,31 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         ax[0,1].grid(True)
         ax[1,0].grid(True)
         ax[1,1].grid(True)
+
+        ax[1,0].get_shared_y_axes().join(ax[1,0],ax[1,1])
     
         fig.subplots_adjust(hspace = 0.3)
         plt.show()
 
 
         #Check that total energy is conserved:
-        K = K_fine_Energies + Ks_FDM
-        W = W_fine_Energies + Ws_FDM
-        Virial_ratios = np.abs(K/W)
-    
-        fig,ax = plt.subplots(1,4,figsize = (20,5))
-        plt.suptitle("Energy of FDM+Stars, at Snapshot times/indices", fontsize = 20)
-        ax[0].set_title("Potential Energy over time", fontsize = 15)
-        ax[0].plot(time,W,"--",label = "$\\Sigma W$")
+        E_FDM = Ks_FDM + Ws_FDM
+        E_stars = K_fine_Energies + W_fine_Energies
+        fig,ax = plt.subplots(1,2,figsize = (20,5))
+        plt.suptitle("Total Energies of FDM and Stars", fontsize = 20)
+        ax[0].plot(time,E_FDM-np.mean(E_FDM),label = "FDM: $\Delta E=\Delta(W+K)$")
+        ax[0].plot(time,E_stars-np.mean(E_stars),label = "Stars: $\Delta E=\Delta(W+K)$")
         
-        ax[1].set_title("Kinetic Energy over time", fontsize = 15)
-        ax[1].plot(time,K,"--",label = "$\\Sigma K$")
-        ax[1].legend()
+        E = E_FDM+E_stars
+        ax[0].plot(time,E-np.mean(E),"--",label = "Total")
+        
+        ax[0].legend()
+        ax[0].grid(True)
 
-        #set the scale:
-        Dy = np.max(K)-np.min(K)
-        y_min = np.min(K+W)
-        y_min = y_min - Dy/2
-        y_max = Dy + y_min
-        ax[2].set_title("Total Energy K+W over time", fontsize = 15)
-        ax[2].plot(time,K+W,"--",label = "$\\Sigma E$")
-        ax[2].set_ylim(y_min,y_max)
-        ax[2].legend()
-
-        ax[3].set_title("Virial Ratio $|K/W|$ over time", fontsize = 15)
-        ax[3].plot(time, Virial_ratios, "b--", marker = "o")
+        Virial_ratios = np.abs((K_fine_Energies + Ks_FDM)/(W_fine_Energies + Ws_FDM))
+        ax[1].plot(time, Virial_ratios, "b--")
+        ax[1].plot([time[0],time[-1]], [np.mean(Virial_ratios),np.mean(Virial_ratios)], "b--")
+        ax[1].grid(True)
         plt.show()
 
         fig,ax = plt.subplots(1,2, figsize = (10,5))
@@ -455,6 +463,7 @@ def analysis(folder: str, type = 'Periodic'):#,*args):
         
         ax[1].plot(time,np.abs(fdm_total_E/E_total))
         ax[1].set_title("FDM: $E/E_{total}$")
+        
         plt.show()
 
     
