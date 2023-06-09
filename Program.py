@@ -65,9 +65,11 @@ elif variable_mass[0] == True:
     mass_part = np.sum(stars[0].mass) + np.sum(stars[1].mass)
 mass_FDM = mu*dz*np.sum(np.abs(chi)**2)
 Total_mass = mass_part + mass_FDM
-print(f"Total_mass = {Total_mass}")
 percent_FDM = mass_FDM/Total_mass
-print("")
+# print(f"Total mass of Particles = {mass_part}")
+# print(f"Total mass of FDM = {mass_FDM}")
+# print(f"Total_mass = {Total_mass}")
+# print("")
 
 ####################################################################
 #SET UP FOLDERS:
@@ -98,12 +100,6 @@ if os.path.exists(Directory+"/"+folder_name) == True:
 # print(Directory+"/"+folder_name)
 os.mkdir(Directory+"/"+folder_name)
 
-#####################################################################
-# Set-Up is Done. Simulation next.
-#####################################################################
-#RUN SIMULATION/CALCULATION
-print("Calculating and Plotting...")
-
 #Whether to track stars or not:
 track_stars = False
 track_stars_rms = False
@@ -116,6 +112,7 @@ if sim_choice2 != 1:
         track_stars_rms = True
     if Num_bosons !=0:
         track_FDM = True
+
 #Whether to track full history or not:
 history=input("Track full history [y/n]?")
 # print("["+history+"]")
@@ -124,6 +121,12 @@ if history == 'y':
 else:
     history=False
 print(history)
+
+#####################################################################
+# Set-Up is Done. Simulation next.
+#####################################################################
+#RUN SIMULATION/CALCULATION
+print("Calculating and Plotting...")
 
 for trial_num in range(num_trials):
     print("------------------------------")
@@ -186,9 +189,11 @@ for trial_num in range(num_trials):
         if variable_mass[0]==True:
             np.savetxt(f"StarsOnly_Pos.csv",[*stars[0].x,*stars[1].x], delimiter = ",")
             np.savetxt(f"StarsOnly_Vel.csv",[*stars[0].v,*stars[1].v], delimiter = ",")
+            np.savetxt(f"Particle_masses.csv", [*stars[0].mass,*stars[1].mass], delimiter = ",")
         else:
             np.savetxt(f"StarsOnly_Pos.csv",stars.x, delimiter = ",")
             np.savetxt(f"StarsOnly_Vel.csv",stars.v, delimiter = ",")
+            np.savetxt(f"Particle_masses.csv", stars.mass, delimiter = ",")
         np.savetxt(f"z_rms_storage.csv", z_rms_storage, delimiter = ",")
         np.savetxt(f"v_rms_storage.csv", v_rms_storage, delimiter = ",")
         np.savetxt(f"Chi.csv", chi)

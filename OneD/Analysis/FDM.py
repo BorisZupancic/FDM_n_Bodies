@@ -15,8 +15,8 @@ import OneD.Global as GF
 
 
 def plot_Energies(time,Ks,Ws):
-    K = Ks# - np.mean(Ks)
-    W = Ws# - np.mean(Ws)
+    K = Ks - np.mean(Ks)
+    W = Ws - np.mean(Ws)
     E = Ks/np.abs(Ws) #+Ws 
     E = E - np.mean(E)
 
@@ -24,25 +24,27 @@ def plot_Energies(time,Ks,Ws):
     Max_amplitude = np.max(E)
     print(Max_amplitude)
     
-    # fig, ax = plt.subplots(2,1, figsize = (10,8), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
+    fig, ax = plt.subplots(2,1, figsize = (10,8), sharex=True, gridspec_kw = {'height_ratios': [2.5,1]})
     
-    # ax[0].set_title("Variation from Mean Total Energies in FDM over Time", fontdict={'fontsize' : 15})
-    # ax[0].plot(time,K,label = "$\\delta K$ Kinetic Energy")
-    # ax[0].plot(time,W,label = "$\\delta W$ Potential Energy")
-    # ax[0].plot(time,E, label = "$\\delta (K+W)$ Total Energy")
-    # ax[0].legend(loc='upper right')
-    # ax[0].set_ylabel("Energy (code units)")
-    # ax[0].set_xlabel("Time (code units)")
+    ax[0].set_title("Variation from Mean Total Energies in FDM over Time", fontdict={'fontsize' : 15})
+    ax[0].plot(time,K,label = "$\\delta K$ Kinetic Energy")
+    ax[0].plot(time,W,label = "$\\delta W$ Potential Energy")
+    ax[0].plot(time,K+W, label = "$\\delta (K+W)$ Total Energy")
+    ax[0].legend(loc='upper right')
+    ax[0].set_ylabel("Energy (code units)")
+    ax[0].set_xlabel("Time (code units)")
 
-    # ax[1].set_title("Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
-    # ax[1].plot(time,Ks/np.abs(Ws)) #, label = "Virial Ratio $\\frac{K}{|W|}$")
-    # ax[1].set_xlabel("Time (code units)")
+    ax[1].set_title("Ratio of Kinetic to Potential Energy $\\frac{K}{|W|}$", fontdict={'fontsize' : 15})
+    ax[1].plot(time,Ks/np.abs(Ws)) #, label = "Virial Ratio $\\frac{K}{|W|}$")
+    ax[1].set_xlabel("Time (code units)")
 
-    # ax[0].grid(True)
-    # ax[1].grid(True)
+    ax[1].plot([time[0],time[-1]],[np.mean(Ks/np.abs(Ws)),np.mean(Ks/np.abs(Ws))],"k--")
 
-    # fig.subplots_adjust(hspace = 0.3)
-    # plt.show()
+    ax[0].grid(True)
+    ax[1].grid(True)
+
+    fig.subplots_adjust(hspace = 0.3)
+    plt.show()
 
     return RMS_amplitude, Max_amplitude
 
@@ -158,4 +160,9 @@ def rms_stuff(z,L,chi,v_dist,mu, plot=False):
         np.sum(v**2 * v_dist) / N2
     )
 
+    chi_tilde = np.fft.fft(chi)
+    k = 2*np.pi*np.fft.fftfreq(len(chi),dz)
+    k2_mean = np.sum((k**2)*np.abs(chi_tilde)**2) / np.sum(np.abs(chi_tilde)**2)
+    k_rms = np.sqrt(k2_mean)
+    v_rms = k_rms/mu
     return z_rms, v_rms

@@ -301,6 +301,7 @@ def main_plot(type,G_tilde,L,eta,
         
     
         phi_FDM = fourier_potential(rho_FDM,L,type = type, G_tilde = G_tilde)
+        phi_FDM -= np.min(phi_FDM)
         ax['upper left'].plot(z,phi_FDM,label = "$\\Phi_{FDM}$")
         ax['upper left'].plot(z,rho_FDM,label = "$\\rho_{FDM} = m_{FDM}|\\psi|^2$")
         
@@ -381,7 +382,7 @@ def main_plot(type,G_tilde,L,eta,
     if Num_bosons !=0:
         fdm_centroid_z = np.sum(np.conj(chi)*z*chi) / np.sum(np.abs(chi)**2)
         k_mean = np.sum(np.conj(chi)*(-1j)*np.gradient(chi,dz))
-        mu = np.mean(rho_FDM/(np.absolute(chi)**2))
+        # mu = np.mean(rho_FDM/(np.absolute(chi)**2))
         fdm_centroid_v = k_mean/mu
 
         fdm_centroid = np.array([np.real(fdm_centroid_z),np.real(fdm_centroid_v)])
@@ -404,6 +405,8 @@ def main_plot(type,G_tilde,L,eta,
     ax['lower right'].set_ylim(-y11_max,y11_max)
     ax['lower right'].set_xlim(-L/2,L/2)
     ax['far right'].set_ylim(-a_max,a_max)
+    if Num_bosons!=0 and Num_stars!=0:
+        ax['upper right'].set_ylim(-y11_max,y11_max)
 
     #now save it as a .jpg file:
     folder = Directory + "/" + folder_name
@@ -616,9 +619,6 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
 
     ######################################
     # DIAGNOSTICS + STORAGE SETTUP
-    # stars_x_storage = []
-    # stars_v_storage = []
-    # chi_storage = []
     acceleration_storage = []
 
     if track_stars == True or track_FDM == True:
@@ -628,13 +628,17 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         elif sim_choice2 == 2:
             track_snapshot_indices = snapshot_indices
 
-    K_star_storage = [] #None #Total Energy at each snapshot 
-    W_star_storage = [] #None
-    K_star_fine_storage = np.ndarray(i_stop+1) #None #Total Energy at each timestep
-    W_star_fine_storage = np.ndarray(i_stop+1) #None
-    W_2_star_storage = np.ndarray(i_stop+1) #None
+    K_star_fine_storage = np.ndarray(i_stop+1) #Total Energy at each timestep
+    W_star_fine_storage = np.ndarray(i_stop+1) 
+    W_2_star_storage = np.ndarray(i_stop+1) 
     get_stars_KW = stars_tracker(track_stars, variable_mass, z)
-    
+
+    if variable_mass[0]==True:
+        K_star_storage = np.ndarray((2,Num_stars,2)) #Kinetic of each star, at start and end
+        W_star_storage = np.ndarray((2,Num_stars,2)) #Potential of each star, at start and end
+    else:
+        K_star_storage = np.ndarray((2,Num_stars)) #Kinetic of each star, at start and end
+        W_star_storage = np.ndarray((2,Num_stars)) #Potential of each star, at start and end
     z_rms_storage = [] #None
     v_rms_storage = [] #None
     get_stars_rms = stars_RMS_tracker(track_stars_rms, variable_mass)
@@ -676,7 +680,20 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         # ##########################################
         # DIAGNOSTICS + STORAGE
         K_star_fine_storage[i], W_star_fine_storage[i], W_2_star_storage[i] = get_stars_KW(stars, rho_part1, rho_part2, phi)
-        
+        if i == 0 or i == i_stop:
+            if variable_mass[0] == True:
+                K_array=[stars[0].get_K(),stars[1].get_K()]
+                W_array=[stars[0].get_W(z,phi),stars[1].get_W(z,phi-np.min(phi))]
+            else:
+                K_array=stars.get_K()
+                W_array=stars.get_W(z,phi-np.min(phi))
+            if i==0:
+                K_star_storage[0,:] = K_array
+                W_star_storage[0,:] = W_array  
+            if i==i_stop:
+                K_star_storage[-1,:] = K_array
+                W_star_storage[-1,:] = W_array  
+
         K_FDM_storage[i], W_FDM_storage[i] = get_FDM_KW(chi,rho_FDM,phi)
         
         if i in track_snapshot_indices: # Happens only at snapshot indices     
@@ -728,12 +745,9 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         #EVOLVE SYSTEM (After calculations on the Mesh)
         ############################################################
         #1,2: Kick+Drift
-
-        
         #FUZZY DM
         chi = FDM.kick(chi,phi/2,r,dtau/2)
         chi = FDM.drift(chi,r,dz,dtau)
-
         #PARTICLES
         g_interp = interp1d(z,a_grid)
         stars = kick(stars, g_interp, dtau)
@@ -746,14 +760,11 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         #4: KICK in updated potential
         #FUZZY DM
         chi = FDM.kick(chi,phi/2,r,dtau/2)
-
         #PARTICLES
         a_grid = -np.gradient(phi,dz)
         a_grid -= np.mean(a_grid)
-
         g_interp = interp1d(z,a_grid)
         stars = kick(stars, g_interp, dtau)
-
         
         time += dtau
         i += 1
