@@ -102,6 +102,7 @@ def init(hbar,L_scale,v_scale, ICs):
             if stars_type == 2:
                 print("Input number of heavy/quasi-particles:")
                 num_heavy = int(input())
+                print(num_heavy)
                 variable_mass = [True,num_heavy]
             else:
                 
@@ -802,28 +803,27 @@ def Spitzer(Num_stars, percent_FDM, z, E0, sigma, Sigma, lambda_ratio, variable_
         chiinterp = interp1d(z,chi)
 
 
-    if N_star is not None:
-        N = np.max([N,N_star])
-
-        z = np.linspace(z[0],z[-1],N)
-        dz = z[1]-z[0]  
-
-        chi = chiinterp(z)
-        #Re-normalize:
-        Normalization = np.sqrt( M / (dz*np.sum(np.abs(chi)**2)) / mu) #np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
-        chi = chi * Normalization
-
+    if N_star is not None and percent_FDM!=0:
+        N = np.max([len(chi),N_star])        
     if choose_mesh==True:
-        z = np.linspace(z[0],z[-1],N_master)
-        dz = z[1]-z[0]  
+        N = N_master
+        # z = np.linspace(z[0],z[-1],N_master)
+        # dz = z[1]-z[0]  
 
-        chi = chiinterp(z)
-        #Re-normalize:
-        Normalization = np.sqrt( M / (dz*np.sum(np.abs(chi)**2)) / mu) #np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
-        chi = chi * Normalization
+        # chi = chiinterp(z)
+        # #Re-normalize:
+        # Normalization = np.sqrt( M / (dz*np.sum(np.abs(chi)**2)) / mu) #np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
+        # chi = chi * Normalization
     
+    z = np.linspace(z[0],z[-1],N)
+    dz = z[1]-z[0]  
+
+    chi = chiinterp(z)
+    #Re-normalize:
+    Normalization = np.sqrt( M / (dz*np.sum(np.abs(chi)**2)) / mu) #np.sqrt( dz*np.sum(rho) / (dz*np.sum(np.abs(chi)**2)) / mu) 
+    chi = chi * Normalization
+
     if percent_FDM!=0 and Num_stars!=0:
-        print("Here")
         chi = chi / np.sqrt(2)
         stars.mass = stars.mass / 2
     

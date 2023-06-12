@@ -217,13 +217,14 @@ def FDM_tracker(track_FDM : bool, z, r):
     L = z[-1]-z[0]
     N = len(z)
     k = 2*np.pi*np.fft.fftfreq(N,dz)
+    dk = k[1]-k[0]
 
     if track_FDM == True:
         def FDM_KW(chi,rho_FDM,phi):
             W = dz*np.sum(rho_FDM*z*np.gradient(phi,dz))
             
-            chi_tilde = np.fft.fft(chi, norm = "ortho")
-            K = (L/N) * r*np.sum(k**2 * np.abs(chi_tilde)**2)
+            chi_tilde = np.fft.fft(chi,norm = "ortho")            
+            K = r * dz * np.sum(k**2 * np.abs(chi_tilde)**2)
 
             return K, W
     else:
@@ -311,7 +312,7 @@ def main_plot(type,G_tilde,L,eta,
     if Num_bosons !=0:
         #PHASE SPACE CALCULATION:
         F, z_kn, p_kn = FDM.Husimi_phase_V2(chi, z, eta) 
-    
+        
         
         ax['upper right'].pcolormesh(z_kn, p_kn/mu, F)
         
@@ -406,7 +407,7 @@ def main_plot(type,G_tilde,L,eta,
     ax['lower right'].set_xlim(-L/2,L/2)
     ax['far right'].set_ylim(-a_max,a_max)
     if Num_bosons!=0 and Num_stars!=0:
-        ax['upper right'].set_ylim(-y11_max,y11_max)
+        ax['upper right'].set_ylim(np.min(p_kn)/mu,np.max(p_kn)/mu)
 
     #now save it as a .jpg file:
     folder = Directory + "/" + folder_name
@@ -631,14 +632,20 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     K_star_fine_storage = np.ndarray(i_stop+1) #Total Energy at each timestep
     W_star_fine_storage = np.ndarray(i_stop+1) 
     W_2_star_storage = np.ndarray(i_stop+1) 
+    if variable_mass[0]==True:
+        K_star_fine_storage = np.ndarray((i_stop+1,2)) #Total Energy at each timestep
+        W_star_fine_storage = np.ndarray((i_stop+1,2))
+        W_2_star_storage = np.ndarray((i_stop+1,2))
+        
     get_stars_KW = stars_tracker(track_stars, variable_mass, z)
 
     if variable_mass[0]==True:
-        K_star_storage = np.ndarray((2,Num_stars,2)) #Kinetic of each star, at start and end
-        W_star_storage = np.ndarray((2,Num_stars,2)) #Potential of each star, at start and end
+        K_star_storage = np.array([[np.zeros(len(stars[0].x)),np.zeros(len(stars[1].x))] for i in range(2)], dtype=object) #Total Energy at each timestep
+        W_star_storage = np.array([[np.zeros(len(stars[0].x)),np.zeros(len(stars[1].x))] for i in range(2)], dtype=object)
     else:
         K_star_storage = np.ndarray((2,Num_stars)) #Kinetic of each star, at start and end
         W_star_storage = np.ndarray((2,Num_stars)) #Potential of each star, at start and end
+
     z_rms_storage = [] #None
     v_rms_storage = [] #None
     get_stars_rms = stars_RMS_tracker(track_stars_rms, variable_mass)
@@ -680,7 +687,8 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         # ##########################################
         # DIAGNOSTICS + STORAGE
         K_star_fine_storage[i], W_star_fine_storage[i], W_2_star_storage[i] = get_stars_KW(stars, rho_part1, rho_part2, phi)
-        if i == 0 or i == i_stop:
+        
+        if Num_stars!=0 and (i == 0 or i == i_stop):
             if variable_mass[0] == True:
                 K_array=[stars[0].get_K(),stars[1].get_K()]
                 W_array=[stars[0].get_W(z,phi),stars[1].get_W(z,phi-np.min(phi))]
@@ -688,11 +696,23 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
                 K_array=stars.get_K()
                 W_array=stars.get_W(z,phi-np.min(phi))
             if i==0:
-                K_star_storage[0,:] = K_array
-                W_star_storage[0,:] = W_array  
+                K_star_storage[0] = K_array
+                W_star_storage[0] = W_array  
             if i==i_stop:
-                K_star_storage[-1,:] = K_array
-                W_star_storage[-1,:] = W_array  
+                K_star_storage[-1] = K_array
+                W_star_storage[-1] = W_array  
+        
+        if i in snapshot_indices:
+            if Num_bosons!=0:
+                np.savetxt(f"chi_storage_{i}.csv", chi, delimiter=",")
+            if variable_mass[0] == True:    
+                np.savetxt(f"QPs_x_storage_{i}.csv", stars[0].x, delimiter=",")
+                np.savetxt(f"QPs_v_storage_{i}.csv", stars[0].v, delimiter=",")
+                np.savetxt(f"stars_x_storage_{i}.csv", stars[1].x, delimiter=",")
+                np.savetxt(f"stars_v_storage_{i}.csv", stars[1].v, delimiter=",")
+            else: 
+                np.savetxt(f"stars_x_storage_{i}.csv", stars.x, delimiter=",")
+                np.savetxt(f"stars_v_storage_{i}.csv", stars.v, delimiter=",")
 
         K_FDM_storage[i], W_FDM_storage[i] = get_FDM_KW(chi,rho_FDM,phi)
         
@@ -700,12 +720,8 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
             z_rms_storage, v_rms_storage = get_stars_rms(stars, z_rms_storage, v_rms_storage)
         
         if history == True:
-            chi_storage.append(chi)
             acceleration_storage.append(a_grid)
-            if variable_mass[0] == False:
-                stars_x_storage.append(stars.x)
-                stars_v_storage.append(stars.v)
-
+        
         # st = process_time() 
         
         #################################################

@@ -9,4 +9,3 @@ This sub-package contains the modules that make the main program (`Program.py`) 
 
 `Init_C.py` is for setting up initial conditions, as well as other initial setup that's used in the main program.
 
-The sub-package `Analysis` contains modules used for post-simulation analysis.
