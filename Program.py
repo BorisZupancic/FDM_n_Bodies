@@ -165,14 +165,18 @@ for trial_num in range(num_trials):
             np.savetxt(f"StarsOnly_Pos.csv",[*stars[0].x,*stars[1].x], delimiter = ",")
             np.savetxt(f"StarsOnly_Vel.csv",[*stars[0].v,*stars[1].v], delimiter = ",")
             np.savetxt(f"Particle_masses.csv", [*stars[0].mass,*stars[1].mass], delimiter = ",")
+            np.savetxt(f"K_star_Energies.csv", [K_star_storage[i,1] for i in range(2)], delimiter = ",")
+            np.savetxt(f"W_star_Energies.csv", [W_star_storage[i,1] for i in range(2)], delimiter = ",")
+
         else:
             np.savetxt(f"StarsOnly_Pos.csv",stars.x, delimiter = ",")
             np.savetxt(f"StarsOnly_Vel.csv",stars.v, delimiter = ",")
             np.savetxt(f"Particle_masses.csv", stars.mass, delimiter = ",")
+            np.savetxt(f"K_star_Energies.csv", K_star_storage, delimiter = ",")
+            np.savetxt(f"W_star_Energies.csv", W_star_storage, delimiter = ",")
+
         np.savetxt(f"z_rms_storage.csv", z_rms_storage, delimiter = ",")
         np.savetxt(f"v_rms_storage.csv", v_rms_storage, delimiter = ",")
-        np.savetxt(f"K_star_Energies.csv", K_star_storage, delimiter = ",")
-        np.savetxt(f"W_star_Energies.csv", W_star_storage, delimiter = ",")
         np.savetxt(f"W_2_star_Energies.csv", W_2_star_storage, delimiter = ",")
 
         np.savetxt(f"K_star_fine_Energies.csv", K_star_fine_storage, delimiter = ",")
