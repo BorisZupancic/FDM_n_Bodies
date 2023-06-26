@@ -193,13 +193,13 @@ def stars_RMS_tracker(track_stars_rms : bool, variable_mass):
     if track_stars_rms == True:
         if variable_mass[0]==True:
             def stars_rms(stars):
-                z_rms = np.sqrt(np.mean([*stars[0].x**2,*stars[1].x**2]))
-                v_rms = np.sqrt(np.mean([*stars[0].v**2,*stars[1].v**2]))
+                z_rms = np.sqrt(np.mean([*(stars[0].x-np.mean(stars[0].x))**2,*(stars[1].x-np.mean(stars[1].x))**2]))
+                v_rms = np.sqrt(np.mean([*(stars[0].v-np.mean(stars[0].v))**2,*(stars[1].v-np.mean(stars[1].v))**2]))
                 return z_rms, v_rms
         else:
             def stars_rms(stars):
-                z_rms = np.sqrt(np.mean(stars.x**2))
-                v_rms = np.sqrt(np.mean(stars.x**2))
+                z_rms = np.sqrt(np.mean((stars.x-np.mean(stars.x))**2))
+                v_rms = np.sqrt(np.mean((stars.v-np.mean(stars.v))**2))
                 return z_rms, v_rms
 
         def get_rms(stars, z_rms_storage, v_rms_storage):
@@ -334,7 +334,7 @@ def main_plot(type,G_tilde,L,eta,
         #Plot light particles
         x1_s = stars[1].x
         v1_s = stars[1].v 
-        ax['lower right'].scatter(x1_s,v1_s,s = 1,c = 'blue', label = "(Light) Particles")
+        ax['lower right'].scatter(x1_s,v1_s,s = 0.01,c = stars[1].mass, alpha=0.9, label = "(Light) Particles")
         #Plot heavy particles 
         x2_s = stars[0].x
         v2_s = stars[0].v 
@@ -342,7 +342,7 @@ def main_plot(type,G_tilde,L,eta,
     else:
         x_s = stars.x
         v_s = stars.v
-        ax['lower right'].scatter(x_s,v_s,c = stars.mass, s = 1,label = "Particles")
+        ax['lower right'].scatter(x_s,v_s,c = stars.mass, s = 0.01,alpha=0.9,label = "Particles")
         
         
     #ADDITIONAL:
@@ -407,7 +407,9 @@ def main_plot(type,G_tilde,L,eta,
     ax['lower right'].set_xlim(-L/2,L/2)
     ax['far right'].set_ylim(-a_max,a_max)
     if Num_bosons!=0 and Num_stars!=0:
-        ax['upper right'].set_ylim(np.min(p_kn)/mu,np.max(p_kn)/mu)
+        ymax = np.min([y11_max,np.max(p_kn)/mu])
+        ymin = np.max([np.min(p_kn)/mu,-y11_max])
+        ax['upper right'].set_ylim(ymin,ymax)
 
     #now save it as a .jpg file:
     folder = Directory + "/" + folder_name
@@ -487,9 +489,26 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     #For Stars
     if Num_stars !=0:
         if variable_mass[0]==True:
+            #smooth/filter the QP component:
+            # from scipy.ndimage import gaussian_filter
             get_rho_part1 = lambda stars : NB.particle_density(stars[0],L,z)
+            # get_rho_part1 = lambda stars : gaussian_filter(NB.particle_density(stars[0],L,z), sigma = 1) #L/len(stars[0].mass))
+            # from scipy.signal import convolve, get_window
+            # std = 0.5*N/len(stars[0].mass) #0.5*N/len(stars[0].mass)
+            # window = get_window(("gaussian", std), N, fftbins=False)
+            # window /= np.sum(window) #np.sqrt(2*np.pi*std**2)
+            # print(f"std = {std}")
+            # print(f"np.sum(window)={np.sum(window)}")
+            # get_rho_part1 = lambda stars : convolve(NB.particle_density(stars[0],L,z),window, mode='same')
             get_rho_part2 = lambda stars : NB.particle_density(stars[1],L,z)
         else:
+            # from scipy.signal import convolve, get_window
+            # std = 0.5*N/len(stars.mass)
+            # window = get_window(("gaussian", std), N, fftbins=False)
+            # window /= np.sum(window) #np.sqrt(2*np.pi*std**2)
+            # print(f"std = {std}")
+            # print(f"np.sum(window)={np.sum(window)}")
+            # get_rho_part1 = lambda stars : convolve(NB.particle_density(stars,L,z),window, mode='same')
             get_rho_part1 = lambda stars : NB.particle_density(stars,L,z)
             get_rho_part2 = lambda stars : np.zeros_like(z)
     else:
@@ -524,6 +543,7 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     # INITIAL SETUP
     rho_FDM = get_rho_FDM(chi)
     rho_part1 = get_rho_part1(stars)
+    print(f"QP total mass: {np.sum(rho_part1)*dz}")
     rho_part2 = get_rho_part2(stars)
     rho_part = rho_part1+rho_part2
 
@@ -587,11 +607,6 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     print(f"dtau = {dtau}")
     tau_stop = dynamical_times*t_dynamical 
     i_stop = dynamical_times * collapse_index
-    indices = [0]
-    x = 0 
-    while 2**x <= dynamical_times:
-        indices.append(2**x)
-        x+=1
     if sim_choice2 == 1:
         dtau = 0.1*t_dynamical/5
         collapse_index = int(np.ceil(t_dynamical/dtau))
@@ -600,6 +615,13 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
         snapshot_indices = None 
             
     elif sim_choice2 == 2:
+        # indices = [0,4*10,4*50,4*100,4*500]
+        indices=[0,4*10,4*50,4*100,4*500]
+        # x = 0 
+        # while 2**x <= dynamical_times:
+        #     indices.append(2**x)
+        #     x+=1
+
         snapshot_indices = np.multiply(collapse_index,indices)
 
         if dynamical_times*collapse_index not in snapshot_indices:
@@ -649,6 +671,8 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     z_rms_storage = [] #None
     v_rms_storage = [] #None
     get_stars_rms = stars_RMS_tracker(track_stars_rms, variable_mass)
+
+    R_half = []
 
     #FDM DIAGNOSTICS 
     W_FDM_storage = np.ndarray(i_stop+1) #None
@@ -706,19 +730,23 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
             if Num_bosons!=0:
                 np.savetxt(f"chi_storage_{i}.csv", chi, delimiter=",")
             if variable_mass[0] == True:    
+                np.savetxt(f"QPs_m_storage_{i}.csv", stars[0].mass, delimiter=",")
                 np.savetxt(f"QPs_x_storage_{i}.csv", stars[0].x, delimiter=",")
                 np.savetxt(f"QPs_v_storage_{i}.csv", stars[0].v, delimiter=",")
                 np.savetxt(f"stars_x_storage_{i}.csv", stars[1].x, delimiter=",")
                 np.savetxt(f"stars_v_storage_{i}.csv", stars[1].v, delimiter=",")
             else: 
                 np.savetxt(f"stars_x_storage_{i}.csv", stars.x, delimiter=",")
-                np.savetxt(f"stars_v_storage_{i}.csv", stars.v, delimiter=",")
+                np.savetxt(f"stars_v_storage_{i}.csv", stars.v, delimiter=",")    
 
         K_FDM_storage[i], W_FDM_storage[i] = get_FDM_KW(chi,rho_FDM,phi)
         
-        if i in track_snapshot_indices: # Happens only at snapshot indices     
+        # if i in track_snapshot_indices: # Happens only at snapshot indices    
+        if i%(4*collapse_index) == 0: #Every 4 collapse times
             z_rms_storage, v_rms_storage = get_stars_rms(stars, z_rms_storage, v_rms_storage)
-        
+            
+            R_half_mass = np.percentile(np.sort(np.abs(z_rms_storage)),50)
+            R_half.append(R_half_mass)
         if history == True:
             acceleration_storage.append(a_grid)
         
@@ -791,7 +819,7 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     # np.savetxt("stars_x_storage.csv", stars_x_storage, delimiter=",")
     # np.savetxt("stars_v_storage.csv", stars_v_storage, delimiter=",")
     np.savetxt("acceleration_storage.csv", acceleration_storage, delimiter=",")
-    
+    np.savetxt("R_half_storage.csv", R_half, delimiter=",")
     if track_centroid == False:
         part_centroids = []
         fdm_centroids = [] 
