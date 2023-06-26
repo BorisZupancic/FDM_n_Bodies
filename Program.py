@@ -59,12 +59,16 @@ z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax, dtau, variable_mass, 
 print(f"N = len(z) = {len(z)}")
 L = z[-1]-z[0]
 dz = z[1]-z[0]
+soften = False
 if variable_mass[0] == False:
     Num_stars = len(stars.x)
     mass_part = np.sum(stars.mass)
 elif variable_mass[0] == True:
     Num_stars = len(stars[0].x)+len(stars[1].x)
     mass_part = np.sum(stars[0].mass) + np.sum(stars[1].mass)
+    print("Soften the QPs? No [0] Yes [1]")
+    soften = bool(input())
+    print(soften)
 mass_FDM = mu*dz*np.sum(np.abs(chi)**2)
 Total_mass = mass_part + mass_FDM
 percent_FDM = mass_FDM/Total_mass
@@ -127,9 +131,9 @@ print(history)
 # Set-Up is Done. Simulation next.
 #####################################################################
 #RUN SIMULATION/CALCULATION
-print("Calculating and Plotting...")
 
-for trial_num in range(num_trials):
+# for trial_num in range(num_trials):
+def trial_process(trial_num):
     print("------------------------------")
     #make a new folder for the trial, within the folder for this simulation
     trial_name = "Trial"+str(trial_num+1)
@@ -146,12 +150,12 @@ for trial_num in range(num_trials):
     
     st = time.process_time() #Start Tracking CPU Time
     #Run simulation on Initial Conditions:
-    snapshot_indices, stars, chi, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, W_2_star_storage, K_star_fine_storage, W_star_fine_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, T_Dynamical, bc_choice, z,
+    snapshot_indices, stars_out, chi_out, z_rms_storage, v_rms_storage, K_star_storage, W_star_storage, W_2_star_storage, K_star_fine_storage, W_star_fine_storage, part_centroids, fdm_centroids, K_FDM_storage, W_FDM_storage= GF.run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, T_Dynamical, bc_choice, z,
                                                                                                         mu, Num_bosons, r, chi, 
                                                                                                         stars,
                                                                                                         v_s,L_s, zmax, vmax,
                                                                                                         Directory,folder_name+"/"+trial_name, 
-                                                                                                        absolute_PLOT = True, track_stars = track_stars, track_stars_rms = track_stars_rms, track_centroid=track_centroid, fixed_phi = fixed_phi, track_FDM=track_FDM, variable_mass = variable_mass, history=history)
+                                                                                                        absolute_PLOT = True, track_stars = track_stars, track_stars_rms = track_stars_rms, track_centroid=track_centroid, fixed_phi = fixed_phi, track_FDM=track_FDM, variable_mass = variable_mass, soften = soften, history=history)
     print("Calculation and Plotting Done.")
     et = time.process_time()
     elapsed_time = et-st
@@ -163,16 +167,16 @@ for trial_num in range(num_trials):
     
     if Num_bosons == 0:
         if variable_mass[0]==True:
-            np.savetxt(f"StarsOnly_Pos.csv",[*stars[0].x,*stars[1].x], delimiter = ",")
-            np.savetxt(f"StarsOnly_Vel.csv",[*stars[0].v,*stars[1].v], delimiter = ",")
-            np.savetxt(f"Particle_masses.csv", [*stars[0].mass,*stars[1].mass], delimiter = ",")
+            np.savetxt(f"StarsOnly_Pos.csv",[*stars_out[0].x,*stars_out[1].x], delimiter = ",")
+            np.savetxt(f"StarsOnly_Vel.csv",[*stars_out[0].v,*stars_out[1].v], delimiter = ",")
+            np.savetxt(f"Particle_masses.csv", [*stars_out[0].mass,*stars_out[1].mass], delimiter = ",")
             np.savetxt(f"K_star_Energies.csv", [K_star_storage[i,1] for i in range(2)], delimiter = ",")
             np.savetxt(f"W_star_Energies.csv", [W_star_storage[i,1] for i in range(2)], delimiter = ",")
 
         else:
-            np.savetxt(f"StarsOnly_Pos.csv",stars.x, delimiter = ",")
-            np.savetxt(f"StarsOnly_Vel.csv",stars.v, delimiter = ",")
-            np.savetxt(f"Particle_masses.csv", stars.mass, delimiter = ",")
+            np.savetxt(f"StarsOnly_Pos.csv",stars_out.x, delimiter = ",")
+            np.savetxt(f"StarsOnly_Vel.csv",stars_out.v, delimiter = ",")
+            np.savetxt(f"Particle_masses.csv", stars_out.mass, delimiter = ",")
             np.savetxt(f"K_star_Energies.csv", K_star_storage, delimiter = ",")
             np.savetxt(f"W_star_Energies.csv", W_star_storage, delimiter = ",")
 
@@ -183,25 +187,25 @@ for trial_num in range(num_trials):
         np.savetxt(f"K_star_fine_Energies.csv", K_star_fine_storage, delimiter = ",")
         np.savetxt(f"W_star_fine_Energies.csv", W_star_fine_storage, delimiter = ",")
         
-        np.savetxt(f"Chi.csv", chi,delimiter = ",")
+        np.savetxt(f"Chi.csv", chi_out,delimiter = ",")
         np.savetxt(f"Particle_Centroids.csv",part_centroids,delimiter = ',')
     elif Num_stars == 0:
-        np.savetxt(f"Chi.csv", chi, delimiter =",")
+        np.savetxt(f"Chi.csv", chi_out, delimiter =",")
         np.savetxt(f"W_FDM_storage.csv", W_FDM_storage, delimiter =",")
         np.savetxt(f"K_FDM_storage.csv", K_FDM_storage, delimiter =",")
         np.savetxt(f"FDM_Centroids.csv",fdm_centroids,delimiter = ',')
     elif Num_bosons!=0 and Num_stars!=0:
         if variable_mass[0]==True:
-            np.savetxt(f"StarsOnly_Pos.csv",[*stars[0].x,*stars[1].x], delimiter = ",")
-            np.savetxt(f"StarsOnly_Vel.csv",[*stars[0].v,*stars[1].v], delimiter = ",")
+            np.savetxt(f"StarsOnly_Pos.csv",[*stars_out[0].x,*stars_out[1].x], delimiter = ",")
+            np.savetxt(f"StarsOnly_Vel.csv",[*stars_out[0].v,*stars_out[1].v], delimiter = ",")
             np.savetxt(f"Particle_masses.csv", [*stars[0].mass,*stars[1].mass], delimiter = ",")
         else:
-            np.savetxt(f"StarsOnly_Pos.csv",stars.x, delimiter = ",")
-            np.savetxt(f"StarsOnly_Vel.csv",stars.v, delimiter = ",")
-            np.savetxt(f"Particle_masses.csv", stars.mass, delimiter = ",")
+            np.savetxt(f"StarsOnly_Pos.csv",stars_out.x, delimiter = ",")
+            np.savetxt(f"StarsOnly_Vel.csv",stars_out.v, delimiter = ",")
+            np.savetxt(f"Particle_masses.csv", stars_out.mass, delimiter = ",")
         np.savetxt(f"z_rms_storage.csv", z_rms_storage, delimiter = ",")
         np.savetxt(f"v_rms_storage.csv", v_rms_storage, delimiter = ",")
-        np.savetxt(f"Chi.csv", chi)
+        np.savetxt(f"Chi.csv", chi_out)
         np.savetxt(f"FDM_Centroids.csv",fdm_centroids,delimiter = ',')
         np.savetxt(f"W_FDM_storage.csv", W_FDM_storage, delimiter =",")
         np.savetxt(f"K_FDM_storage.csv", K_FDM_storage, delimiter =",")
@@ -215,6 +219,8 @@ for trial_num in range(num_trials):
         np.savetxt(f"Particle_Centroids.csv",part_centroids,delimiter = ',')
 
 
+    #convert the snapshot indices to a string:
+    snapshot_indices = str(snapshot_indices)
     if variable_mass[0] == True:
         if stars_type == 1:
             properties = [["Time Elapsed:", elapsed_time],
@@ -270,3 +276,10 @@ for trial_num in range(num_trials):
     #     subprocess.call(["xdg-open", "FDM_n_Body_Snapshots.mp4"]) 
 
     os.chdir("..")
+
+print("Calculating and Plotting...")
+from multiprocessing import Pool
+pool = Pool(num_trials)
+
+with pool:
+    pool.map(trial_process,range(num_trials))
