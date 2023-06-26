@@ -430,7 +430,7 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
                     v_s, L_s, zmax, vmax, 
                     Directory, folder_name, 
                     absolute_PLOT = True, track_stars = False, track_stars_rms = False, track_centroid = False, fixed_phi = False,
-                    track_FDM = False, variable_mass = False, history = False):
+                    track_FDM = False, variable_mass = False, soften = False, history = False):
     
     st = process_time()
     #########################################
@@ -489,17 +489,15 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
     #For Stars
     if Num_stars !=0:
         if variable_mass[0]==True:
-            #smooth/filter the QP component:
-            # from scipy.ndimage import gaussian_filter
             get_rho_part1 = lambda stars : NB.particle_density(stars[0],L,z)
-            # get_rho_part1 = lambda stars : gaussian_filter(NB.particle_density(stars[0],L,z), sigma = 1) #L/len(stars[0].mass))
-            # from scipy.signal import convolve, get_window
-            # std = 0.5*N/len(stars[0].mass) #0.5*N/len(stars[0].mass)
-            # window = get_window(("gaussian", std), N, fftbins=False)
-            # window /= np.sum(window) #np.sqrt(2*np.pi*std**2)
-            # print(f"std = {std}")
-            # print(f"np.sum(window)={np.sum(window)}")
-            # get_rho_part1 = lambda stars : convolve(NB.particle_density(stars[0],L,z),window, mode='same')
+            if soften==True: #smooth/filter the QP component:
+                from scipy.signal import convolve, get_window
+                std = 0.5*N/len(stars[0].mass) #0.5*N/len(stars[0].mass)
+                window = get_window(("gaussian", std), N, fftbins=False)
+                window /= np.sum(window) #np.sqrt(2*np.pi*std**2)
+                print(f"std = {std}")
+                print(f"np.sum(window)={np.sum(window)}")
+                get_rho_part1 = lambda stars : convolve(NB.particle_density(stars[0],L,z),window, mode='same')
             get_rho_part2 = lambda stars : NB.particle_density(stars[1],L,z)
         else:
             # from scipy.signal import convolve, get_window
