@@ -11,7 +11,7 @@ import cv2
 from PIL import Image 
 
 #Import My Library
-My_Package_PATH = "/home/boris/Documents/Research/FDM_Codes/FDM_n_Bodies"
+My_Package_PATH = "~/Documents/Research/FDM_n_Bodies"
 import sys
 sys.path.insert(1, My_Package_PATH)
 import OneD.FDM as FDM
@@ -24,13 +24,14 @@ import OneD.Init_C as IC
 print("Specify Path to create folder for saving images.")
 parent = str(input())
 
-print("Specify number of trials to perform:")
-num_trials = int(input())
-
 # dirExtension = "1D_Codes/Programs"
 # Directory = os.getcwd()+"/"+dirExtension+"/"+parent #os.curdir() #"/home/boris/Documents/Research/Coding/1D codes/Non-Dim"
 Directory = os.getcwd()+"/"+parent #os.curdir() #"/home/boris/
 print(Directory)
+
+print("Specify number of trials to perform:")
+num_trials = int(input())
+print(num_trials)
 
 ############################################
 # SET UP:
@@ -55,6 +56,7 @@ fixed_phi, bc_choice, sim_choice2, dynamical_times, ICs = IC.startup()
 print("---Creating Initial Conditions---")
 
 z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax, dtau, variable_mass, stars_type = IC.init(hbar,L_s, v_s, ICs)    
+print(f"N = len(z) = {len(z)}")
 L = z[-1]-z[0]
 dz = z[1]-z[0]
 if variable_mass[0] == False:
@@ -86,8 +88,7 @@ elif sim_choice2 == 2:
             folder_name = f"{Num_stars}ParticlesOnly_Snapshots"
         else:
             folder_name = f"Mixed_{len(stars[0].x)}Heavy_{len(stars[1].x)}Light_ParticlesOnly_Snapshots"
-            # folder_name = f"SigmaRatio({sigma1/sigma2})_{Num_stars}ParticlesOnly_Snapshots"
-    elif Num_stars == 0:
+elif Num_stars == 0:
         folder_name = f"OnlyFDM_r{r}_Snapshots"
 
 print(os.getcwd())
