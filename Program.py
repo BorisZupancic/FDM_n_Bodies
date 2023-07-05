@@ -51,47 +51,65 @@ print(f"Time scale T = {T}")
 M_s = L_s*v_s**2
 print(f"Mass scale M = {M_s}")
 
-fixed_phi, bc_choice, sim_choice2, dynamical_times, ICs = IC.startup()
+fixed_phi, bc_choice, sim_choice2, dynamical_times, ICs, history = IC.startup()
 
-print("---Creating Initial Conditions---")
+L, percent_FDM, percent_Particles, lambda_ratio, variable_mass, stars_type, soften, Num_stars, Num_QPs, choose_mesh = IC.stuff(hbar,L_s, v_s, ICs)    
 
-z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax, dtau, variable_mass, stars_type = IC.init(hbar,L_s, v_s, ICs)    
-print(f"N = len(z) = {len(z)}")
-L = z[-1]-z[0]
-dz = z[1]-z[0]
-soften = False
-if variable_mass[0] == False:
-    Num_stars = len(stars.x)
-    mass_part = np.sum(stars.mass)
-elif variable_mass[0] == True:
-    Num_stars = len(stars[0].x)+len(stars[1].x)
-    mass_part = np.sum(stars[0].mass) + np.sum(stars[1].mass)
-    print("Soften the QPs? No [0] Yes [1]")
-    soften = bool(input())
-    print(soften)
-mass_FDM = mu*dz*np.sum(np.abs(chi)**2)
-Total_mass = mass_part + mass_FDM
-percent_FDM = mass_FDM/Total_mass
-# print(f"Total mass of Particles = {mass_part}")
-# print(f"Total mass of FDM = {mass_FDM}")
-# print(f"Total_mass = {Total_mass}")
-# print("")
+# generate_ICs = IC.generator(ICs, L, percent_FDM, percent_Particles, lambda_ratio, variable_mass, stars_type, Num_stars, Num_QPs)
+
+# generators=[IC.generator(ICs, L, percent_FDM, percent_Particles, lambda_ratio, variable_mass, stars_type, Num_stars, Num_QPs, choose_mesh) for i in range(num_trials)]
+generators = []
+ss = np.random.SeedSequence(12345)
+child_seeds = ss.spawn(num_trials)
+streams = [np.random.default_rng(s) for s in child_seeds]
+
+for i in range(num_trials):
+    rng = streams[i]
+    generator = IC.generator(ICs, L, percent_FDM, percent_Particles, lambda_ratio, variable_mass, stars_type, Num_stars, Num_QPs, choose_mesh, rng)
+    generators.append(generator)
+
+# generate_ICs = lambda : IC.generate(ICs, L, percent_FDM, percent_Particles, lambda_ratio, variable_mass, stars_type, Num_stars, Num_QPs)
+
+# print(f"L = {L}")
+# print("---Creating Initial Conditions---")
+
+# z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax, dtau, variable_mass, stars_type = IC.init(hbar,L_s, v_s, ICs)    
+# print(f"N = len(z) = {len(z)}")
+# L = z[-1]-z[0]
+# dz = z[1]-z[0]
+# soften = False
+# if variable_mass[0] == False:
+#     Num_stars = len(stars.x)
+#     mass_part = np.sum(stars.mass)
+# elif variable_mass[0] == True:
+#     Num_stars = len(stars[0].x)+len(stars[1].x)
+#     mass_part = np.sum(stars[0].mass) + np.sum(stars[1].mass)
+#     print("Soften the QPs? No [0] Yes [1]")
+#     soften = bool(input())
+#     print(soften)
+# mass_FDM = mu*dz*np.sum(np.abs(chi)**2)
+# Total_mass = mass_part + mass_FDM
+# percent_FDM = mass_FDM/Total_mass
+# # print(f"Total mass of Particles = {mass_part}")
+# # print(f"Total mass of FDM = {mass_FDM}")
+# # print(f"Total_mass = {Total_mass}")
+# # print("")
 
 ####################################################################
 #SET UP FOLDERS:
 if sim_choice2 == 1: 
     folder_name = f"FDM{percent_FDM}_r{r}_Images"
-    if Num_bosons == 0:
+    if percent_FDM == 0:
         folder_name = f"{Num_stars}ParticlesOnly_Images"
     elif Num_stars == 0:
-        folder_name = f"OnlyFDM_r{r}_Images"
+        folder_name = f"OnlyFDM_lambda{lambda_ratio}_Images"
 elif sim_choice2 == 2:
-    folder_name = f"FDM{percent_FDM}_r{r}_Snapshots"
-    if Num_bosons == 0:
+    folder_name = f"FDM{percent_FDM}_Snapshots"
+    if percent_FDM == 0:
         if variable_mass[0] == False:
             folder_name = f"{Num_stars}ParticlesOnly_Snapshots"
         else:
-            folder_name = f"Mixed_{len(stars[0].x)}Heavy_{len(stars[1].x)}Light_ParticlesOnly_Snapshots"
+            folder_name = f"Mixed_{Num_QPs}QPs_{Num_stars}Stars_ParticlesOnly_Snapshots"
 elif Num_stars == 0:
         folder_name = f"OnlyFDM_r{r}_Snapshots"
 
@@ -99,10 +117,6 @@ print(os.getcwd())
 print(os.path.exists(Directory+"/"+folder_name))
 if os.path.exists(Directory+"/"+folder_name) == True:
     shutil.rmtree(Directory+"/"+folder_name)
-    # for folder in os.listdir(Directory+"/"+folder_name):
-    #     os.rmdir(Directory+"/"+folder_name+"/"+folder)
-    # os.rmdir(Directory+"/"+folder_name)    
-# print(Directory+"/"+folder_name)
 os.mkdir(Directory+"/"+folder_name)
 
 #Whether to track stars or not:
@@ -115,17 +129,9 @@ if sim_choice2 != 1:
     if Num_stars != 0:
         track_stars = True
         track_stars_rms = True
-    if Num_bosons !=0:
+    if percent_FDM !=0:
         track_FDM = True
 
-#Whether to track full history or not:
-history=input("Track full history [y/n]?")
-# print("["+history+"]")
-if history == 'y':
-    history=True
-else:
-    history=False
-print(history)
 
 #####################################################################
 # Set-Up is Done. Simulation next.
@@ -134,6 +140,50 @@ print(history)
 
 # for trial_num in range(num_trials):
 def trial_process(trial_num):
+    
+    generate_ICs = generators[trial_num]
+    print("---Creating Initial Conditions---")
+
+    # z, stars, chi, mu, Num_bosons, r, T_Dynamical, zmax, vmax, dtau, variable_mass, stars_type = IC.generate(ICs, L_box, percent_FDM, percent_Particles, variable_mass, Num_stars, lambda_ratio)
+    z, stars, chi, mu, r, T_Dynamical, zmax, vmax, dtau, variable_mass, stars_type = generate_ICs()
+    
+    if variable_mass[0] == False:
+        Num_stars = len(stars.x)
+        mass_part = np.sum(stars.mass)
+    elif variable_mass[0] == True:
+        Num_stars = len(stars[0].x)+len(stars[1].x)
+        mass_part = np.sum(stars[0].mass) + np.sum(stars[1].mass)
+
+    dz=z[1]-z[0]    
+    mass_FDM = mu*dz*np.sum(np.abs(chi)**2)
+    Total_mass = mass_part + mass_FDM
+    Num_bosons = Total_mass*percent_FDM/mu
+
+    print(f"Num_stars = {Num_stars}")
+    print(f"Num_Bosons = {Num_bosons}")
+
+    print(f"Total mass of Particles = {mass_part}")
+    print(f"Total mass of FDM = {mass_FDM}")
+    print(f"Total_mass = {Total_mass}")
+    # percent_FDM = mass_FDM/Total_mass
+    print("")
+
+    print(f"N = len(z) = {len(z)}")
+    L = z[-1]-z[0]
+    dz = z[1]-z[0]
+    # soften = False
+    if variable_mass[0] == False:
+        Num_stars = len(stars.x)
+        mass_part = np.sum(stars.mass)
+    elif variable_mass[0] == True:
+        Num_stars = len(stars[0].x)+len(stars[1].x)
+        mass_part = np.sum(stars[0].mass) + np.sum(stars[1].mass)
+        # print("Soften the QPs? No [0] Yes [1]")
+        # soften = bool(input())
+        # print(soften)
+    mass_FDM = mu*dz*np.sum(np.abs(chi)**2)
+    Total_mass = mass_part + mass_FDM
+   
     print("------------------------------")
     #make a new folder for the trial, within the folder for this simulation
     trial_name = "Trial"+str(trial_num+1)

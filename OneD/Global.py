@@ -492,7 +492,7 @@ def run_FDM_n_Bodies(sim_choice2, dtau, dynamical_times, t_dynamical, bc_choice,
             get_rho_part1 = lambda stars : NB.particle_density(stars[0],L,z)
             if soften==True: #smooth/filter the QP component:
                 from scipy.signal import convolve, get_window
-                std = 0.5*N/len(stars[0].mass) #0.5*N/len(stars[0].mass)
+                std = 0.5*N/len(stars[0].mass)
                 window = get_window(("gaussian", std), N, fftbins=False)
                 window /= np.sum(window) #np.sqrt(2*np.pi*std**2)
                 print(f"std = {std}")
