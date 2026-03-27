@@ -1,6 +1,6 @@
 # FDM_n_Bodies
-This is the simulation code used for generating the data in the paper [Zupancic & Widrow (2024)](https://doi.org/10.1093/mnras/stad3620).
-Fuzzy Dark Matter and Particles in a self-consistent gravitational field in 1 spatial dimension.
+This is the code used for generating the data in the paper [Zupancic & Widrow (2024)](https://doi.org/10.1093/mnras/stad3620), 
+where we simulated Fuzzy Dark Matter and Particles in a self-consistent gravitational field in 1 spatial dimension.
 
 `Program.py` is the main script that can run a simulation. 
 
@@ -8,7 +8,7 @@ Fuzzy Dark Matter and Particles in a self-consistent gravitational field in 1 sp
 
 > [!WARNING]
 > This repository is not actively maintained and the code is largely undocumented.
-> To understand the underlying algorithm, please refer to the paper [Zupancic & Widrow (2024)](https://doi.org/10.1093/mnras/stad3620).
+> To understand the physics, please refer to the paper [Zupancic & Widrow (2024)](https://doi.org/10.1093/mnras/stad3620).
 
 ## Citation
 If you use this code, please cite the following paper:
