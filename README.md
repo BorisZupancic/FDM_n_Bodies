@@ -6,6 +6,10 @@ Fuzzy Dark Matter and Particles in a self-consistent gravitational field in 1 sp
 
 `OneD` is the package containing all modules and functions used in `Program.py`.
 
+> [!WARNING]
+> This repository is not actively maintained and the code is largely undocumented.
+> To understand the underlying algorithm, please refer to the [cited paper](https://doi.org/10.1093/mnras/stad3620).
+
 ## Citation
 If you use this code, please cite the following paper:
 
