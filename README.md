@@ -8,7 +8,7 @@ Fuzzy Dark Matter and Particles in a self-consistent gravitational field in 1 sp
 
 > [!WARNING]
 > This repository is not actively maintained and the code is largely undocumented.
-> To understand the underlying algorithm, please refer to the [cited paper](https://doi.org/10.1093/mnras/stad3620).
+> To understand the underlying algorithm, please refer to the paper [Zupancic & Widrow (2024)](https://doi.org/10.1093/mnras/stad3620).
 
 ## Citation
 If you use this code, please cite the following paper:
